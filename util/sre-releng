@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+ack '(?<=\#define)\s*DDEBUG\s*[1-9]' src && exit 1
+ack '.{81}' `ls src/sre_*.[ch]|grep -v 'sre_regex_parser.c'`
+ack '(?<!:)//' src/sre_*.[ch]
+ack '^master_on' t && exit 1
+ack '\b(?:ONLY|LAST)\b' t
+ack -l '\r\n' t
+ack '\(\);' src/sre_*.h
+ack '^static .*?\(\);' src/sre_*.[ch]
+perl -e 'use strict; use warnings;
+    my $seen = 0;
+    my $saved;
+    my $indent;
+    for my $fname (@ARGV) {
+        open my $in, $fname or die $!;
+        while (<$in>) {
+            next if /^\s*$/ || m{^\s*/\*} || m{^\#\s*include\s+};
+            if (/(sre_p[cn]*alloc\b|\b[mc]alloc\b|\bsre_array_push\b|\bsre_regex_create\b|\bsre_alloc_chain_link\b|\bsre_c?alloc_buf\b)\(/) {
+                my $pattern = $1;
+                if (/^\Q$pattern\E/) {
+                    next;
+                }
+                if (!/return\b.*?$pattern/ && !/"[^"]*$pattern/ && !/^\s+\*/) {
+                    if (/^\s+/) {
+                        $indent = $&;
+                    } else {
+                        $indent = "";
+                    }
+                    $seen = 1;
+                    $saved = $_;
+                    next;
+                }
+            }
+            if ($seen) {
+                if (/^\s+/) {
+                    if (length($&) > length($indent)) {
+                        next;
+                    }
+                }
+                if (!/\bif\b.*? [=!]= NULL/) {
+                    warn "not check NULL: $fname: line $.: $saved$_";
+                }
+            }
+            $seen = 0;
+        }
+        close $in;
+    }' `ls src/sre_*.[cy]`
+
+ack '_log_error\(NGX_[^L]' src/sre_*.[ch]
+
+echo done.
+
