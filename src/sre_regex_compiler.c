@@ -120,13 +120,13 @@ sre_regex_emit_bytecode(sre_instruction_t *pc, sre_regex_t *r)
 
     case SRE_REGEX_TYPE_PAREN:
         pc->opcode = SRE_OPCODE_SAVE;
-        pc->v.group = 2 * r->nparens;
+        pc->v.group = 2 * r->group;
         pc++;
 
         pc = sre_regex_emit_bytecode(pc, r->left);
         pc->opcode = SRE_OPCODE_SAVE;
 
-        pc->v.group = 2 * r->nparens + 1;
+        pc->v.group = 2 * r->group + 1;
         pc++;
 
         break;

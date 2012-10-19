@@ -16,7 +16,7 @@
 static int yylex(void);
 static void yyerror(char *msg);
 
-static unsigned      sre_regex_nparens;
+static unsigned      sre_regex_group;
 static sre_pool_t   *sre_regex_pool;
 static sre_regex_t  *sre_regex_parsed;
 
@@ -25,14 +25,14 @@ static sre_regex_t  *sre_regex_parsed;
 %union {
     sre_regex_t     *re;
     int              ch;
-    unsigned         nparens;
+    unsigned         group;
 }
 
 
 %token <ch>         SRE_REGEX_TOKEN_CHAR SRE_REGEX_TOKEN_EOF
 
 %type  <re>         alt concat repeat atom regex
-%type  <nparens>    count
+%type  <group>      count
 
 %start              regex
 
@@ -131,7 +131,7 @@ repeat: atom
       ;
 
 
-count: { $$ = ++sre_regex_nparens; }
+count: { $$ = ++sre_regex_group; }
      ;
 
 
@@ -142,7 +142,7 @@ atom: '(' count alt ')'
             YYABORT;
         }
 
-        $$->nparens = $2;
+        $$->group = $2;
       }
 
     | '(' '?' ':' alt ')'
@@ -208,7 +208,7 @@ sre_regex_parse(sre_pool_t *pool, u_char *src)
 
     sre_regex_str     = src;
     sre_regex_pool    = pool;
-    sre_regex_nparens = 0;
+    sre_regex_group = 0;
 
     if (yyparse() != SRE_OK) {
         return NULL;

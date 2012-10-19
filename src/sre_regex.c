@@ -25,7 +25,7 @@ sre_regex_create(sre_pool_t *pool, sre_regex_type_t type, sre_regex_t *left,
     r->left = left;
     r->right = right;
     r->greedy = 1;
-    r->nparens = 0;
+    r->group = 0;
 
     return r;
 }
@@ -60,7 +60,7 @@ sre_regex_dump(sre_regex_t *r)
         break;
 
     case SRE_REGEX_TYPE_PAREN:
-        printf("Paren(%d, ", r->nparens);
+        printf("Paren(%d, ", r->group);
         sre_regex_dump(r->left);
         printf(")");
         break;

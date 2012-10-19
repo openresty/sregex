@@ -76,7 +76,7 @@
 static int yylex(void);
 static void yyerror(char *msg);
 
-static unsigned      sre_regex_nparens;
+static unsigned      sre_regex_group;
 static sre_pool_t   *sre_regex_pool;
 static sre_regex_t  *sre_regex_parsed;
 
@@ -126,7 +126,7 @@ typedef union YYSTYPE
 
     sre_regex_t     *re;
     int              ch;
-    unsigned         nparens;
+    unsigned         group;
 
 
 
@@ -1492,7 +1492,7 @@ yyreduce:
 
 /* Line 1806 of yacc.c  */
 #line 134 "src/sre_regex_parser.y"
-    { (yyval.nparens) = ++sre_regex_nparens; }
+    { (yyval.group) = ++sre_regex_group; }
     break;
 
   case 15:
@@ -1505,7 +1505,7 @@ yyreduce:
             YYABORT;
         }
 
-        (yyval.re)->nparens = (yyvsp[(2) - (4)].nparens);
+        (yyval.re)->group = (yyvsp[(2) - (4)].group);
       }
     break;
 
@@ -1818,7 +1818,7 @@ sre_regex_parse(sre_pool_t *pool, u_char *src)
 
     sre_regex_str     = src;
     sre_regex_pool    = pool;
-    sre_regex_nparens = 0;
+    sre_regex_group = 0;
 
     if (yyparse() != SRE_OK) {
         return NULL;

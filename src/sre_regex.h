@@ -35,7 +35,7 @@ struct sre_regex_s {
     sre_regex_t         *left;
     sre_regex_t         *right;
     u_char               ch;
-    unsigned             nparens;
+    unsigned             group;
     unsigned             greedy; /* :1 */
 };
 
