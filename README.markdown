@@ -26,7 +26,7 @@ Build
 
     make
 
-where Gnu make, gcc, and bison are required.
+where Gnu make and gcc are required.
 
 Author
 ======
