@@ -6,7 +6,7 @@ SRegex - A non-backtracking regex engine matching on data streams
 Status
 ======
 
-This library is ''not'' usable yet and still under early development.
+This library is *not* usable yet and still under early development.
 
 Already rewrote the code base of Russ Cox's re1 library using the nginx coding style (yes, I love it!), also incorparated a clone of the nginx memory pool into it for memory management.
 
