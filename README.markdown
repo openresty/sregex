@@ -16,8 +16,8 @@ At the moment, I haven't added support for streaming matching to the API, but th
 
 When the port of the Pike VM and API adjustment for data streams completes, I'll
 
-# add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM), and
-# add a JIT compiler for the regex VM targeting x86_64.
+1. add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM), and
+1. add a JIT compiler for the regex VM targeting x86_64.
 
 I'll also add more and more regex features like character classes and shortcuts like `\d`, `\w`, `\s`, along the way, so that I'll be able to start running Perl 5's regex test suite.
 
