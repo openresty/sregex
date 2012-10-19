@@ -25,7 +25,7 @@ libsregex.so: $(LIB_O_FILES)
 	$(CC) -shared -Wl,-soname,$@ -o $@ $+
 
 libsregex.a: $(LIB_O_FILES)
-	ar -cq $@ $(LIB_O_FILES)
+	ar -cq $@ $+
 
 %.o: %.c $(H_FILES)
 	$(CC) -c $(CFLAGS) -o $@ $<
