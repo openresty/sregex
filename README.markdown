@@ -10,7 +10,7 @@ This library is *not* usable yet and still under early development.
 
 Already rewrote the code base of Russ Cox's re1 library using the nginx coding style (yes, I love it!), also incorparated a clone of the nginx memory pool into it for memory management.
 
-Already ported the Thompson VM and Pike VM to sregex. The former is just for yes-or-no matching, and the latter also supports submatch capturing.
+Already ported the Thompson and Pike VM backends to sregex. The former is just for yes-or-no matching, and the latter also supports submatch capturing.
 
 At the moment, I haven't added support for streaming matching to the API, but this should be easy.
 
