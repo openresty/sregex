@@ -26,6 +26,15 @@ Build
 
     make
 
+Gnu make and gcc are required.
+
+Test Suite
+==========
+
+    make test
+
+Gnu make, perl 5.6.1+, and the Test::Base perl module are required.
+
 Usage
 =====
 
@@ -34,8 +43,6 @@ There is no ABI for the library yet.
 There's a simple executable that can be used to exercise the engine:
 
     $ ./sregex 'a|ab' 'blab'
-
-where Gnu make and gcc are required.
 
 Author
 ======
