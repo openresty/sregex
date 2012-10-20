@@ -26,6 +26,15 @@ Build
 
     make
 
+Usage
+=====
+
+There is no ABI for the library yet.
+
+There's a simple executable that can be used to exercise the engine:
+
+    $ ./sregex 'a|ab' 'blab'
+
 where Gnu make and gcc are required.
 
 Author
