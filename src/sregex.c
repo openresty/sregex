@@ -68,7 +68,7 @@ main(int argc, char **argv)
             printf("match\n");
 
         } else {
-            printf("-no match-\n");
+            printf("no match\n");
         }
 
         printf("pike ");
@@ -87,7 +87,7 @@ main(int argc, char **argv)
             printf("\n");
 
         } else {
-            printf("-no match-\n");
+            printf("no match\n");
         }
     }
 
