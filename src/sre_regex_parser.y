@@ -240,8 +240,6 @@ sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps)
         return NULL;
     }
 
-    dotstar->greedy = 0;
-
     return sre_regex_create(pool, SRE_REGEX_TYPE_CAT, dotstar, re);
 }
 

@@ -24,7 +24,7 @@ sre_regex_create(sre_pool_t *pool, sre_regex_type_t type, sre_regex_t *left,
     r->type = type;
     r->left = left;
     r->right = right;
-    r->greedy = 1;
+    r->greedy = 0;
     r->group = 0;
 
     return r;

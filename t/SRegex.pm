@@ -75,8 +75,8 @@ sub run_test ($) {
                 is($pike_cap, $expected_cap, "pike vm capture ok");
 
             } else {
-                nok($thompson_match, "thompson vm should not match");
-                nok($pike_match, "thompson vm should not match");
+                ok(!$thompson_match, "thompson vm should not match");
+                ok(!$pike_match, "thompson vm should not match");
             }
         }
     }
