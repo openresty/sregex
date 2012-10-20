@@ -10,16 +10,16 @@ This library is *not* usable yet and still under early development.
 
 Already rewrote the code base of Russ Cox's re1 library using the nginx coding style (yes, I love it!), also incorparated a clone of the nginx memory pool into it for memory management.
 
-For now, only ported the Thompson VM to sregex. will port the Pike VM tomorrow. the former is just for yes-or-no matching, and the latter also supports submatch capturing.
+Already ported the Thompson VM and Pike VM to sregex. The former is just for yes-or-no matching, and the latter also supports submatch capturing.
 
 At the moment, I haven't added support for streaming matching to the API, but this should be easy.
 
-When the port of the Pike VM and API adjustment for data streams completes, I'll
+Things to do:
 
+1. add an API for streaming processing,
+1. add more and more regex features like character classes and shortcuts like `\d`, `\w`, `\s`, along the way, so that I'll be able to start running Perl 5's regex test suite,
 1. add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM), and
-1. add a JIT compiler for the regex VM targeting x86_64.
-
-I'll also add more and more regex features like character classes and shortcuts like `\d`, `\w`, `\s`, along the way, so that I'll be able to start running Perl 5's regex test suite.
+1. add a JIT compiler for the regex VM targeting x86_64 (and other architectures).
 
 Build
 =====

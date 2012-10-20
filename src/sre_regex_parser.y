@@ -202,13 +202,13 @@ yyerror(char *s)
 
 
 sre_regex_t *
-sre_regex_parse(sre_pool_t *pool, u_char *src)
+sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps)
 {
     sre_regex_t     *re, *dotstar;
 
     sre_regex_str     = src;
     sre_regex_pool    = pool;
-    sre_regex_group = 0;
+    sre_regex_group   = 0;
 
     if (yyparse() != SRE_OK) {
         return NULL;
@@ -218,6 +218,8 @@ sre_regex_parse(sre_pool_t *pool, u_char *src)
         yyerror("syntax error");
         return NULL;
     }
+
+    *ncaps = sre_regex_group;
 
     /* assemble the regex ".*?(regex)" */
 

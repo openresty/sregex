@@ -20,13 +20,15 @@ src/compiler.h
 src/parser.y
 src/core.h
 src/regex.h
-src/capture.h
+src/capture.[ch]
 src/compiler.c
 src/palloc.c
 src/parser.c
 src/thompson.c
 src/thompson.h
+src/pike.[ch]
 src/sre_regex_parser.output
 *.so
 *.a
 sregex
+go

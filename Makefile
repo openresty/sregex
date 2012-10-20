@@ -8,7 +8,9 @@ LIB_C_FILES = \
         src/sre_regex_parser.c \
         src/sre_regex_compiler.c \
         src/sre_vm_bytecode.c \
-        src/sre_vm_thompson.c
+        src/sre_vm_thompson.c \
+        src/sre_vm_pike.c \
+        src/sre_capture.c
 
 LIB_O_FILES = $(patsubst %.c,%.o,$(LIB_C_FILES))
 H_FILES=$(wildcard src/*.h)
@@ -25,6 +27,7 @@ libsregex.so: $(LIB_O_FILES)
 	$(CC) -shared -Wl,-soname,$@ -o $@ $+
 
 libsregex.a: $(LIB_O_FILES)
+	rm -f $@
 	ar -cq $@ $+
 
 %.o: %.c $(H_FILES)

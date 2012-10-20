@@ -14,7 +14,7 @@
 #include <sre_regex.h>
 
 
-sre_regex_t *sre_regex_parse(sre_pool_t *pool, u_char *src);
+sre_regex_t *sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps);
 
 
 #endif /* _SRE_REGEX_PARSER_H_INCLUDED_ */

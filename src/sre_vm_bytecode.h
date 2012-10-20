@@ -48,6 +48,7 @@ typedef struct {
 } sre_program_t;
 
 
+void sre_program_reset(sre_program_t *prog);
 void sre_program_dump(sre_program_t *prog);
 
 
