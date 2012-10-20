@@ -1,7 +1,7 @@
 Name
 ====
 
-SRegex - A non-backtracking regex engine matching on data streams
+libsregex - A non-backtracking regex engine library for large data streams
 
 Status
 ======
