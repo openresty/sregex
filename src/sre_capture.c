@@ -46,17 +46,19 @@ sre_capture_create(sre_pool_t *pool, unsigned ovecsize, unsigned clear)
 
 sre_capture_t *
 sre_capture_update(sre_pool_t *pool, sre_capture_t *cap, unsigned group,
-    int pos, sre_capture_t *freecap)
+    int pos, sre_capture_t **freecap)
 {
     sre_capture_t       *newcap;
 
     dd("update cap %u to %d", group, pos);
 
     if (cap->ref > 1) {
-        if (freecap) {
-            newcap = freecap;
-            freecap = freecap->next;
+        if (*freecap) {
+            dd("reusing cap %p", *freecap);
+            newcap = *freecap;
+            *freecap = newcap->next;
             newcap->next = NULL;
+            newcap->ref = 1;
 
         } else {
             newcap = sre_capture_create(pool, cap->ovecsize, 0);
@@ -69,10 +71,12 @@ sre_capture_update(sre_pool_t *pool, sre_capture_t *cap, unsigned group,
 
         cap->ref--;
 
+        dd("!! cap %p: set group %u to %d", newcap, group, pos);
         newcap->vector[group] = pos;
         return newcap;
     }
 
+    dd("!! cap %p: set group %u to %d", cap, group, pos);
     cap->vector[group] = pos;
     return cap;
 }

@@ -78,11 +78,13 @@ main(int argc, char **argv)
         if (sre_vm_pike_exec(pool, prog, (u_char *) argv[i], ovector, ovecsize)
             == SRE_OK)
         {
-            printf("match\n");
+            printf("match");
 
             for (j = 0; j < 2 * (ncaps + 1); j += 2) {
                 printf(" (%d, %d)", ovector[j], ovector[j + 1]);
             }
+
+            printf("\n");
 
         } else {
             printf("-no match-\n");

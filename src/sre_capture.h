@@ -15,10 +15,12 @@
 #include <sre_palloc.h>
 
 
-#define sre_capture_decr_ref(cap, freecaps)                                  \
+#define sre_capture_decr_ref(ctx, cap)                                       \
+    dd("decr ref cap %p (%d)", cap, cap->ref);                               \
     if (--(cap)->ref == 0) {                                                 \
-        (cap)->next = (freecaps);                                            \
-        (freecaps) = (cap);                                                 \
+        dd("free cap %p", cap);                                              \
+        (cap)->next = (ctx)->free_capture;                                   \
+        (ctx)->free_capture = (cap);                                         \
     }
 
 
@@ -35,7 +37,7 @@ struct sre_capture_s {
 sre_capture_t *sre_capture_create(sre_pool_t *pool, unsigned ovecsize,
     unsigned clear);
 sre_capture_t *sre_capture_update(sre_pool_t *pool, sre_capture_t *cap,
-    unsigned group, int pos, sre_capture_t *freecap);
+    unsigned group, int pos, sre_capture_t **freecap);
 void sre_capture_destroy(sre_pool_t *pool, sre_capture_t *cap);
 
 
