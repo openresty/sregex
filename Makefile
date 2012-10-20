@@ -15,7 +15,7 @@ LIB_C_FILES = \
 LIB_O_FILES = $(patsubst %.c,%.o,$(LIB_C_FILES))
 H_FILES=$(wildcard src/*.h)
 
-.PHONY: all clean
+.PHONY: all clean test
 .PRECIOUS: src/sre_regex_parser.c
 
 all: libsregex.so libsregex.a sregex
@@ -39,4 +39,7 @@ src/%.c: src/%.y
 clean:
 	rm -f src/*.o core $(TARGET) src/sre_regex_parser.c \
 	    src/*.output sregex *.so *.a
+
+test:
+	prove -r t
 
