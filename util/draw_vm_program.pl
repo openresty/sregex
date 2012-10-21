@@ -47,7 +47,7 @@ while (<$in>) {
             $edges{$pc} = [[$x, "x"], [$y, "y"]];
 
         } elsif ($cmd eq 'any') {
-            $edges{$pc} = [[$pc + 1, "."]];
+            $edges{$pc} = [[$pc + 1, "any"]];
 
         } elsif ($cmd eq 'char') {
             $args =~ s/\\/\\\\/g;
@@ -74,12 +74,16 @@ while (<$in>) {
 
 close $in;
 
+$title =~ s/\\/\\\\/g;
+$title =~ s/"/\\"/g;
+
 print <<"_EOC_";
 digraph test {
     graph [ratio=auto];
+    fontname="new courier";
     labelloc="t";
     label="$title";
-    node [label="\\N", fillcolor=yellow, shape=circle, style=filled, width=0.5, height=0.5];
+    node [label="\\N", fillcolor=yellow, shape=circle, style=filled, width=0.5, height=0.5, fontname="new courier"];
     edge [color=red];
 
 _EOC_
