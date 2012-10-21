@@ -82,3 +82,9 @@ __DATA__
 --- re: a??
 --- s: bhac
 
+
+
+=== TEST 14:
+--- re: (a*)*
+--- s: bhaac
+

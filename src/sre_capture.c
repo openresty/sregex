@@ -81,3 +81,16 @@ sre_capture_update(sre_pool_t *pool, sre_capture_t *cap, unsigned group,
     return cap;
 }
 
+
+void
+sre_capture_dump(sre_capture_t *cap)
+{
+    unsigned            i, n;
+
+    n = cap->ovecsize / sizeof(int);
+
+    for (i = 0; i < n; i += 2) {
+        fprintf(stderr, " (%d, %d)", cap->vector[i], cap->vector[i + 1]);
+    }
+}
+

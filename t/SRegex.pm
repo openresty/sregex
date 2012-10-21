@@ -59,6 +59,10 @@ sub run_test ($) {
         die "Failed to execute --- re for test $name: $err\n";
 
     } else {
+        if ($err) {
+            warn "$err\n";
+        }
+
         #is $res, $block->out, "$name - output ok";
         if (!defined $res) {
             is_string $res, $block->out, "$name - output ok";
@@ -66,6 +70,11 @@ sub run_test ($) {
         } else {
 
             my ($thompson_match, $pike_match, $pike_cap) = parse_res($res);
+
+            if ($ENV{TEST_SREGEX_VERBOSE}) {
+                warn "thompson: $thompson_match, pike: $pike_match, cap: $pike_cap\n";
+                warn $res;
+            }
 
             if ($s =~ m/$re/) {
                 my $expected_cap = fmt_cap(\@-, \@+);

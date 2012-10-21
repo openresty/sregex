@@ -129,6 +129,12 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
             case SRE_OPCODE_MATCH:
 
                 if (matched) {
+
+                    dd("discarding match: ");
+#if (DDEBUG)
+                    sre_capture_dump(matched);
+#endif
+
                     sre_capture_decr_ref(&ctx, matched);
                 }
 
@@ -206,7 +212,15 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
     sre_capture_t               *cap;
 
     if (pc->tag == ctx->tag) {
-        dd("already on list: %d", pc->tag);
+        dd("pc %d: already on list: %d", (int) (pc - ctx->program->start),
+           pc->tag);
+
+        if (pc->opcode == SRE_OPCODE_SPLIT) {
+            if (pc->y->tag != ctx->tag) {
+                return sre_vm_pike_add_thread(ctx, l, pc->y, capture, pos);
+            }
+        }
+
         return SRE_OK;
     }
 
@@ -228,13 +242,17 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
         return sre_vm_pike_add_thread(ctx, l, pc->y, capture, pos);
 
     case SRE_OPCODE_SAVE:
-        dd("pc %p: save %d as group %d", pc, pos, pc->v.group);
+        dd("pc %d: cap %p: save %d as group %d",
+           (int) (pc - ctx->program->start), capture, pos,
+           pc->v.group);
 
         cap = sre_capture_update(ctx->pool, capture, pc->v.group, pos,
                                  &ctx->free_capture);
         if (cap == NULL) {
             return SRE_ERROR;
         }
+
+        dd("new cap: %p", cap);
 
         return sre_vm_pike_add_thread(ctx, l, pc + 1, cap, pos);
 

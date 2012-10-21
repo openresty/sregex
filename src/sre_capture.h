@@ -38,7 +38,7 @@ sre_capture_t *sre_capture_create(sre_pool_t *pool, unsigned ovecsize,
     unsigned clear);
 sre_capture_t *sre_capture_update(sre_pool_t *pool, sre_capture_t *cap,
     unsigned group, int pos, sre_capture_t **freecap);
-void sre_capture_destroy(sre_pool_t *pool, sre_capture_t *cap);
+void sre_capture_dump(sre_capture_t *cap);
 
 
 #endif /* _SRE_CAPTURE_H_INCLUDED_ */

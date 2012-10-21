@@ -40,6 +40,8 @@ clean:
 	rm -f src/*.o core $(TARGET) src/sre_regex_parser.c \
 	    src/*.output sregex *.so *.a
 
-test:
+test: all
 	prove -r t
 
+valtest: all
+	TEST_SREGEX_USE_VALGRIND=1 prove -r t
