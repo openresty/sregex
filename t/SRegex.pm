@@ -79,6 +79,10 @@ sub run_test ($) {
             if ($s =~ m/$re/) {
                 my $expected_cap = fmt_cap(\@-, \@+);
 
+                if ($block->cap) {
+                    $expected_cap = $block->cap;
+                }
+
                 ok($thompson_match, "thompson vm should match");
                 ok($pike_match, "pike vm should match");
                 is($pike_cap, $expected_cap, "pike vm capture ok");

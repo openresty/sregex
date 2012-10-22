@@ -78,13 +78,75 @@ __DATA__
 
 
 
-=== TEST 13:
+=== TEST 13: non-greedy ?
 --- re: a??
 --- s: bhac
 
 
 
-=== TEST 14:
+=== TEST 14: looping empty pattern (matching none)
+re1 and re2 are wrong here
 --- re: (a*)*
 --- s: bhaac
+
+
+
+=== TEST 15: looping empty pattern (matching one char)
+perl and pcre are wrong here
+--- re: (a*)*
+--- s: a
+--- cap: (0, 1) (0, 1)
+
+
+
+=== TEST 16: looping empty pattern (matching one char, non-greedy)
+re1 and re2 are wrong here.
+--- re: (a*?)*
+--- s: a
+
+
+
+=== TEST 17: looping empty pattern
+perl and pcre are wrong here.
+--- re: (a?)*
+--- s: a
+--- cap: (0, 1) (0, 1)
+
+
+
+=== TEST 18: looping empty pattern
+re1 and re2 are wrong here.
+--- re: (a??)*
+--- s: a
+
+
+
+=== TEST 19: looping empty pattern
+re1 and re2 are wrong here.
+--- re: (a*?)*
+--- s: a
+
+
+
+=== TEST 20: perl capturing semantics
+--- re: (a|bcdef|g|ab|c|d|e|efg|fg)*
+--- s: abcdefg
+
+
+
+=== TEST 21:
+--- re: (a+)(b+)
+--- s: aabbbb
+
+
+
+=== TEST 22: (?: ... )
+--- re: (?:a+)(?:b+)
+--- s: aabbbb
+
+
+
+=== TEST 23: many captures exceeding $9
+--- re eval: "(.)" x 12
+--- s eval: "a" x 12
 
