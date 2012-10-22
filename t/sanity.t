@@ -156,3 +156,51 @@ re1 and re2 are wrong here.
 --- re: (a|)
 --- s: aabbbb
 
+
+
+=== TEST 25:
+--- re: (|a)
+--- s: aabbbb
+
+
+
+=== TEST 26: empty regex
+--- re:
+--- s: aabbbb
+
+
+
+=== TEST 27: empty group
+--- re: ()
+--- s: aabbbb
+
+
+
+=== TEST 28:
+--- re: abab|abbb
+--- s: abbb
+
+
+
+=== TEST 29:
+--- re: (a?)(a?)(a?)aaa
+--- s: aaa
+
+
+
+=== TEST 30: a common pathological regex
+--- re: (.*) (.*) (.*) (.*) (.*)
+--- s: a  c d ee fff
+
+
+
+=== TEST 31: submatch semantics (greedy)
+--- re: (.+)(.+)
+--- s: abcd
+
+
+
+=== TEST 32: submatch semantics (non-greedy)
+--- re: (.+?)(.+?)
+--- s: abcd
+
