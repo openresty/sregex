@@ -19,6 +19,7 @@ typedef struct sre_regex_s  sre_regex_t;
 
 
 typedef enum {
+    SRE_REGEX_TYPE_NIL      = 0,
     SRE_REGEX_TYPE_ALT      = 1,
     SRE_REGEX_TYPE_CAT      = 2,
     SRE_REGEX_TYPE_LIT      = 3,

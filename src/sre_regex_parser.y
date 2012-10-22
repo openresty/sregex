@@ -167,6 +167,13 @@ atom: '(' count alt ')'
             YYABORT;
         }
       }
+    |
+      {
+        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
+        if ($$ == NULL) {
+            YYABORT;
+        }
+      }
     ;
 
 %%

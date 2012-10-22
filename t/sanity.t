@@ -150,3 +150,9 @@ re1 and re2 are wrong here.
 --- re eval: "(.)" x 12
 --- s eval: "a" x 12
 
+
+
+=== TEST 24:
+--- re: (a|)
+--- s: aabbbb
+

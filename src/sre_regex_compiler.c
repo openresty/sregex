@@ -187,6 +187,10 @@ sre_regex_emit_bytecode(sre_instruction_t *pc, sre_regex_t *r)
 
         break;
 
+    case SRE_REGEX_TYPE_NIL:
+        /* do nothing */
+        break;
+
     default:
         /* impossible to reach here */
         break;

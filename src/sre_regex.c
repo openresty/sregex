@@ -95,8 +95,9 @@ sre_regex_dump(sre_regex_t *r)
         printf(")");
         break;
 
+    case SRE_REGEX_TYPE_NIL:
     default:
-        printf("???");
+        printf("Nil");
         break;
     }
 }
