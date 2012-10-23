@@ -74,12 +74,13 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
         return SRE_ERROR;
     }
 
-    ctx.tag = 1;
+    ctx.tag = prog->tag + 1;
     ctx.program = prog;
     ctx.pool = pool;
     ctx.free_capture = NULL;
 
     if (sre_vm_pike_add_thread(&ctx, clist, prog->start, cap, 0) != SRE_OK) {
+        prog->tag = ctx.tag;
         return SRE_ERROR;
     }
 
@@ -121,6 +122,7 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
                                            (int) (sp - input + 1))
                     != SRE_OK)
                 {
+                    prog->tag = ctx.tag;
                     return SRE_ERROR;
                 }
 
@@ -174,9 +176,11 @@ matched:
         dd("matched: %p", matched);
         memcpy(ovector, matched->vector, ovecsize);
         /* sre_capture_decr_ref(matched, freecap); */
+        prog->tag = ctx.tag;
         return SRE_OK;
     }
 
+    prog->tag = ctx.tag;
     return SRE_DECLINED;
 }
 

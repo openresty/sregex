@@ -11,18 +11,20 @@
 
 
 typedef struct {
+    unsigned        tag;
+} sre_vm_thompson_ctx_t;
+
+
+typedef struct {
     unsigned                    count;
     sre_instruction_t         **threads;
 } sre_vm_thompson_thread_list_t;
 
 
-static void sre_vm_thompson_add_thread(sre_vm_thompson_thread_list_t *l,
-    sre_instruction_t *pc);
+static void sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
+    sre_vm_thompson_thread_list_t *l, sre_instruction_t *pc);
 static sre_vm_thompson_thread_list_t *sre_vm_thompson_thread_list_create(
     sre_pool_t *pool, int size);
-
-
-static unsigned sre_vm_thompson_tag = 0;
 
 
 int
@@ -31,6 +33,7 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
     u_char                          *sp;
     unsigned                         i, len;
     sre_instruction_t               *pc;
+    sre_vm_thompson_ctx_t            ctx;
     sre_vm_thompson_thread_list_t   *clist, *nlist, *tmp;
 
     len = prog->len;
@@ -45,9 +48,9 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
         return SRE_ERROR;
     }
 
-    sre_vm_thompson_tag++;
+    ctx.tag = prog->tag + 1;
 
-    sre_vm_thompson_add_thread(clist, prog->start);
+    sre_vm_thompson_add_thread(&ctx, clist, prog->start);
 
     for (sp = input; /* void */; sp++) {
 
@@ -57,7 +60,7 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
 
         /* printf("%d(%02x).", (int)(sp - input), *sp & 0xFF); */
 
-        sre_vm_thompson_tag++;
+        ctx.tag++;
 
         for (i = 0; i < clist->count; i++) {
             pc = clist->threads[i];
@@ -75,10 +78,11 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
                     break;
                 }
 
-                sre_vm_thompson_add_thread(nlist, pc + 1);
+                sre_vm_thompson_add_thread(&ctx, nlist, pc + 1);
                 break;
 
             case SRE_OPCODE_MATCH:
+                prog->tag = ctx.tag;
                 return SRE_OK;
 
             default:
@@ -104,34 +108,35 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
         }
     } /* for */
 
+    prog->tag = ctx.tag;
     return SRE_DECLINED;
 }
 
 
 static void
-sre_vm_thompson_add_thread(sre_vm_thompson_thread_list_t *l,
-    sre_instruction_t *pc)
+sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
+    sre_vm_thompson_thread_list_t *l, sre_instruction_t *pc)
 {
-    if (pc->tag == sre_vm_thompson_tag) {  /* already on list */
+    if (pc->tag == ctx->tag) {  /* already on list */
         return;
     }
 
-    pc->tag = sre_vm_thompson_tag;
+    pc->tag = ctx->tag;
     l->threads[l->count] = pc;
     l->count++;
 
     switch (pc->opcode) {
     case SRE_OPCODE_JMP:
-        sre_vm_thompson_add_thread(l, pc->x);
+        sre_vm_thompson_add_thread(ctx, l, pc->x);
         break;
 
     case SRE_OPCODE_SPLIT:
-        sre_vm_thompson_add_thread(l, pc->x);
-        sre_vm_thompson_add_thread(l, pc->y);
+        sre_vm_thompson_add_thread(ctx, l, pc->x);
+        sre_vm_thompson_add_thread(ctx, l, pc->y);
         break;
 
     case SRE_OPCODE_SAVE:
-        sre_vm_thompson_add_thread(l, pc + 1);
+        sre_vm_thompson_add_thread(ctx, l, pc + 1);
         break;
 
     default:

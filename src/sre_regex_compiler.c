@@ -42,6 +42,7 @@ sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
     pc++;
 
     prog->len = pc - prog->start;
+    prog->tag = 0;
 
     return prog;
 }

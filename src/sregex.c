@@ -73,8 +73,6 @@ main(int argc, char **argv)
 
         printf("pike ");
 
-        sre_program_reset(prog);
-
         if (sre_vm_pike_exec(pool, prog, (u_char *) argv[i], ovector, ovecsize)
             == SRE_OK)
         {

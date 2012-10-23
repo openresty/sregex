@@ -11,20 +11,6 @@
 
 
 void
-sre_program_reset(sre_program_t *prog)
-{
-    sre_instruction_t      *pc, *start, *end;
-
-    start = prog->start;
-    end = prog->start + prog->len;
-
-    for (pc = start; pc < end; pc++) {
-        pc->tag = 0;
-    }
-}
-
-
-void
 sre_program_dump(sre_program_t *prog)
 {
     sre_instruction_t      *pc, *start, *end;
