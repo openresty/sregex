@@ -188,10 +188,16 @@ static int
 yylex(void)
 {
     u_char               c;
-    unsigned             seen_dash, no_dash;
+    unsigned             i, seen_dash, no_dash;
     sre_regex_t         *r;
-    sre_regex_range_t   *range, *last;
+    sre_regex_range_t   *range, *last = NULL;
     sre_regex_type_t     type;
+
+    static u_char        esc_w_ranges[] = { 'A', 'Z', 'a', 'z', '0', '9',
+                                            '_', '_' };
+
+    static u_char        esc_s_ranges[] = { ' ', ' ', '\f', '\f', '\n', '\n',
+                                            '\r', '\r', '\t', '\t' };
 
     if (sre_regex_str == NULL || *sre_regex_str == '\0') {
         return SRE_REGEX_TOKEN_EOF;
@@ -200,6 +206,211 @@ yylex(void)
     c = *sre_regex_str++;
     if (strchr("-|*+?():.^$", (int) c)) {
         return c;
+    }
+
+    if (c == '\\') {
+        c = *sre_regex_str++;
+        if (strchr("-|*+?():.^$\\[]", (int) c)) {
+            yylval.ch = c;
+            return SRE_REGEX_TOKEN_CHAR;
+        }
+
+        switch (c) {
+        case 'd':
+            /* \d is defined as [0-9] */
+
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            if (range == NULL) {
+                break;
+            }
+
+            range->from = '0';
+            range->to = '9';
+            range->next = NULL;
+
+            r->range = range;
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_CHAR_CLASS;
+
+        case 'D':
+            /* \D is defined as [^0-9] */
+
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NCLASS, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            if (range == NULL) {
+                break;
+            }
+
+            range->from = '0';
+            range->to = '9';
+            range->next = NULL;
+
+            r->range = range;
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_CHAR_CLASS;
+
+        case 'w':
+            /* \w is defined as [A-Za-z0-9_] */
+
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            for (i = 0; i < sre_nelems(esc_w_ranges); i += 2) {
+                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                if (range == NULL) {
+                    return SRE_REGEX_TOKEN_BAD;
+                }
+
+                range->from = esc_w_ranges[i];
+                range->to = esc_w_ranges[i + 1];
+
+                if (i == 0) {
+                    r->range = range;
+
+                } else {
+                    last->next = range;
+                }
+
+                if (i == sre_nelems(esc_w_ranges) - 2) {
+                    range->next = NULL;
+
+                } else {
+                    last = range;
+                }
+            }
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_CHAR_CLASS;
+
+        case 'W':
+            /* \W is defined as [^A-Za-z0-9_] */
+
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NCLASS, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            for (i = 0; i < sre_nelems(esc_w_ranges); i += 2) {
+                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                if (range == NULL) {
+                    return SRE_REGEX_TOKEN_BAD;
+                }
+
+                range->from = esc_w_ranges[i];
+                range->to = esc_w_ranges[i + 1];
+
+                if (i == 0) {
+                    r->range = range;
+
+                } else {
+                    last->next = range;
+                }
+
+                if (i == sre_nelems(esc_w_ranges) - 2) {
+                    range->next = NULL;
+
+                } else {
+                    last = range;
+                }
+            }
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_CHAR_CLASS;
+
+        case 's':
+            /* \s is defined as [ \f\n\r\t] */
+
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            for (i = 0; i < sre_nelems(esc_s_ranges); i += 2) {
+                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                if (range == NULL) {
+                    return SRE_REGEX_TOKEN_BAD;
+                }
+
+                range->from = esc_s_ranges[i];
+                range->to = esc_s_ranges[i + 1];
+
+                if (i == 0) {
+                    r->range = range;
+
+                } else {
+                    last->next = range;
+                }
+
+                if (i == sre_nelems(esc_s_ranges) - 2) {
+                    range->next = NULL;
+
+                } else {
+                    last = range;
+                }
+            }
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_CHAR_CLASS;
+
+        case 'S':
+            /* \S is defined as [^ \f\n\r\t] */
+
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NCLASS, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            for (i = 0; i < sre_nelems(esc_s_ranges); i += 2) {
+                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                if (range == NULL) {
+                    return SRE_REGEX_TOKEN_BAD;
+                }
+
+                range->from = esc_s_ranges[i];
+                range->to = esc_s_ranges[i + 1];
+
+                if (i == 0) {
+                    r->range = range;
+
+                } else {
+                    last->next = range;
+                }
+
+                if (i == sre_nelems(esc_s_ranges) - 2) {
+                    range->next = NULL;
+
+                } else {
+                    last = range;
+                }
+            }
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_CHAR_CLASS;
+
+        default:
+            break;
+        }
+
+        return SRE_REGEX_TOKEN_BAD;
     }
 
     if (c == '[') {

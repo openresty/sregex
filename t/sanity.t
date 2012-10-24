@@ -252,3 +252,45 @@ re1 and re2 are wrong here.
 --- re: [0-9A-Za-z]+
 --- s: -hello_world1234Blah(+
 
+
+
+=== TEST 41: \d
+--- re: \d+
+--- s: -hello_world1234Blah(+
+
+
+
+=== TEST 42: \w
+--- re: \w+
+--- s: -hello_world1234Blah(+
+
+
+
+=== TEST 43: \W
+--- re: \W+
+--- s: hello_world1234Blah(+-
+
+
+
+=== TEST 44: \D
+--- re: \D+
+--- s: -+(hello)_world1234Blah(+
+
+
+
+=== TEST 45: \s
+--- re: \s+
+--- s eval: "-+(hello) \t_world1234Blah(+"
+
+
+
+=== TEST 46: \S
+--- re: \S+
+--- s eval: "-+(hello) \t_world1234Blah(+"
+
+
+
+=== TEST 47: escaped \ and [
+--- re: \\\[\)\(\.
+--- s: hello\[)(.a
+
