@@ -26,6 +26,7 @@ sre_regex_create(sre_pool_t *pool, sre_regex_type_t type, sre_regex_t *left,
     r->right = right;
     r->greedy = 0;
     r->group = 0;
+    r->range = NULL;
 
     return r;
 }
@@ -34,6 +35,8 @@ sre_regex_create(sre_pool_t *pool, sre_regex_type_t type, sre_regex_t *left,
 void
 sre_regex_dump(sre_regex_t *r)
 {
+    sre_regex_range_t       *range;
+
     switch (r->type) {
     case SRE_REGEX_TYPE_ALT:
         printf("Alt(");
@@ -97,6 +100,26 @@ sre_regex_dump(sre_regex_t *r)
 
     case SRE_REGEX_TYPE_NIL:
         printf("Nil");
+        break;
+
+    case SRE_REGEX_TYPE_CLASS:
+        printf("CLASS(");
+
+        for (range = r->range; range; range = range->next) {
+            printf("[%d, %d]", range->from, range->to);
+        }
+
+        printf(")");
+        break;
+
+    case SRE_REGEX_TYPE_NCLASS:
+        printf("NCLASS(");
+
+        for (range = r->range; range; range = range->next) {
+            printf("[%d, %d]", range->from, range->to);
+        }
+
+        printf(")");
         break;
 
     default:

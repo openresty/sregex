@@ -72,24 +72,28 @@ sub run_test ($) {
             my ($thompson_match, $pike_match, $pike_cap) = parse_res($res);
 
             if ($ENV{TEST_SREGEX_VERBOSE}) {
-                warn "thompson: $thompson_match, pike: $pike_match, cap: $pike_cap\n";
+                my $cap = $pike_cap;
+                if (!defined $cap) {
+                    $cap = '<undef>';
+                }
+                warn "$name - thompson: $thompson_match, pike: $pike_match, cap: $cap\n";
                 warn $res;
             }
 
             if ($s =~ m/$re/) {
                 my $expected_cap = fmt_cap(\@-, \@+);
 
-                if ($block->cap) {
+                if (defined $block->cap) {
                     $expected_cap = $block->cap;
                 }
 
-                ok($thompson_match, "thompson vm should match");
-                ok($pike_match, "pike vm should match");
-                is($pike_cap, $expected_cap, "pike vm capture ok");
+                ok($thompson_match, "$name - thompson vm should match");
+                ok($pike_match, "$name - pike vm should match");
+                is($pike_cap, $expected_cap, "$name - pike vm capture ok");
 
             } else {
-                ok(!$thompson_match, "thompson vm should not match");
-                ok(!$pike_match, "thompson vm should not match");
+                ok(!$thompson_match, "$name - thompson vm should not match");
+                ok(!$pike_match, "$name - pike vm should not match");
             }
         }
     }

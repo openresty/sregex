@@ -20,8 +20,22 @@ typedef enum {
     SRE_OPCODE_JMP      = 3,
     SRE_OPCODE_SPLIT    = 4,
     SRE_OPCODE_ANY      = 5,
-    SRE_OPCODE_SAVE     = 6
+    SRE_OPCODE_SAVE     = 6,
+    SRE_OPCODE_IN       = 7,
+    SRE_OPCODE_NOTIN    = 8
 } sre_opcode_t;
+
+
+typedef struct {
+    u_char      from;
+    u_char      to;
+} sre_vm_range_t;
+
+
+typedef struct {
+    unsigned            count;
+    sre_vm_range_t     *head;
+} sre_vm_ranges_t;
 
 
 typedef struct sre_instruction_s  sre_instruction_t;
@@ -36,6 +50,7 @@ struct sre_instruction_s {
 
     union {
         u_char                  ch;
+        sre_vm_ranges_t        *ranges;
         unsigned                group; /* capture group */
         unsigned                greedy;  /* :1 */
     } v;

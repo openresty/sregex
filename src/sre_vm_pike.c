@@ -48,12 +48,14 @@ int
 sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
     int *ovector, unsigned ovecsize)
 {
-    unsigned                   i, len;
-    sre_vm_pike_thread_list_t *clist, *nlist, *tmp;
-    sre_instruction_t         *pc;
     u_char                    *sp;
+    unsigned                   i, j, len;
+    unsigned                   in;
     sre_capture_t             *cap, *matched;
+    sre_vm_range_t            *range;
+    sre_instruction_t         *pc;
     sre_vm_pike_ctx_t          ctx;
+    sre_vm_pike_thread_list_t *clist, *nlist, *tmp;
 
     matched = NULL;
 
@@ -102,6 +104,74 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
                pc->opcode);
 
             switch (pc->opcode) {
+            case SRE_OPCODE_IN:
+                if (*sp == '\0') {
+                    sre_capture_decr_ref(&ctx, cap);
+                    break;
+                }
+
+                in = 0;
+                for (j = 0; j < pc->v.ranges->count; j++) {
+                    range = &pc->v.ranges->head[j];
+
+                    dd("testing %d for [%d, %d] (%u)", *sp, range->from,
+                       range->to, j);
+
+                    if (*sp >= range->from && *sp <= range->to) {
+                        in = 1;
+                        break;
+                    }
+                }
+
+                if (!in) {
+                    sre_capture_decr_ref(&ctx, cap);
+                    break;
+                }
+
+                if (sre_vm_pike_add_thread(&ctx, nlist, pc + 1, cap,
+                                           (int) (sp - input + 1))
+                    != SRE_OK)
+                {
+                    prog->tag = ctx.tag;
+                    return SRE_ERROR;
+                }
+
+                break;
+
+            case SRE_OPCODE_NOTIN:
+                if (*sp == '\0') {
+                    sre_capture_decr_ref(&ctx, cap);
+                    break;
+                }
+
+                in = 0;
+                for (j = 0; j < pc->v.ranges->count; j++) {
+                    range = &pc->v.ranges->head[j];
+
+                    dd("testing %d for [%d, %d] (%u)", *sp, range->from,
+                       range->to, j);
+
+                    if (*sp >= range->from && *sp <= range->to) {
+                        in = 1;
+                        break;
+                    }
+                }
+
+                if (in) {
+                    sre_capture_decr_ref(&ctx, cap);
+                    break;
+                }
+
+                if (sre_vm_pike_add_thread(&ctx, nlist, pc + 1, cap,
+                                           (int) (sp - input + 1))
+                    != SRE_OK)
+                {
+                    prog->tag = ctx.tag;
+                    return SRE_ERROR;
+                }
+
+                break;
+
             case SRE_OPCODE_CHAR:
 
                 dd("matching char %d against %d", *sp, pc->v.ch);

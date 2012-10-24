@@ -7,12 +7,19 @@
  */
 
 
+#ifndef DDEBUG
+#define DDEBUG 0
+#endif
+#include <ddebug.h>
+
 #include <sre_regex_compiler.h>
 
 
 static unsigned sre_program_len(sre_regex_t *r);
-static sre_instruction_t *sre_regex_emit_bytecode(sre_instruction_t *pc,
-    sre_regex_t *re);
+static sre_instruction_t *sre_regex_emit_bytecode(sre_pool_t *pool,
+    sre_instruction_t *pc, sre_regex_t *re);
+static int sre_regex_compiler_add_char_class(sre_pool_t *pool,
+    sre_instruction_t *pc, sre_regex_range_t *range);
 
 
 sre_program_t *
@@ -37,7 +44,11 @@ sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
 
     sre_memzero(prog->start, n * sizeof(sre_instruction_t));
 
-    pc = sre_regex_emit_bytecode(prog->start, re);
+    pc = sre_regex_emit_bytecode(pool, prog->start, re);
+    if (pc == NULL) {
+        return NULL;
+    }
+
     pc->opcode = SRE_OPCODE_MATCH;
     pc++;
 
@@ -60,6 +71,8 @@ sre_program_len(sre_regex_t *r)
 
     case SRE_REGEX_TYPE_LIT:
     case SRE_REGEX_TYPE_DOT:
+    case SRE_REGEX_TYPE_CLASS:
+    case SRE_REGEX_TYPE_NCLASS:
         return 1;
 
     case SRE_REGEX_TYPE_PAREN:
@@ -82,7 +95,7 @@ sre_program_len(sre_regex_t *r)
 
 
 static sre_instruction_t *
-sre_regex_emit_bytecode(sre_instruction_t *pc, sre_regex_t *r)
+sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
 {
     sre_instruction_t    *p1, *p2, *t;
 
@@ -92,25 +105,60 @@ sre_regex_emit_bytecode(sre_instruction_t *pc, sre_regex_t *r)
         p1 = pc++;
         p1->x = pc;
 
-        pc = sre_regex_emit_bytecode(pc, r->left);
+        pc = sre_regex_emit_bytecode(pool, pc, r->left);
+        if (pc == NULL) {
+            return NULL;
+        }
 
         pc->opcode = SRE_OPCODE_JMP;
         p2 = pc++;
         p1->y = pc;
 
-        pc = sre_regex_emit_bytecode(pc, r->right);
+        pc = sre_regex_emit_bytecode(pool, pc, r->right);
+        if (pc == NULL) {
+            return NULL;
+        }
+
         p2->x = pc;
 
         break;
 
     case SRE_REGEX_TYPE_CAT:
-        pc = sre_regex_emit_bytecode(pc, r->left);
-        pc = sre_regex_emit_bytecode(pc, r->right);
+        pc = sre_regex_emit_bytecode(pool, pc, r->left);
+        if (pc == NULL) {
+            return NULL;
+        }
+
+        pc = sre_regex_emit_bytecode(pool, pc, r->right);
+        if (pc == NULL) {
+            return NULL;
+        }
+
         break;
 
     case SRE_REGEX_TYPE_LIT:
         pc->opcode = SRE_OPCODE_CHAR;
         pc->v.ch = r->ch;
+        pc++;
+        break;
+
+    case SRE_REGEX_TYPE_CLASS:
+        pc->opcode = SRE_OPCODE_IN;
+
+        if (sre_regex_compiler_add_char_class(pool, pc, r->range) != SRE_OK) {
+            return NULL;
+        }
+
+        pc++;
+        break;
+
+    case SRE_REGEX_TYPE_NCLASS:
+        pc->opcode = SRE_OPCODE_NOTIN;
+
+        if (sre_regex_compiler_add_char_class(pool, pc, r->range) != SRE_OK) {
+            return NULL;
+        }
+
         pc++;
         break;
 
@@ -124,7 +172,11 @@ sre_regex_emit_bytecode(sre_instruction_t *pc, sre_regex_t *r)
         pc->v.group = 2 * r->group;
         pc++;
 
-        pc = sre_regex_emit_bytecode(pc, r->left);
+        pc = sre_regex_emit_bytecode(pool, pc, r->left);
+        if (pc == NULL) {
+            return NULL;
+        }
+
         pc->opcode = SRE_OPCODE_SAVE;
 
         pc->v.group = 2 * r->group + 1;
@@ -137,7 +189,11 @@ sre_regex_emit_bytecode(sre_instruction_t *pc, sre_regex_t *r)
         p1 = pc++;
         p1->x = pc;
 
-        pc = sre_regex_emit_bytecode(pc, r->left);
+        pc = sre_regex_emit_bytecode(pool, pc, r->left);
+        if (pc == NULL) {
+            return NULL;
+        }
+
         p1->y = pc;
 
         if (!r->greedy) { /* non-greedy */
@@ -153,7 +209,10 @@ sre_regex_emit_bytecode(sre_instruction_t *pc, sre_regex_t *r)
         p1 = pc++;
         p1->x = pc;
 
-        pc = sre_regex_emit_bytecode(pc, r->left);
+        pc = sre_regex_emit_bytecode(pool, pc, r->left);
+        if (pc == NULL) {
+            return NULL;
+        }
 
         pc->opcode = SRE_OPCODE_JMP;
         pc->x = p1;
@@ -171,7 +230,10 @@ sre_regex_emit_bytecode(sre_instruction_t *pc, sre_regex_t *r)
 
     case SRE_REGEX_TYPE_PLUS:
         p1 = pc;
-        pc = sre_regex_emit_bytecode(pc, r->left);
+        pc = sre_regex_emit_bytecode(pool, pc, r->left);
+        if (pc == NULL) {
+            return NULL;
+        }
 
         pc->opcode = SRE_OPCODE_SPLIT;
         pc->x = p1;
@@ -198,5 +260,40 @@ sre_regex_emit_bytecode(sre_instruction_t *pc, sre_regex_t *r)
     }
 
     return pc;
+}
+
+
+static int
+sre_regex_compiler_add_char_class(sre_pool_t *pool, sre_instruction_t *pc,
+    sre_regex_range_t *range)
+{
+    u_char               *p;
+    unsigned              i, n;
+    sre_regex_range_t    *r;
+
+    n = 0;
+    for (r = range; r; r = r->next) {
+        n++;
+    }
+
+    p = sre_pnalloc(pool,
+                    sizeof(sre_vm_ranges_t) + n * sizeof(sre_vm_range_t));
+    if (p == NULL) {
+        return SRE_ERROR;
+    }
+
+    pc->v.ranges = (sre_vm_ranges_t *) p;
+
+    p += sizeof(sre_vm_ranges_t);
+    pc->v.ranges->head = (sre_vm_range_t *) p;
+
+    pc->v.ranges->count = n;
+
+    for (i = 0, r = range; r; i++, r = r->next) {
+        pc->v.ranges->head[i].from = r->from;
+        pc->v.ranges->head[i].to = r->to;
+    }
+
+    return SRE_OK;
 }
 

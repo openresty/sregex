@@ -204,3 +204,51 @@ re1 and re2 are wrong here.
 --- re: (.+?)(.+?)
 --- s: abcd
 
+
+
+=== TEST 33: character class (single char ranges)
+--- re: [az]+
+--- s: -(aazbc+d
+
+
+
+=== TEST 34: character class (two char ranges)
+--- re: [a-z]+
+--- s: -(aazbc+d
+
+
+
+=== TEST 35: character class (two char ranges)
+--- re: [^a-z]+
+--- s: -(aazbc+d
+
+
+
+=== TEST 36: character class (special char -)
+--- re: [^-a-z]+
+--- s: -aaz-bc+d
+
+
+
+=== TEST 37: character class (special char "()")
+--- re: [^()a-z]+
+--- s: -a(az)-bc+d
+
+
+
+=== TEST 38: character class (special char "()")
+--- re: [()a-]+
+--- s: -a(az)-bc+d
+
+
+
+=== TEST 39: character class (special char "()")
+--- re: [()a-z-A]+
+--- s: -a(az)-bc+d
+
+
+
+=== TEST 40: character class (two ranges)
+--- re: [0-9A-Za-z]+
+--- s: -hello_world1234Blah(+
+

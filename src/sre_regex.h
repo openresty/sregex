@@ -27,8 +27,19 @@ typedef enum {
     SRE_REGEX_TYPE_PAREN    = 5,
     SRE_REGEX_TYPE_QUEST    = 6,
     SRE_REGEX_TYPE_STAR     = 7,
-    SRE_REGEX_TYPE_PLUS     = 8
+    SRE_REGEX_TYPE_PLUS     = 8,
+    SRE_REGEX_TYPE_CLASS    = 9,
+    SRE_REGEX_TYPE_NCLASS   = 10,
 } sre_regex_type_t;
+
+
+typedef struct sre_regex_range_s  sre_regex_range_t;
+
+struct sre_regex_range_s {
+    u_char               from;
+    u_char               to;
+    sre_regex_range_t   *next;
+};
 
 
 struct sre_regex_s {
@@ -36,6 +47,7 @@ struct sre_regex_s {
     sre_regex_t         *left;
     sre_regex_t         *right;
     u_char               ch;
+    sre_regex_range_t   *range;
     unsigned             group;
     unsigned             greedy; /* :1 */
 };

@@ -13,6 +13,8 @@
 void
 sre_program_dump(sre_program_t *prog)
 {
+    unsigned                i;
+    sre_vm_range_t         *range;
     sre_instruction_t      *pc, *start, *end;
 
     start = prog->start;
@@ -32,6 +34,28 @@ sre_program_dump(sre_program_t *prog)
 
         case SRE_OPCODE_CHAR:
             printf("%2d. char %c\n", (int) (pc - start), pc->v.ch);
+            break;
+
+        case SRE_OPCODE_IN:
+            printf("%2d. in", (int) (pc - start));
+
+            for (i = 0; i < pc->v.ranges->count; i++) {
+                range = &pc->v.ranges->head[i];
+                printf(" %d-%d", range->from, range->to);
+            }
+
+            printf("\n");
+            break;
+
+        case SRE_OPCODE_NOTIN:
+            printf("%2d. notin", (int) (pc - start));
+
+            for (i = 0; i < pc->v.ranges->count; i++) {
+                range = &pc->v.ranges->head[i];
+                printf(" %d-%d", range->from, range->to);
+            }
+
+            printf("\n");
             break;
 
         case SRE_OPCODE_ANY:

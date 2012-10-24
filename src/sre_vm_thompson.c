@@ -7,6 +7,11 @@
  */
 
 
+#ifndef DDEBUG
+#define DDEBUG 0
+#endif
+#include <ddebug.h>
+
 #include <sre_vm_thompson.h>
 
 
@@ -31,7 +36,9 @@ int
 sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
 {
     u_char                          *sp;
-    unsigned                         i, len;
+    unsigned                         i, j, len;
+    unsigned                         in;
+    sre_vm_range_t                  *range;
     sre_instruction_t               *pc;
     sre_vm_thompson_ctx_t            ctx;
     sre_vm_thompson_thread_list_t   *clist, *nlist, *tmp;
@@ -68,6 +75,56 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
             /* printf(" %d", (int)(pc - prog->start)); */
 
             switch (pc->opcode) {
+            case SRE_OPCODE_IN:
+                if (*sp == '\0') {
+                    break;
+                }
+
+                in = 0;
+                for (j = 0; j < pc->v.ranges->count; j++) {
+                    range = &pc->v.ranges->head[j];
+
+                    dd("testing %d for [%d, %d] (%u)", *sp, range->from,
+                       range->to, j);
+
+                    if (*sp >= range->from && *sp <= range->to) {
+                        in = 1;
+                        break;
+                    }
+                }
+
+                if (!in) {
+                    break;
+                }
+
+                sre_vm_thompson_add_thread(&ctx, nlist, pc + 1);
+                break;
+
+            case SRE_OPCODE_NOTIN:
+                if (*sp == '\0') {
+                    break;
+                }
+
+                in = 0;
+                for (j = 0; j < pc->v.ranges->count; j++) {
+                    range = &pc->v.ranges->head[j];
+
+                    dd("testing %d for [%d, %d] (%u)", *sp, range->from,
+                       range->to, j);
+
+                    if (*sp >= range->from && *sp <= range->to) {
+                        in = 1;
+                        break;
+                    }
+                }
+
+                if (in) {
+                    break;
+                }
+
+                sre_vm_thompson_add_thread(&ctx, nlist, pc + 1);
+                break;
+
             case SRE_OPCODE_CHAR:
                 if (*sp != pc->v.ch) {
                     break;

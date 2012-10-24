@@ -23,13 +23,14 @@ static sre_regex_t  *sre_regex_parsed;
 %}
 
 %union {
-    sre_regex_t     *re;
-    int              ch;
-    unsigned         group;
+    sre_regex_t         *re;
+    u_char               ch;
+    unsigned             group;
 }
 
 
-%token <ch>         SRE_REGEX_TOKEN_CHAR SRE_REGEX_TOKEN_EOF
+%token <ch>         SRE_REGEX_TOKEN_CHAR SRE_REGEX_TOKEN_EOF SRE_REGEX_TOKEN_BAD
+%token <re>         SRE_REGEX_TOKEN_CHAR_CLASS
 
 %type  <re>         alt concat repeat atom regex
 %type  <group>      count
@@ -167,6 +168,8 @@ atom: '(' count alt ')'
             YYABORT;
         }
       }
+
+    | SRE_REGEX_TOKEN_CHAR_CLASS
     |
       {
         $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
@@ -184,15 +187,107 @@ static u_char *sre_regex_str;
 static int
 yylex(void)
 {
-    u_char c;
+    u_char               c;
+    unsigned             seen_dash, no_dash;
+    sre_regex_t         *r;
+    sre_regex_range_t   *range, *last;
+    sre_regex_type_t     type;
 
     if (sre_regex_str == NULL || *sre_regex_str == '\0') {
         return SRE_REGEX_TOKEN_EOF;
     }
 
     c = *sre_regex_str++;
-    if (strchr("|*+?():.", (int) c)) {
+    if (strchr("-|*+?():.^$", (int) c)) {
         return c;
+    }
+
+    if (c == '[') {
+        /* get character class */
+
+        if (*sre_regex_str == '^') {
+            type = SRE_REGEX_TYPE_NCLASS;
+            sre_regex_str++;
+
+        } else {
+            type = SRE_REGEX_TYPE_CLASS;
+        }
+
+        r = sre_regex_create(sre_regex_pool, type, NULL, NULL);
+        if (r == NULL) {
+            return SRE_REGEX_TOKEN_BAD;
+        }
+
+        last = NULL;
+        seen_dash = 0;
+        no_dash = 0;
+
+        for ( ;; ) {
+            c = *sre_regex_str++;
+            switch (c) {
+            case '\0':
+                return SRE_REGEX_TOKEN_BAD;
+
+            case ']':
+                if (seen_dash) {
+                    range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                    if (range == NULL) {
+                        return SRE_REGEX_TOKEN_BAD;
+                    }
+
+                    range->from = '-';
+                    range->to = '-';
+                    range->next = NULL;
+
+                    if (last) {
+                        last->next = range;
+
+                    } else {
+                        r->range = range;
+                    }
+                }
+
+                yylval.re = r;
+                return SRE_REGEX_TOKEN_CHAR_CLASS;
+
+            case '-':
+                if (!seen_dash && last && !no_dash) {
+                    seen_dash = 1;
+                    break;
+                }
+
+            default:
+                if (seen_dash) {
+                    last->to = c;
+                    seen_dash = 0;
+                    no_dash = 1;
+                    break;
+                }
+
+                if (no_dash) {
+                    no_dash = 0;
+                }
+
+                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                if (range == NULL) {
+                    return SRE_REGEX_TOKEN_BAD;
+                }
+
+                range->from = c;
+                range->to = c;
+                range->next = NULL;
+
+                if (last) {
+                    last->next = range;
+
+                } else {
+                    r->range = range;
+                }
+
+                last = range;
+                break;
+            }
+        }
     }
 
     yylval.ch = c;
