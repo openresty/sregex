@@ -17,7 +17,8 @@ At the moment, I haven't added support for streaming matching to the API, but th
 Things to do:
 
 1. add an API for streaming processing,
-1. add more and more regex features like character classes and shortcuts like `\d`, `\w`, `\s`, along the way, so that I'll be able to start running Perl 5's regex test suite,
+1. add more and more regex features, like ^, $, and \b, so that we'll be able to start running Perl 5's regex test suite,
+1. add an API for assembling multiple user regexes and return an ID indicating exactly which regex is matched (first), as wellas the corresponding submatch captures.
 1. add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM), and
 1. add a JIT compiler for the regex VM targeting x86_64 (and other architectures).
 
