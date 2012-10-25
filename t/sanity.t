@@ -294,3 +294,99 @@ re1 and re2 are wrong here.
 --- re: \\\[\)\(\.
 --- s: hello\[)(.a
 
+
+
+=== TEST 48: [\d]
+--- re: [\d]+
+--- s: -hello_world1234Blah(+
+
+
+
+=== TEST 49: [B\d]
+--- re: [B\d]+
+--- s: -hello_world1234Blah(+
+
+
+
+=== TEST 50: [\dB]
+--- re: [\dB]+
+--- s: -hello_world1234Blah(+
+
+
+
+=== TEST 51: [^\d]
+--- re: [^\d]+
+--- s: -hello_world1234Blah(+
+
+
+
+=== TEST 52: [a-\d]
+--- re: [a-\d]+
+--- s: -hello_world1234Blah(+
+
+
+
+=== TEST 53:
+--- re: [(\w]+
+--- s: -hello_world1234Blah(+
+
+
+
+=== TEST 54:
+--- re: [\w(]+
+--- s: -hello_world1234Blah(+
+
+
+
+=== TEST 55:
+--- re: [\s]+
+--- s eval: "-+(hello) \t_world1234Blah(+"
+
+
+
+=== TEST 56:
+--- re: [\S]+
+--- s eval: "-+(hello) \t_world1234Blah(+"
+
+
+
+=== TEST 57: \W
+--- re: [\W]+
+--- s: hello_world1234Blah(+-
+
+
+
+=== TEST 58: \D
+--- re: [\D]+
+--- s: -+(hello)_world1234Blah(+
+
+
+
+=== TEST 59:
+--- re: [^\D]+
+--- s: -+(hello)_world1234Blah(+
+
+
+
+=== TEST 60: escaped metachars
+--- re: [\\\[\)\(\.]+
+--- s: hello\[)(.a
+
+
+
+=== TEST 61: . in []
+--- re: [.]+
+--- s: hello\[)(.a
+
+
+
+=== TEST 62: . in []
+--- re: [\.-9]+
+--- s: -+(hello)_world.1234Blah(+
+
+
+
+=== TEST 63: +-.
+--- re: [\+-\.]+
+--- s: -.,+(hello)_world.1234Blah(+
+
