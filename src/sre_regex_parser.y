@@ -701,7 +701,7 @@ yyerror(char *s)
 sre_regex_t *
 sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps)
 {
-    sre_regex_t     *re, *dotstar;
+    sre_regex_t     *re, *r;
 
     sre_regex_str     = src;
     sre_regex_pool    = pool;
@@ -727,16 +727,16 @@ sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps)
         return NULL;
     }
 
-    dotstar = sre_regex_create(pool, SRE_REGEX_TYPE_DOT, NULL, NULL);
-    if (dotstar == NULL) {
+    r = sre_regex_create(pool, SRE_REGEX_TYPE_DOT, NULL, NULL);
+    if (r == NULL) {
         return NULL;
     }
 
-    dotstar = sre_regex_create(pool, SRE_REGEX_TYPE_STAR, dotstar, NULL);
-    if (dotstar == NULL) {
+    r = sre_regex_create(pool, SRE_REGEX_TYPE_STAR, r, NULL);
+    if (r == NULL) {
         return NULL;
     }
 
-    return sre_regex_create(pool, SRE_REGEX_TYPE_CAT, dotstar, re);
+    return sre_regex_create(pool, SRE_REGEX_TYPE_CAT, r, re);
 }
 
