@@ -100,6 +100,7 @@ TODO
 ====
 
 1. implement zero-width assertions like `^`, `$`, and `\b`,
+1. implement more escaping sequences like `\x{}`, `\x00`, `\o{}`, and `\000`.
 1. add an API for streaming processing,
 1. add an API for assembling multiple user regexes and return an ID indicating exactly which regex is matched (first), as well as the corresponding submatch captures.
 1. add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM), and
