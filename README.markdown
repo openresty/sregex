@@ -54,21 +54,24 @@ Build
 
 Gnu make and gcc are required.
 
+Usage
+=====
+
+There is no proper API nor ABI for the library yet.
+
+There's a simple executable that can be used to exercise the engine:
+
+    $ ./sregex 'a|ab' 'blab'
+
 Test Suite
 ==========
+
+The test suite is driven by Perl.
 
     make test
 
 Gnu make, perl 5.6.1+, and the Test::Base perl module are required.
 
-Usage
-=====
-
-There is no ABI for the library yet.
-
-There's a simple executable that can be used to exercise the engine:
-
-    $ ./sregex 'a|ab' 'blab'
 
 TODO
 ====
