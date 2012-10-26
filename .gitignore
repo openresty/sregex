@@ -36,3 +36,4 @@ releng
 reindex
 a.*
 plot
+*.plist
