@@ -573,3 +573,75 @@ re1 and re2 are wrong here.
 --- re: x{0,0}
 --- s: hab
 
+
+
+=== TEST 94: match a tab
+--- re: \t
+--- s eval: " \t"
+
+
+
+=== TEST 95: match a tab in char class
+--- re: [\t]
+--- s eval: " \t"
+
+
+
+=== TEST 96: match a newline
+--- re: \n
+--- s eval: " \n"
+
+
+
+=== TEST 97: match a newline in char class
+--- re: [\n]
+--- s eval: " \n"
+
+
+
+=== TEST 98: match a return
+--- re: \r
+--- s eval: " \r"
+
+
+
+=== TEST 99: match a return in char class
+--- re: [\r]
+--- s eval: " \r"
+
+
+
+=== TEST 100: match a form feed
+--- re: \f
+--- s eval: " \f"
+
+
+
+=== TEST 101: match a form feed in char class
+--- re: [\f]
+--- s eval: " \f"
+
+
+
+=== TEST 102: match an alarm feed
+--- re: \a
+--- s eval: " \a"
+
+
+
+=== TEST 103: match an alarm in char class
+--- re: [\a]
+--- s eval: " \a"
+
+
+
+=== TEST 104: match an escape feed
+--- re: \e
+--- s eval: " \e"
+
+
+
+=== TEST 105: match an escape in char class
+--- re: [\e]
+--- s eval: " \e"
+

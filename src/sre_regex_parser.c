@@ -2074,6 +2074,30 @@ yylex(void)
             yylval.re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
+        case 't':
+            yylval.ch = '\t';
+            return SRE_REGEX_TOKEN_CHAR;
+
+        case 'n':
+            yylval.ch = '\n';
+            return SRE_REGEX_TOKEN_CHAR;
+
+        case 'r':
+            yylval.ch = '\r';
+            return SRE_REGEX_TOKEN_CHAR;
+
+        case 'f':
+            yylval.ch = '\f';
+            return SRE_REGEX_TOKEN_CHAR;
+
+        case 'a':
+            yylval.ch = '\a';
+            return SRE_REGEX_TOKEN_CHAR;
+
+        case 'e':
+            yylval.ch = '\e';
+            return SRE_REGEX_TOKEN_CHAR;
+
         default:
             break;
         }
@@ -2133,8 +2157,36 @@ yylex(void)
             case '\\':
                 c = *sre_regex_str++;
 
-                if (c == '\0') {
-                    return SRE_REGEX_TOKEN_CHAR_CLASS;
+                switch (c) {
+                case 't':
+                    c = '\t';
+                    goto process_char;
+
+                case 'n':
+                    c = '\n';
+                    goto process_char;
+
+                case 'r':
+                    c = '\r';
+                    goto process_char;
+
+                case 'f':
+                    c = '\f';
+                    goto process_char;
+
+                case 'a':
+                    c = '\a';
+                    goto process_char;
+
+                case 'e':
+                    c = '\e';
+                    goto process_char;
+
+                case '\0':
+                    return SRE_REGEX_TOKEN_BAD;
+
+                default:
+                    break;
                 }
 
                 if (strchr("-|*+?():.^$\\[]{}", (int) c)) {
