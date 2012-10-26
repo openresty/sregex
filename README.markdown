@@ -14,13 +14,38 @@ Already ported the Thompson and Pike VM backends to sregex. The former is just f
 
 At the moment, I haven't added support for streaming matching to the API, but this should be easy.
 
-Things to do:
+Syntax Supported
+================
 
-1. add an API for streaming processing,
-1. add more and more regex features, like ^, $, and \b, so that we'll be able to start running Perl 5's regex test suite,
-1. add an API for assembling multiple user regexes and return an ID indicating exactly which regex is matched (first), as well as the corresponding submatch captures.
-1. add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM), and
-1. add a JIT compiler for the regex VM targeting x86_64 (and other architectures).
+The following regex syntax are already implemented:
+
+    .             match any char
+    [ab0-9]       character classes (positive)
+    [^ab0-9]      character classes (negative)
+    \d            match a digit character ([0-9])
+    \D            match a non-digit character ([^0-9])
+    \s            match a whitespace character ([ \f\n\r\t])
+    \S            match a non-whitespace character ([^ \f\n\r\t])
+    \w            match a "word" character ([A-Za-z0-9_])
+    \W            match a non-"word" character ([^A-Za-z0-9_])
+    ab            concatenation
+    a|b           alternation
+    (a)           capturing groups
+    (?:a)         non-capturing parantheses
+    a?            repeated zero or one time (greedy)
+    a*            repeated zero or more times (greedy)
+    a+            repeated one or more times (greedy)
+    a??           repeated zero or one time (non-greedy)
+    a*?           repeated zero or more times (non-greedy)
+    a+?           repeated one or more times (non-greedy)
+    a{n}          repeated exactly n times
+    a{m,n}        repeated m to n times (greedy)
+    a{m,}         repeated m or more times (greedy)
+    a{n}?         repeated exactly n times
+    a{m,n}?       repeated m to n times (non-greedy)
+    a{m,}?        repeated m or more times (non-greedy)
+
+Only the octet mode is supported; no multi-byte character encoding love (yet).
 
 Build
 =====
@@ -44,6 +69,15 @@ There is no ABI for the library yet.
 There's a simple executable that can be used to exercise the engine:
 
     $ ./sregex 'a|ab' 'blab'
+
+TODO
+====
+
+1. implement zero-width assertions like `^`, `$`, and `\b`,
+1. add an API for streaming processing,
+1. add an API for assembling multiple user regexes and return an ID indicating exactly which regex is matched (first), as well as the corresponding submatch captures.
+1. add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM), and
+1. add a JIT compiler for the regex VM targeting x86_64 (and other architectures).
 
 Author
 ======
