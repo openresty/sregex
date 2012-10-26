@@ -17,7 +17,7 @@ At the moment, I haven't added support for streaming matching to the API, but th
 Syntax Supported
 ================
 
-The following regex syntax features have already been implemented.
+The following Perl 5 regex syntax features have already been implemented.
 
     .             match any char
 
