@@ -17,7 +17,7 @@ At the moment, I haven't added support for streaming matching to the API, but th
 Syntax Supported
 ================
 
-The following regex syntax are already implemented:
+The following regex syntax features have already been implemented.
 
     .             match any char
 
@@ -33,8 +33,8 @@ The following regex syntax are already implemented:
     \w            match a "word" character ([A-Za-z0-9_])
     \W            match a non-"word" character ([^A-Za-z0-9_])
 
-    ab            concatenation
-    a|b           alternation
+    ab            concatenation; first match a, and then b
+    a|b           alternation; match a or b
 
     (a)           capturing parentheses
     (?:a)         non-capturing parantheses
@@ -117,4 +117,10 @@ Redistribution and use in source and binary forms, with or without modification,
 this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+See Also
+========
+* "Implementing Regular Expressions" http://swtch.com/~rsc/regexp/
+* the re1 project: http://code.google.com/p/re1/
+* the re2 project: http://code.google.com/p/re2/
 
