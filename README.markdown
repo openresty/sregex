@@ -20,30 +20,40 @@ Syntax Supported
 The following regex syntax are already implemented:
 
     .             match any char
+
     [ab0-9]       character classes (positive)
     [^ab0-9]      character classes (negative)
+
     \d            match a digit character ([0-9])
     \D            match a non-digit character ([^0-9])
+
     \s            match a whitespace character ([ \f\n\r\t])
     \S            match a non-whitespace character ([^ \f\n\r\t])
+
     \w            match a "word" character ([A-Za-z0-9_])
     \W            match a non-"word" character ([^A-Za-z0-9_])
+
     ab            concatenation
     a|b           alternation
-    (a)           capturing groups
+
+    (a)           capturing parentheses
     (?:a)         non-capturing parantheses
-    a?            repeated zero or one time (greedy)
-    a*            repeated zero or more times (greedy)
-    a+            repeated one or more times (greedy)
-    a??           repeated zero or one time (non-greedy)
-    a*?           repeated zero or more times (non-greedy)
-    a+?           repeated one or more times (non-greedy)
-    a{n}          repeated exactly n times
-    a{m,n}        repeated m to n times (greedy)
-    a{m,}         repeated m or more times (greedy)
-    a{n}?         repeated exactly n times
-    a{m,n}?       repeated m to n times (non-greedy)
-    a{m,}?        repeated m or more times (non-greedy)
+
+    a?            match 1 or 0 times, greedily
+    a*            match 0 or more times, greedily
+    a+            match 1 or more times, greedily
+
+    a??           match 1 or 0 times, not greedily
+    a*?           match 0 or more times, not greedily
+    a+?           match 1 or more times, not greedily
+
+    a{n}          match exactly n times
+    a{n,m}        match at least n but not more than m times, greedily
+    a{n,}         match at least n times, greedily
+
+    a{n}?         match exactly n times, not greedily (redundant)
+    a{n,m}?       match at least n but not more than m times, not greedily
+    a{n,}?        match at least n times, not greedily
 
 Only the octet mode is supported; no multi-byte character encoding love (yet).
 
