@@ -69,12 +69,21 @@
 #line 10 "src/sre_regex_parser.y"
 
 
+#ifndef DDEBUG
+#define DDEBUG 0
+#endif
+#include <ddebug.h>
+
+
 #include <sre_regex_parser.h>
 #include <sre_palloc.h>
 
 
 static int yylex(void);
 static void yyerror(char *msg);
+static sre_regex_t *sre_regex_desugar_counted_repetition(sre_regex_t *subj,
+    sre_regex_cquant_t *cquant, unsigned greedy);
+
 
 static unsigned      sre_regex_group;
 static sre_pool_t   *sre_regex_pool;
@@ -83,7 +92,7 @@ static sre_regex_t  *sre_regex_parsed;
 
 
 /* Line 268 of yacc.c  */
-#line 87 "src/sre_regex_parser.c"
+#line 96 "src/sre_regex_parser.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -113,7 +122,8 @@ static sre_regex_t  *sre_regex_parsed;
      SRE_REGEX_TOKEN_CHAR = 258,
      SRE_REGEX_TOKEN_EOF = 259,
      SRE_REGEX_TOKEN_BAD = 260,
-     SRE_REGEX_TOKEN_CHAR_CLASS = 261
+     SRE_REGEX_TOKEN_CQUANT = 261,
+     SRE_REGEX_TOKEN_CHAR_CLASS = 262
    };
 #endif
 
@@ -124,16 +134,17 @@ typedef union YYSTYPE
 {
 
 /* Line 293 of yacc.c  */
-#line 25 "src/sre_regex_parser.y"
+#line 34 "src/sre_regex_parser.y"
 
     sre_regex_t         *re;
     u_char               ch;
     unsigned             group;
+    sre_regex_cquant_t   cquant;
 
 
 
 /* Line 293 of yacc.c  */
-#line 137 "src/sre_regex_parser.c"
+#line 148 "src/sre_regex_parser.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -145,7 +156,7 @@ typedef union YYSTYPE
 
 
 /* Line 343 of yacc.c  */
-#line 149 "src/sre_regex_parser.c"
+#line 160 "src/sre_regex_parser.c"
 
 #ifdef short
 # undef short
@@ -364,20 +375,20 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  12
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   35
+#define YYLAST   30
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  15
+#define YYNTOKENS  16
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  7
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  20
+#define YYNRULES  22
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  28
+#define YYNSTATES  30
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   261
+#define YYMAXUTOK   262
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -389,15 +400,15 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-      11,    12,     8,    10,     2,     2,    14,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,    13,     2,
-       2,     2,     2,     9,     2,     2,     2,     2,     2,     2,
+      12,    13,     9,    11,     2,     2,    15,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,    14,     2,
+       2,     2,     2,    10,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     7,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     8,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -411,7 +422,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
-       5,     6
+       5,     6,     7
 };
 
 #if YYDEBUG
@@ -419,28 +430,29 @@ static const yytype_uint8 yytranslate[] =
    YYRHS.  */
 static const yytype_uint8 yyprhs[] =
 {
-       0,     0,     3,     6,     8,    12,    14,    17,    19,    22,
-      26,    29,    33,    36,    40,    41,    46,    52,    54,    56,
-      58
+       0,     0,     3,     6,     8,    12,    14,    17,    18,    20,
+      23,    27,    30,    34,    37,    41,    44,    48,    49,    54,
+      60,    62,    64
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      16,     0,    -1,    17,     4,    -1,    18,    -1,    17,     7,
-      18,    -1,    19,    -1,    18,    19,    -1,    21,    -1,    21,
-       8,    -1,    21,     8,     9,    -1,    21,    10,    -1,    21,
-      10,     9,    -1,    21,     9,    -1,    21,     9,     9,    -1,
-      -1,    11,    20,    17,    12,    -1,    11,     9,    13,    17,
-      12,    -1,     3,    -1,    14,    -1,     6,    -1,    -1
+      17,     0,    -1,    18,     4,    -1,    19,    -1,    18,     8,
+      19,    -1,    20,    -1,    19,    20,    -1,    -1,    22,    -1,
+      22,     9,    -1,    22,     9,    10,    -1,    22,    11,    -1,
+      22,    11,    10,    -1,    22,    10,    -1,    22,    10,    10,
+      -1,    22,     6,    -1,    22,     6,    10,    -1,    -1,    12,
+      21,    18,    13,    -1,    12,    10,    14,    18,    13,    -1,
+       3,    -1,    15,    -1,     7,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    42,    42,    50,    51,    61,    62,    72,    73,    84,
-      93,   104,   113,   124,   135,   139,   149,   154,   164,   172,
-     174
+       0,    55,    55,    63,    64,    74,    75,    83,    92,    93,
+     104,   113,   124,   133,   144,   153,   161,   170,   174,   184,
+     189,   199,   207
 };
 #endif
 
@@ -450,7 +462,7 @@ static const yytype_uint8 yyrline[] =
 static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "SRE_REGEX_TOKEN_CHAR",
-  "SRE_REGEX_TOKEN_EOF", "SRE_REGEX_TOKEN_BAD",
+  "SRE_REGEX_TOKEN_EOF", "SRE_REGEX_TOKEN_BAD", "SRE_REGEX_TOKEN_CQUANT",
   "SRE_REGEX_TOKEN_CHAR_CLASS", "'|'", "'*'", "'?'", "'+'", "'('", "')'",
   "':'", "'.'", "$accept", "regex", "alt", "concat", "repeat", "count",
   "atom", 0
@@ -462,25 +474,25 @@ static const char *const yytname[] =
    token YYLEX-NUM.  */
 static const yytype_uint16 yytoknum[] =
 {
-       0,   256,   257,   258,   259,   260,   261,   124,    42,    63,
-      43,    40,    41,    58,    46
+       0,   256,   257,   258,   259,   260,   261,   262,   124,    42,
+      63,    43,    40,    41,    58,    46
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    15,    16,    17,    17,    18,    18,    19,    19,    19,
-      19,    19,    19,    19,    20,    21,    21,    21,    21,    21,
-      21
+       0,    16,    17,    18,    18,    19,    19,    19,    20,    20,
+      20,    20,    20,    20,    20,    20,    20,    21,    22,    22,
+      22,    22,    22
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     2,     1,     3,     1,     2,     1,     2,     3,
-       2,     3,     2,     3,     0,     4,     5,     1,     1,     1,
-       0
+       0,     2,     2,     1,     3,     1,     2,     0,     1,     2,
+       3,     2,     3,     2,     3,     2,     3,     0,     4,     5,
+       1,     1,     1
 };
 
 /* YYDEFACT[STATE-NAME] -- Default reduction number in state STATE-NUM.
@@ -488,9 +500,9 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-      20,    17,    19,    14,    18,     0,     0,     3,     5,     7,
-       0,    20,     1,     2,    20,     6,     8,    12,    10,    20,
-       0,     4,     9,    13,    11,     0,    15,    16
+       7,    20,    22,    17,    21,     0,     0,     3,     5,     8,
+       0,     7,     1,     2,     7,     6,    15,     9,    13,    11,
+       7,     0,     4,    16,    10,    14,    12,     0,    18,    19
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
@@ -501,53 +513,53 @@ static const yytype_int8 yydefgoto[] =
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -9
+#define YYPACT_NINF -10
 static const yytype_int8 yypact[] =
 {
-      -1,    -9,    -9,    14,    -9,    17,    15,    -2,    -9,    16,
-       5,    -1,    -9,    -9,    -1,    -9,    18,    19,    20,    -1,
-       8,    -2,    -9,    -9,    -9,     9,    -9,    -9
+      -2,   -10,   -10,     6,   -10,    19,    10,    -2,   -10,    -3,
+       7,    -2,   -10,   -10,    -2,   -10,    12,    13,    14,    15,
+      -2,    -4,    -2,   -10,   -10,   -10,   -10,     4,   -10,   -10
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -9,    -9,    -8,    21,    -7,    -9,    -9
+     -10,   -10,    -9,    16,    -7,   -10,   -10
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
    positive, shift that token.  If negative, reduce the rule which
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
-#define YYTABLE_NINF -21
-static const yytype_int8 yytable[] =
+#define YYTABLE_NINF -1
+static const yytype_uint8 yytable[] =
 {
-      15,     1,     1,    20,     2,     2,   -20,   -20,   -20,     3,
-       3,    25,     4,     4,    15,    14,    14,    12,    19,    13,
-      26,    27,    14,    10,    16,    17,    18,    22,    23,    24,
-       0,     0,     0,     0,     0,    21
+      15,     1,    21,    16,    14,     2,    17,    18,    19,    28,
+       3,    27,    14,     4,    13,    15,    10,    29,    14,    12,
+       0,    20,    23,    24,    25,    26,     0,     0,     0,     0,
+      22
 };
 
 #define yypact_value_is_default(yystate) \
-  ((yystate) == (-9))
+  ((yystate) == (-10))
 
 #define yytable_value_is_error(yytable_value) \
   YYID (0)
 
 static const yytype_int8 yycheck[] =
 {
-       7,     3,     3,    11,     6,     6,     8,     9,    10,    11,
-      11,    19,    14,    14,    21,     7,     7,     0,    13,     4,
-      12,    12,     7,     9,     8,     9,    10,     9,     9,     9,
-      -1,    -1,    -1,    -1,    -1,    14
+       7,     3,    11,     6,     8,     7,     9,    10,    11,    13,
+      12,    20,     8,    15,     4,    22,    10,    13,     8,     0,
+      -1,    14,    10,    10,    10,    10,    -1,    -1,    -1,    -1,
+      14
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     3,     6,    11,    14,    16,    17,    18,    19,    21,
-       9,    20,     0,     4,     7,    19,     8,     9,    10,    13,
-      17,    18,     9,     9,     9,    17,    12,    12
+       0,     3,     7,    12,    15,    17,    18,    19,    20,    22,
+      10,    21,     0,     4,     8,    20,     6,     9,    10,    11,
+      14,    18,    19,    10,    10,    10,    10,    18,    13,    13
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1384,7 +1396,7 @@ yyreduce:
         case 2:
 
 /* Line 1806 of yacc.c  */
-#line 43 "src/sre_regex_parser.y"
+#line 56 "src/sre_regex_parser.y"
     {
         sre_regex_parsed = (yyvsp[(1) - (2)].re);
         return SRE_OK;
@@ -1394,7 +1406,7 @@ yyreduce:
   case 4:
 
 /* Line 1806 of yacc.c  */
-#line 52 "src/sre_regex_parser.y"
+#line 65 "src/sre_regex_parser.y"
     {
         (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ALT, (yyvsp[(1) - (3)].re), (yyvsp[(3) - (3)].re));
         if ((yyval.re) == NULL) {
@@ -1406,7 +1418,7 @@ yyreduce:
   case 6:
 
 /* Line 1806 of yacc.c  */
-#line 63 "src/sre_regex_parser.y"
+#line 76 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, (yyvsp[(1) - (2)].re), (yyvsp[(2) - (2)].re));
             if ((yyval.re) == NULL) {
@@ -1415,10 +1427,22 @@ yyreduce:
         }
     break;
 
-  case 8:
+  case 7:
 
 /* Line 1806 of yacc.c  */
-#line 74 "src/sre_regex_parser.y"
+#line 83 "src/sre_regex_parser.y"
+    {
+        (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
+        if ((yyval.re) == NULL) {
+            YYABORT;
+        }
+      }
+    break;
+
+  case 9:
+
+/* Line 1806 of yacc.c  */
+#line 94 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_STAR, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1430,10 +1454,10 @@ yyreduce:
         }
     break;
 
-  case 9:
+  case 10:
 
 /* Line 1806 of yacc.c  */
-#line 85 "src/sre_regex_parser.y"
+#line 105 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_STAR, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1443,10 +1467,10 @@ yyreduce:
         }
     break;
 
-  case 10:
+  case 11:
 
 /* Line 1806 of yacc.c  */
-#line 94 "src/sre_regex_parser.y"
+#line 114 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_PLUS, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1458,10 +1482,10 @@ yyreduce:
         }
     break;
 
-  case 11:
+  case 12:
 
 /* Line 1806 of yacc.c  */
-#line 105 "src/sre_regex_parser.y"
+#line 125 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_PLUS, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1471,10 +1495,10 @@ yyreduce:
         }
     break;
 
-  case 12:
+  case 13:
 
 /* Line 1806 of yacc.c  */
-#line 114 "src/sre_regex_parser.y"
+#line 134 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_QUEST, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1486,10 +1510,10 @@ yyreduce:
         }
     break;
 
-  case 13:
+  case 14:
 
 /* Line 1806 of yacc.c  */
-#line 125 "src/sre_regex_parser.y"
+#line 145 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_QUEST, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1499,17 +1523,41 @@ yyreduce:
         }
     break;
 
-  case 14:
-
-/* Line 1806 of yacc.c  */
-#line 135 "src/sre_regex_parser.y"
-    { (yyval.group) = ++sre_regex_group; }
-    break;
-
   case 15:
 
 /* Line 1806 of yacc.c  */
-#line 140 "src/sre_regex_parser.y"
+#line 154 "src/sre_regex_parser.y"
+    {
+            (yyval.re) = sre_regex_desugar_counted_repetition((yyvsp[(1) - (2)].re), &(yyvsp[(2) - (2)].cquant), 1 /* greedy */);
+            if ((yyval.re) == NULL) {
+                YYABORT;
+            }
+        }
+    break;
+
+  case 16:
+
+/* Line 1806 of yacc.c  */
+#line 162 "src/sre_regex_parser.y"
+    {
+            (yyval.re) = sre_regex_desugar_counted_repetition((yyvsp[(1) - (3)].re), &(yyvsp[(2) - (3)].cquant), 0 /* greedy */);
+            if ((yyval.re) == NULL) {
+                YYABORT;
+            }
+        }
+    break;
+
+  case 17:
+
+/* Line 1806 of yacc.c  */
+#line 170 "src/sre_regex_parser.y"
+    { (yyval.group) = ++sre_regex_group; }
+    break;
+
+  case 18:
+
+/* Line 1806 of yacc.c  */
+#line 175 "src/sre_regex_parser.y"
     {
         (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_PAREN, (yyvsp[(3) - (4)].re), NULL);
         if ((yyval.re) == NULL) {
@@ -1520,19 +1568,19 @@ yyreduce:
       }
     break;
 
-  case 16:
+  case 19:
 
 /* Line 1806 of yacc.c  */
-#line 150 "src/sre_regex_parser.y"
+#line 185 "src/sre_regex_parser.y"
     {
         (yyval.re) = (yyvsp[(4) - (5)].re);
       }
     break;
 
-  case 17:
+  case 20:
 
 /* Line 1806 of yacc.c  */
-#line 155 "src/sre_regex_parser.y"
+#line 190 "src/sre_regex_parser.y"
     {
         (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1543,10 +1591,10 @@ yyreduce:
       }
     break;
 
-  case 18:
+  case 21:
 
 /* Line 1806 of yacc.c  */
-#line 165 "src/sre_regex_parser.y"
+#line 200 "src/sre_regex_parser.y"
     {
         (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_DOT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1555,22 +1603,10 @@ yyreduce:
       }
     break;
 
-  case 20:
-
-/* Line 1806 of yacc.c  */
-#line 174 "src/sre_regex_parser.y"
-    {
-        (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
-        if ((yyval.re) == NULL) {
-            YYABORT;
-        }
-      }
-    break;
-
 
 
 /* Line 1806 of yacc.c  */
-#line 1574 "src/sre_regex_parser.c"
+#line 1610 "src/sre_regex_parser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1801,7 +1837,7 @@ yyreturn:
 
 
 /* Line 2067 of yacc.c  */
-#line 182 "src/sre_regex_parser.y"
+#line 210 "src/sre_regex_parser.y"
 
 
 static u_char *sre_regex_str;
@@ -1811,6 +1847,7 @@ static int
 yylex(void)
 {
     u_char               c;
+    int                  from, to;
     unsigned             i, seen_dash, no_dash;
     sre_regex_t         *r;
     sre_regex_range_t   *range, *last = NULL;
@@ -1840,7 +1877,7 @@ yylex(void)
 
     if (c == '\\') {
         c = *sre_regex_str++;
-        if (strchr("-|*+?():.^$\\[]", (int) c)) {
+        if (strchr("-|*+?():.^$\\[]{}", (int) c)) {
             yylval.ch = c;
             return SRE_REGEX_TOKEN_CHAR;
         }
@@ -1940,6 +1977,7 @@ yylex(void)
             for (i = 0; i < sre_nelems(esc_w_ranges); i += 2) {
                 range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    yylval.ch = 0;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -2043,7 +2081,8 @@ yylex(void)
         return SRE_REGEX_TOKEN_BAD;
     }
 
-    if (c == '[') {
+    switch (c) {
+    case '[':
         /* get character class */
 
         if (*sre_regex_str == '^') {
@@ -2098,7 +2137,7 @@ yylex(void)
                     return SRE_REGEX_TOKEN_CHAR_CLASS;
                 }
 
-                if (strchr("-|*+?():.^$\\[]", (int) c)) {
+                if (strchr("-|*+?():.^$\\[]{}", (int) c)) {
                     goto process_char;
                 }
 
@@ -2306,7 +2345,101 @@ process_char:
                 break;
             }
         }
+
+        break;
+
+    case '{':
+        /* quantifier for counted repetition */
+
+        c = *sre_regex_str;
+        if (c < '0' || c > '9') {
+            c = sre_regex_str[-1];
+            break;
+        }
+
+        i = 0;
+        from = 0;
+        do {
+            from = c - '0' + from * 10;
+            c = sre_regex_str[++i];
+        } while (c >= '0' && c <= '9');
+
+        dd("from parsed: %d, next: %c", from, sre_regex_str[i]);
+
+        if (c == '}') {
+            to = from;
+            sre_regex_str += i + 1;
+            goto cquant_parsed;
+        }
+
+        if (c != ',') {
+            dd("',' expected but got %c", c);
+            c = sre_regex_str[-1];
+            break;
+        }
+
+        c = sre_regex_str[++i];
+
+        if (c == '}') {
+            to = -1;
+            sre_regex_str += i + 1;
+            goto cquant_parsed;
+        }
+
+        if (c < '0' || c > '9') {
+            c = sre_regex_str[-1];
+            break;
+        }
+
+        to = 0;
+        do {
+            to = c - '0' + to * 10;
+            c = sre_regex_str[++i];
+        } while (c >= '0' && c <= '9');
+
+        if (c != '}') {
+            c = sre_regex_str[-1];
+            break;
+        }
+
+        sre_regex_str += i + 1;
+
+cquant_parsed:
+        dd("from = %d, to = %d, next: %d", from, to, sre_regex_str[0]);
+
+        if (from >= 100 || to >= 100) {
+            dd("from or to too large: %d %d", from, to);
+            return SRE_REGEX_TOKEN_BAD;
+        }
+
+        if (to > 0 && from > to) {
+            return SRE_REGEX_TOKEN_BAD;
+        }
+
+        if (from == 0) {
+            if (to == 1) {
+                return '?';
+            }
+
+            if (to == -1) {
+                return '*';
+            }
+
+        } else if (from == 1) {
+            if (to == -1) {
+                return '+';
+            }
+        }
+
+        yylval.cquant.from = from;
+        yylval.cquant.to = to;
+        return SRE_REGEX_TOKEN_CQUANT;
+
+    default:
+        break;
     }
+
+    dd("token char: %c(%d)", c, c);
 
     yylval.ch = c;
     return SRE_REGEX_TOKEN_CHAR;
@@ -2361,6 +2494,76 @@ sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps)
     }
 
     return sre_regex_create(pool, SRE_REGEX_TYPE_CAT, r, re);
+}
+
+
+static sre_regex_t *
+sre_regex_desugar_counted_repetition(sre_regex_t *subj,
+    sre_regex_cquant_t *cquant, unsigned greedy)
+{
+    int                  i;
+    sre_regex_t         *concat, *quest, *star;
+
+    if (cquant->from == 1 && cquant->to == 1) {
+        return subj;
+    }
+
+    if (cquant->from == 0 && cquant->to == 0) {
+        return sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
+    }
+
+    /* generate subj{from} first */
+
+    concat = subj;
+
+    for (i = 1; i < cquant->from; i++) {
+        concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, concat, subj);
+        if (concat == NULL) {
+            return NULL;
+        }
+    }
+
+    if (cquant->from == cquant->to) {
+        return concat;
+    }
+
+    if (cquant->to == -1) {
+        /* append subj* to concat */
+
+        star = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_STAR, subj,
+                                NULL);
+        if (star == NULL) {
+            return NULL;
+        }
+
+        star->greedy = greedy;
+
+        concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, concat, star);
+        if (concat == NULL) {
+            return NULL;
+        }
+
+        return concat;
+    }
+
+    /* append (?:subj?){to - from} */
+
+    quest = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_QUEST, subj,
+                             NULL);
+    if (quest == NULL) {
+        return NULL;
+    }
+
+    quest->greedy = greedy;
+
+    for ( ; i < cquant->to; i++) {
+        concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, concat, quest);
+        if (concat == NULL) {
+            return NULL;
+        }
+    }
+
+    return concat;
 }
 
 

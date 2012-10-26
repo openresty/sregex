@@ -14,6 +14,7 @@ sub fmt_cap ($$);
 
 our @EXPORT = qw( run_tests );
 
+our $UseValgrind = $ENV{TEST_SREGEX_USE_VALGRIND};
 
 sub run_tests {
     for my $block (blocks()) {
@@ -42,7 +43,8 @@ sub run_test ($) {
 
     my @cmd = ("./sregex", $re, $s);
 
-    if ($ENV{TEST_SREGEX_USE_VALGRIND}) {
+    if ($UseValgrind) {
+        warn "$name\n";
         @cmd =  ('valgrind', '-q', '--leak-check=full', @cmd);
     }
 
@@ -56,11 +58,21 @@ sub run_test ($) {
         is $err, $block->err, "$name - err expected";
 
     } elsif ($?) {
-        die "Failed to execute --- re for test $name: $err\n";
+        if (defined $block->fatal) {
+            pass("failed as expected");
+
+        } else {
+            die "Failed to execute --- re for test $name: $err\n";
+        }
 
     } else {
         if ($err) {
-            warn "$err\n";
+            if (!defined $block->err) {
+                warn "$err\n";
+
+            } else {
+                is $err, $block->err, "$name - err ok";
+            }
         }
 
         #is $res, $block->out, "$name - output ok";

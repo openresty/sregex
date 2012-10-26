@@ -9,12 +9,21 @@
 
 %{
 
+#ifndef DDEBUG
+#define DDEBUG 0
+#endif
+#include <ddebug.h>
+
+
 #include <sre_regex_parser.h>
 #include <sre_palloc.h>
 
 
 static int yylex(void);
 static void yyerror(char *msg);
+static sre_regex_t *sre_regex_desugar_counted_repetition(sre_regex_t *subj,
+    sre_regex_cquant_t *cquant, unsigned greedy);
+
 
 static unsigned      sre_regex_group;
 static sre_pool_t   *sre_regex_pool;
@@ -26,10 +35,14 @@ static sre_regex_t  *sre_regex_parsed;
     sre_regex_t         *re;
     u_char               ch;
     unsigned             group;
+    sre_regex_cquant_t   cquant;
 }
 
 
 %token <ch>         SRE_REGEX_TOKEN_CHAR SRE_REGEX_TOKEN_EOF SRE_REGEX_TOKEN_BAD
+
+%token <cquant>     SRE_REGEX_TOKEN_CQUANT
+
 %token <re>         SRE_REGEX_TOKEN_CHAR_CLASS
 
 %type  <re>         alt concat repeat atom regex
@@ -66,7 +79,14 @@ concat: repeat
                 YYABORT;
             }
         }
-      ;
+    |
+      {
+        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
+        if ($$ == NULL) {
+            YYABORT;
+        }
+      }
+    ;
 
 
 repeat: atom
@@ -129,8 +149,23 @@ repeat: atom
                 YYABORT;
             }
         }
-      ;
 
+      | atom SRE_REGEX_TOKEN_CQUANT
+        {
+            $$ = sre_regex_desugar_counted_repetition($1, &$2, 1 /* greedy */);
+            if ($$ == NULL) {
+                YYABORT;
+            }
+        }
+
+      | atom SRE_REGEX_TOKEN_CQUANT '?'
+        {
+            $$ = sre_regex_desugar_counted_repetition($1, &$2, 0 /* greedy */);
+            if ($$ == NULL) {
+                YYABORT;
+            }
+        }
+      ;
 
 count: { $$ = ++sre_regex_group; }
      ;
@@ -170,13 +205,6 @@ atom: '(' count alt ')'
       }
 
     | SRE_REGEX_TOKEN_CHAR_CLASS
-    |
-      {
-        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
-        if ($$ == NULL) {
-            YYABORT;
-        }
-      }
     ;
 
 %%
@@ -188,6 +216,7 @@ static int
 yylex(void)
 {
     u_char               c;
+    int                  from, to;
     unsigned             i, seen_dash, no_dash;
     sre_regex_t         *r;
     sre_regex_range_t   *range, *last = NULL;
@@ -217,7 +246,7 @@ yylex(void)
 
     if (c == '\\') {
         c = *sre_regex_str++;
-        if (strchr("-|*+?():.^$\\[]", (int) c)) {
+        if (strchr("-|*+?():.^$\\[]{}", (int) c)) {
             yylval.ch = c;
             return SRE_REGEX_TOKEN_CHAR;
         }
@@ -317,6 +346,7 @@ yylex(void)
             for (i = 0; i < sre_nelems(esc_w_ranges); i += 2) {
                 range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    yylval.ch = 0;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -420,7 +450,8 @@ yylex(void)
         return SRE_REGEX_TOKEN_BAD;
     }
 
-    if (c == '[') {
+    switch (c) {
+    case '[':
         /* get character class */
 
         if (*sre_regex_str == '^') {
@@ -475,7 +506,7 @@ yylex(void)
                     return SRE_REGEX_TOKEN_CHAR_CLASS;
                 }
 
-                if (strchr("-|*+?():.^$\\[]", (int) c)) {
+                if (strchr("-|*+?():.^$\\[]{}", (int) c)) {
                     goto process_char;
                 }
 
@@ -683,7 +714,101 @@ process_char:
                 break;
             }
         }
+
+        break;
+
+    case '{':
+        /* quantifier for counted repetition */
+
+        c = *sre_regex_str;
+        if (c < '0' || c > '9') {
+            c = sre_regex_str[-1];
+            break;
+        }
+
+        i = 0;
+        from = 0;
+        do {
+            from = c - '0' + from * 10;
+            c = sre_regex_str[++i];
+        } while (c >= '0' && c <= '9');
+
+        dd("from parsed: %d, next: %c", from, sre_regex_str[i]);
+
+        if (c == '}') {
+            to = from;
+            sre_regex_str += i + 1;
+            goto cquant_parsed;
+        }
+
+        if (c != ',') {
+            dd("',' expected but got %c", c);
+            c = sre_regex_str[-1];
+            break;
+        }
+
+        c = sre_regex_str[++i];
+
+        if (c == '}') {
+            to = -1;
+            sre_regex_str += i + 1;
+            goto cquant_parsed;
+        }
+
+        if (c < '0' || c > '9') {
+            c = sre_regex_str[-1];
+            break;
+        }
+
+        to = 0;
+        do {
+            to = c - '0' + to * 10;
+            c = sre_regex_str[++i];
+        } while (c >= '0' && c <= '9');
+
+        if (c != '}') {
+            c = sre_regex_str[-1];
+            break;
+        }
+
+        sre_regex_str += i + 1;
+
+cquant_parsed:
+        dd("from = %d, to = %d, next: %d", from, to, sre_regex_str[0]);
+
+        if (from >= 100 || to >= 100) {
+            dd("from or to too large: %d %d", from, to);
+            return SRE_REGEX_TOKEN_BAD;
+        }
+
+        if (to > 0 && from > to) {
+            return SRE_REGEX_TOKEN_BAD;
+        }
+
+        if (from == 0) {
+            if (to == 1) {
+                return '?';
+            }
+
+            if (to == -1) {
+                return '*';
+            }
+
+        } else if (from == 1) {
+            if (to == -1) {
+                return '+';
+            }
+        }
+
+        yylval.cquant.from = from;
+        yylval.cquant.to = to;
+        return SRE_REGEX_TOKEN_CQUANT;
+
+    default:
+        break;
     }
+
+    dd("token char: %c(%d)", c, c);
 
     yylval.ch = c;
     return SRE_REGEX_TOKEN_CHAR;
@@ -738,5 +863,75 @@ sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps)
     }
 
     return sre_regex_create(pool, SRE_REGEX_TYPE_CAT, r, re);
+}
+
+
+static sre_regex_t *
+sre_regex_desugar_counted_repetition(sre_regex_t *subj,
+    sre_regex_cquant_t *cquant, unsigned greedy)
+{
+    int                  i;
+    sre_regex_t         *concat, *quest, *star;
+
+    if (cquant->from == 1 && cquant->to == 1) {
+        return subj;
+    }
+
+    if (cquant->from == 0 && cquant->to == 0) {
+        return sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
+    }
+
+    /* generate subj{from} first */
+
+    concat = subj;
+
+    for (i = 1; i < cquant->from; i++) {
+        concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, concat, subj);
+        if (concat == NULL) {
+            return NULL;
+        }
+    }
+
+    if (cquant->from == cquant->to) {
+        return concat;
+    }
+
+    if (cquant->to == -1) {
+        /* append subj* to concat */
+
+        star = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_STAR, subj,
+                                NULL);
+        if (star == NULL) {
+            return NULL;
+        }
+
+        star->greedy = greedy;
+
+        concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, concat, star);
+        if (concat == NULL) {
+            return NULL;
+        }
+
+        return concat;
+    }
+
+    /* append (?:subj?){to - from} */
+
+    quest = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_QUEST, subj,
+                             NULL);
+    if (quest == NULL) {
+        return NULL;
+    }
+
+    quest->greedy = greedy;
+
+    for ( ; i < cquant->to; i++) {
+        concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, concat, quest);
+        if (concat == NULL) {
+            return NULL;
+        }
+    }
+
+    return concat;
 }
 

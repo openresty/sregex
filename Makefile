@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS = -fpic -g -Wall -Werror -O -Isrc
 pwd = $(shell pwd)
 
-LIB_C_FILES = \
+lib_c_files = \
         src/sre_palloc.c \
         src/sre_regex.c \
         src/sre_regex_parser.c \
@@ -12,8 +12,9 @@ LIB_C_FILES = \
         src/sre_vm_pike.c \
         src/sre_capture.c
 
-LIB_O_FILES = $(patsubst %.c,%.o,$(LIB_C_FILES))
-H_FILES=$(wildcard src/*.h)
+lib_o_files = $(patsubst %.c,%.o,$(lib_c_files))
+h_files=$(wildcard src/*.h)
+plist_vfiles=$(patsubst src/%.c,%.plist,$(lib_c_files)) src/sregex.c
 
 .PHONY: all clean test
 .PRECIOUS: src/sre_regex_parser.c
@@ -23,14 +24,14 @@ all: libsregex.so libsregex.a sregex
 sregex: src/sregex.o libsregex.so
 	$(CC) -o $@ -Wl,-rpath,$(pwd) $< -L. -lsregex
 
-libsregex.so: $(LIB_O_FILES)
+libsregex.so: $(lib_o_files)
 	$(CC) -shared -Wl,-soname,$@ -o $@ $+
 
-libsregex.a: $(LIB_O_FILES)
+libsregex.a: $(lib_o_files)
 	rm -f $@
 	ar -cq $@ $+
 
-%.o: %.c $(H_FILES)
+%.o: %.c $(h_files)
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 src/%.c: src/%.y
@@ -45,3 +46,10 @@ test: all
 
 valtest: all
 	TEST_SREGEX_USE_VALGRIND=1 prove -r t
+
+clang: $(plist_vfiles)
+
+%.plist: src/%.c
+	@echo $<
+	-@clang -O --analyze -Wextra -Wall -Werror -Isrc $<
+

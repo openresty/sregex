@@ -390,3 +390,186 @@ re1 and re2 are wrong here.
 --- re: [\+-\.]+
 --- s: -.,+(hello)_world.1234Blah(+
 
+
+
+=== TEST 64:
+--- re: x{1,}
+--- s: hxxxxxx
+
+
+
+=== TEST 65:
+--- re: x{0,}
+--- s: hxxxxxx
+
+
+
+=== TEST 66:
+--- re: x{0,}
+--- s: hab
+
+
+
+=== TEST 67:
+--- re: x{1,}
+--- s: hab
+
+
+
+=== TEST 68:
+--- re: x{0,1}
+--- s: hab
+
+
+
+=== TEST 69:
+--- re: x{0,1}
+--- s: haxb
+
+
+
+=== TEST 70:
+--- re: x{0, 1}
+--- s: x{0, 1}
+
+
+
+=== TEST 71:
+--- re: x{0,1
+--- s: x{0,1}
+
+
+
+=== TEST 72:
+--- re: x{0 ,1}
+--- s: x{0 ,1}
+
+
+
+=== TEST 73:
+--- re: x{,12}
+--- s: x{,12}
+
+
+
+=== TEST 74:
+--- re: x{1,1}
+--- s: axxxx
+
+
+
+=== TEST 75:
+--- re: x{1,1}?
+--- s: axxxx
+
+
+
+=== TEST 76:
+--- re: x{3,3}
+--- s: axxxx
+
+
+
+=== TEST 77:
+--- re: x{1,3}
+--- s: axxxx
+
+
+
+=== TEST 78:
+--- re: x{2,3}
+--- s: axxxx
+
+
+
+=== TEST 79:
+--- re: x{2,3}?
+--- s: axxxx
+
+
+
+=== TEST 80:
+--- re: x{1,3}?
+--- s: axxxx
+
+
+
+=== TEST 81:
+--- re: x{1,}?
+--- s: axxxx
+
+
+
+=== TEST 82:
+--- re: x{1,}
+--- s: axxxx
+
+
+
+=== TEST 83:
+--- re: x{12,15}
+--- s eval: 'x' x 16
+
+
+
+=== TEST 84:
+--- re: x{12,15}
+--- s eval: 'x' x 16
+
+
+
+=== TEST 85:
+--- re: x{100,}
+--- s eval: 'x' x 16
+--- fatal
+
+
+
+=== TEST 86: from exceeding 100
+--- re: x{0,100}
+--- s eval: 'x' x 16
+--- fatal
+
+
+
+=== TEST 87: to exceeding 100
+--- re: {0,100}
+--- s eval: 'x' x 16
+--- fatal
+
+
+
+=== TEST 88:
+--- re: x{1}
+--- s eval: 'x' x 16
+
+
+
+=== TEST 89:
+--- re: x{1}?
+--- s eval: 'x' x 16
+
+
+
+=== TEST 90:
+--- re: x{2}
+--- s eval: 'x' x 16
+
+
+
+=== TEST 91:
+--- re: x{2}?
+--- s eval: 'x' x 16
+
+
+
+=== TEST 92:
+--- re: x{11}
+--- s eval: 'x' x 16
+
+
+
+=== TEST 93:
+--- re: x{0,0}
+--- s: hab
+

@@ -42,6 +42,14 @@ struct sre_regex_range_s {
 };
 
 
+/* counted quantifier */
+
+typedef struct {
+    int     from;
+    int     to;
+} sre_regex_cquant_t;
+
+
 struct sre_regex_s {
     sre_regex_type_t     type;
     sre_regex_t         *left;
