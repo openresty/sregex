@@ -55,6 +55,17 @@ The following Perl 5 regex syntax features have already been implemented.
     a{n,m}?       match at least n but not more than m times, not greedily
     a{n,}?        match at least n times, not greedily
 
+The following escaping sequences are supported:
+
+    \t          tab
+    \n          newline
+    \r          return
+    \f          form feed
+    \a          alarm
+    \e          escape
+
+Escaping a regex meta character yields the literal character itself, like `\{` and `\.`.
+
 Only the octet mode is supported; no multi-byte character encoding love (yet).
 
 Build
