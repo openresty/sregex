@@ -21,6 +21,15 @@ Syntax Supported
 
 The following Perl 5 regex syntax features have already been implemented.
 
+    ^             match the beginning of lines
+    $             match the end of lines
+
+    \A            match only at beginning of stream
+    \z            match only at end of stream
+
+    \b            match a word boundary
+    \B            match except at a word boundary
+
     .             match any char
 
     [ab0-9]       character classes (positive)
@@ -99,12 +108,12 @@ Gnu make, perl 5.6.1+, and the Test::Base perl module are required.
 TODO
 ====
 
-1. implement zero-width assertions like `^`, `$`, and `\b`,
 1. implement more escaping sequences like `\x{}`, `\x00`, `\o{}`, and `\000`.
-1. add an API for streaming processing,
+1. add an API for streaming processing.
 1. add an API for assembling multiple user regexes and return an ID indicating exactly which regex is matched (first), as well as the corresponding submatch captures.
-1. add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM), and
+1. add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM).
 1. add a JIT compiler for the regex VM targeting x86_64 (and other architectures).
+1. implement generalized look-around assertions like `(?=pattern)`, `(?!pattern)`, `(?<=pattern)`, and `(?<!pattern)`.
 
 Author
 ======
