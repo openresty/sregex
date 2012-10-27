@@ -16,9 +16,7 @@
 
 
 #define sre_capture_decr_ref(ctx, cap)                                       \
-    dd("decr ref cap %p (%d)", cap, cap->ref);                               \
     if (--(cap)->ref == 0) {                                                 \
-        dd("free cap %p", cap);                                              \
         (cap)->next = (ctx)->free_capture;                                   \
         (ctx)->free_capture = (cap);                                         \
     }

@@ -22,7 +22,8 @@ typedef enum {
     SRE_OPCODE_ANY      = 5,
     SRE_OPCODE_SAVE     = 6,
     SRE_OPCODE_IN       = 7,
-    SRE_OPCODE_NOTIN    = 8
+    SRE_OPCODE_NOTIN    = 8,
+    SRE_OPCODE_ASSERT   = 9
 } sre_opcode_t;
 
 
@@ -53,6 +54,7 @@ struct sre_instruction_s {
         sre_vm_ranges_t        *ranges;
         unsigned                group; /* capture group */
         unsigned                greedy;  /* :1 */
+        uint8_t                 assertion_type;
     } v;
 };
 

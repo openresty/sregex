@@ -17,23 +17,39 @@
 #include <sre_capture.h>
 
 
-typedef struct {
-    sre_instruction_t    *pc;
-    sre_capture_t        *capture;
-} sre_vm_pike_thread_t;
+#define sre_vm_pike_free_thread(ctx, t)                                     \
+    (t)->next = (ctx)->free_threads;                                        \
+    (ctx)->free_threads = t;
+
+
+enum {
+    SRE_VM_PIKE_SEEN_WORD = 1
+};
+
+
+typedef struct sre_vm_pike_thread_s  sre_vm_pike_thread_t;
+
+struct sre_vm_pike_thread_s {
+    sre_instruction_t       *pc;
+    sre_capture_t           *capture;
+    sre_vm_pike_thread_t    *next;
+    unsigned                 seen_word; /* :1 */
+};
 
 
 typedef struct {
-    unsigned                  count;
-    sre_vm_pike_thread_t     *threads;
+    sre_vm_pike_thread_t     *head;
+    sre_vm_pike_thread_t    **next;
 } sre_vm_pike_thread_list_t;
 
 
 typedef struct {
-    unsigned             tag;
-    sre_pool_t          *pool;
-    sre_program_t       *program;
-    sre_capture_t       *free_capture;
+    unsigned                 tag;
+    u_char                  *start;
+    sre_pool_t              *pool;
+    sre_program_t           *program;
+    sre_capture_t           *free_capture;
+    sre_vm_pike_thread_t    *free_threads;
 } sre_vm_pike_ctx_t;
 
 
@@ -49,13 +65,15 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
     int *ovector, unsigned ovecsize)
 {
     u_char                    *sp;
-    unsigned                   i, j, len;
+    unsigned                   j, len;
     unsigned                   in;
     sre_capture_t             *cap, *matched;
     sre_vm_range_t            *range;
     sre_instruction_t         *pc;
     sre_vm_pike_ctx_t          ctx;
+    sre_vm_pike_thread_t      *t;
     sre_vm_pike_thread_list_t *clist, *nlist, *tmp;
+    sre_vm_pike_thread_list_t  list;
 
     matched = NULL;
 
@@ -77,9 +95,11 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
     }
 
     ctx.tag = prog->tag + 1;
+    ctx.start = input;
     ctx.program = prog;
     ctx.pool = pool;
     ctx.free_capture = NULL;
+    ctx.free_threads = NULL;
 
     if (sre_vm_pike_add_thread(&ctx, clist, prog->start, cap, 0) != SRE_OK) {
         prog->tag = ctx.tag;
@@ -87,20 +107,31 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
     }
 
     for (sp = input; /* void */; sp++) {
-        if (clist->count == 0) {
+        dd("=== pos %d (char %d).\n", (int)(sp - input), *sp & 0xFF);
+
+        if (clist->head == NULL) {
             dd("clist empty. abort.");
             break;
         }
 
-        dd("=== pos %d (char %d).\n", (int)(sp - input), *sp & 0xFF);
+#if (DDEBUG)
+        fprintf(stderr, "cur list:");
+        for (t = clist->head; t; t = t->next) {
+            fprintf(stderr, " %d", (int) (t->pc - prog->start));
+        }
+        fprintf(stderr, "\n");
+#endif
 
         ctx.tag++;
 
-        for (i = 0; i < clist->count; i++) {
-            pc = clist->threads[i].pc;
-            cap = clist->threads[i].capture;
+        while (clist->head) {
+            t = clist->head;
+            clist->head = t->next;
 
-            dd("--- #%d: pc %d: opcode %d\n", i, (int)(pc - prog->start),
+            pc = t->pc;
+            cap = t->capture;
+
+            dd("--- #%u: pc %d: opcode %d\n", ctx.tag, (int)(pc - prog->start),
                pc->opcode);
 
             switch (pc->opcode) {
@@ -198,6 +229,70 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
 
                 break;
 
+            case SRE_OPCODE_ASSERT:
+                switch (pc->v.assertion_type) {
+                case SRE_REGEX_ASSERTION_SMALL_Z:
+                    if (*sp != '\0') {
+                        break;
+                    }
+
+                    goto assertion_hold;
+
+                case SRE_REGEX_ASSERTION_DOLLAR:
+
+                    if (*sp != '\0' && *sp != '\n') {
+                        break;
+                    }
+
+                    goto assertion_hold;
+
+                case SRE_REGEX_ASSERTION_BIG_B:
+
+                    if (t->seen_word ^ sre_isword(*sp)) {
+                        break;
+                    }
+
+                    dd("\\B assertion passed: %u %c", t->seen_word, *sp);
+
+                    goto assertion_hold;
+
+                case SRE_REGEX_ASSERTION_SMALL_B:
+
+                    if ((t->seen_word ^ sre_isword(*sp)) == 0) {
+                        break;
+                    }
+
+                    dd("\\b assertion passed: %u %c", t->seen_word, *sp);
+
+                    goto assertion_hold;
+
+                default:
+                    /* impossible to reach here */
+                    break;
+                }
+
+                break;
+
+assertion_hold:
+                ctx.tag--;
+
+                list.head = NULL;
+                if (sre_vm_pike_add_thread(&ctx, &list, pc + 1, cap,
+                                           (int)(sp - input))
+                    != SRE_OK)
+                {
+                    prog->tag = ctx.tag + 1;
+                    return SRE_ERROR;
+                }
+
+                if (list.head) {
+                    *list.next = clist->head;
+                    clist->head = list.head;
+                }
+
+                ctx.tag++;
+                break;
+
             case SRE_OPCODE_MATCH:
 
                 if (matched) {
@@ -212,11 +307,17 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
 
                 matched = cap;
 
-                for (i++; i < clist->count; i++) {
-                    sre_capture_decr_ref(&ctx, clist->threads[i].capture);
+                sre_vm_pike_free_thread(&ctx, t);
+
+                while (clist->head) {
+                    t = clist->head;
+                    clist->head = t->next;
+
+                    sre_capture_decr_ref(&ctx, t->capture);
+                    sre_vm_pike_free_thread(&ctx, t);
                 }
 
-                goto matched;
+                goto step_done;
 
                 /*
                  * Jmp, Split, Save handled in addthread, so that
@@ -228,14 +329,20 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
                 /* impossible to reach here */
                 break;
             }
-        } /* for */
 
-matched:
+            sre_vm_pike_free_thread(&ctx, t);
+        } /* while */
+
+step_done:
         tmp = clist;
         clist = nlist;
         nlist = tmp;
 
-        nlist->count = 0;
+        if (nlist->head) {
+            *nlist->next = ctx.free_threads;
+            ctx.free_threads = nlist->head;
+            nlist->head = NULL;
+        }
 
         if (*sp == '\0') {
             break;
@@ -258,21 +365,15 @@ matched:
 static sre_vm_pike_thread_list_t *
 sre_vm_pike_thread_list_create(sre_pool_t *pool, int size)
 {
-    u_char                          *p;
     sre_vm_pike_thread_list_t       *l;
 
-    p = sre_pnalloc(pool, sizeof(sre_vm_pike_thread_list_t)
-                    + size * sizeof(sre_vm_pike_thread_t));
-    if (p == NULL) {
+    l = sre_palloc(pool, sizeof(sre_vm_pike_thread_list_t));
+    if (l == NULL) {
         return NULL;
     }
 
-    l = (sre_vm_pike_thread_list_t *) p;
-
-    p += sizeof(sre_vm_pike_thread_list_t);
-    l->threads = (sre_vm_pike_thread_t *) p;
-
-    l->count = 0;
+    l->head = NULL;
+    l->next = &l->head;
 
     return l;
 }
@@ -284,6 +385,11 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
 {
     sre_vm_pike_thread_t        *t;
     sre_capture_t               *cap;
+    unsigned                     seen_word = 0;
+
+#if 0
+    dd("pc tag: %u, ctx tag: %u", pc->tag, ctx->tag);
+#endif
 
     if (pc->tag == ctx->tag) {
         dd("pc %d: already on list: %d", (int) (pc - ctx->program->start),
@@ -297,6 +403,8 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
 
         return SRE_OK;
     }
+
+    dd("adding thread: pc %d", (int) (pc - ctx->program->start));
 
     pc->tag = ctx->tag;
 
@@ -316,9 +424,12 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
         return sre_vm_pike_add_thread(ctx, l, pc->y, capture, pos);
 
     case SRE_OPCODE_SAVE:
+
+#if 0
         dd("pc %d: cap %p: save %d as group %d",
            (int) (pc - ctx->program->start), capture, pos,
            pc->v.group);
+#endif
 
         cap = sre_capture_update(ctx->pool, capture, pc->v.group, pos,
                                  &ctx->free_capture);
@@ -326,17 +437,86 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
             return SRE_ERROR;
         }
 
+#if 0
         dd("new cap: %p", cap);
+#endif
 
         return sre_vm_pike_add_thread(ctx, l, pc + 1, cap, pos);
 
+
+    case SRE_OPCODE_ASSERT:
+        switch (pc->v.assertion_type) {
+        case SRE_REGEX_ASSERTION_BIG_A:
+            if (pos != 0) {
+                break;
+            }
+
+            return sre_vm_pike_add_thread(ctx, l, pc + 1, capture, pos);
+
+        case SRE_REGEX_ASSERTION_CARET:
+            if (pos != 0 && ctx->start[pos - 1] != '\n') {
+                break;
+            }
+
+            return sre_vm_pike_add_thread(ctx, l, pc + 1, capture, pos);
+
+        case SRE_REGEX_ASSERTION_SMALL_B:
+        case SRE_REGEX_ASSERTION_BIG_B:
+            {
+                u_char c;
+
+                if (pos == 0) {
+                    seen_word = 0;
+
+                } else {
+                    c = ctx->start[pos - 1];
+                    seen_word = sre_isword(c);
+                }
+
+                goto add;
+            }
+
+        default:
+            /* postpone look-ahead assertions */
+            goto add;
+        }
+
+        break;
+
     default:
-        t = &l->threads[l->count];
+
+add:
+        dd("added thread");
+
+        if (ctx->free_threads) {
+            /* fprintf(stderr, "reusing free thread\n"); */
+
+            t = ctx->free_threads;
+            ctx->free_threads = t->next;
+            t->next = NULL;
+
+        } else {
+            /* fprintf(stderr, "creating new thread\n"); */
+
+            t = sre_palloc(ctx->pool, sizeof(sre_vm_pike_thread_t));
+            if (t == NULL) {
+                return SRE_ERROR;
+            }
+        }
 
         t->pc = pc;
         t->capture = capture;
+        t->next = NULL;
+        t->seen_word = seen_word;
 
-        l->count++;
+        if (l->head == NULL) {
+            l->head = t;
+
+        } else {
+            *l->next = t;
+        }
+
+        l->next = &t->next;
         break;
     }
 

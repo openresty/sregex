@@ -23,8 +23,13 @@
 
 
 #define sre_memzero(buf, n)  (void) memset(buf, 0, n)
-
 #define sre_nelems(a)        (sizeof(a)/sizeof((a)[0]))
+
+#define sre_isword(c)                                                       \
+    (((c) >= '0' && (c) <= '9')                                             \
+     || ((c) >= 'A' && (c) <= 'Z')                                          \
+     || ((c) >= 'a' && (c) <= 'z')                                          \
+     || (c) == '_')
 
 
 #endif /* _SRE_CORE_H_INCLUDED_ */

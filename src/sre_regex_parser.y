@@ -43,12 +43,14 @@ static sre_regex_t  *sre_regex_parsed;
 
 %token <cquant>     SRE_REGEX_TOKEN_CQUANT
 
-%token <re>         SRE_REGEX_TOKEN_CHAR_CLASS
+%token <re>         SRE_REGEX_TOKEN_CHAR_CLASS SRE_REGEX_TOKEN_ASSERTION
 
 %type  <re>         alt concat repeat atom regex
 %type  <group>      count
 
 %start              regex
+
+%expect             28
 
 %%
 
@@ -204,6 +206,27 @@ atom: '(' count alt ')'
         }
       }
 
+    | '^'
+      {
+        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
+        if ($$ == NULL) {
+            YYABORT;
+        }
+
+        $$->assertion_type = SRE_REGEX_ASSERTION_CARET;
+      }
+
+    | '$'
+      {
+        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
+        if ($$ == NULL) {
+            YYABORT;
+        }
+
+        $$->assertion_type = SRE_REGEX_ASSERTION_DOLLAR;
+      }
+
+    | SRE_REGEX_TOKEN_ASSERTION
     | SRE_REGEX_TOKEN_CHAR_CLASS
     ;
 
@@ -252,6 +275,55 @@ yylex(void)
         }
 
         switch (c) {
+        case 'B':
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            r->assertion_type = SRE_REGEX_ASSERTION_BIG_B;
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_ASSERTION;
+
+        case 'b':
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            r->assertion_type = SRE_REGEX_ASSERTION_SMALL_B;
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_ASSERTION;
+
+        case 'z':
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            r->assertion_type = SRE_REGEX_ASSERTION_SMALL_Z;
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_ASSERTION;
+
+        case 'A':
+
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            r->assertion_type = SRE_REGEX_ASSERTION_BIG_A;
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_ASSERTION;
+
         case 'd':
             /* \d is defined as [0-9] */
 

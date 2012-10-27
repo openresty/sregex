@@ -22,6 +22,18 @@ if ($opts{h}) {
 
 my $title = $opts{t} or usage();
 
+my %char_table = (
+    "\n" => "\\n",
+    "\t" => "\\t",
+    "\f" => "\\f",
+    "\r" => "\\r",
+    "\b" => "\\b",
+    "\a" => "\\a",
+    "\e" => "\\e",
+    "\\" => "\\\\",
+    "'" => "\\'",
+);
+
 my $start;
 my %match;
 my %edges;
@@ -50,9 +62,28 @@ while (<$in>) {
             $edges{$pc} = [[$pc + 1, "any"]];
 
         } elsif ($cmd eq 'char') {
-            $args =~ s/\\/\\\\/g;
-            $args =~ s/'/\\'/g;
-            $edges{$pc} = [[$pc + 1, "'$args'"]];
+            my $c = fmt_char($args);
+            $edges{$pc} = [[$pc + 1, "'$c'"]];
+
+        } elsif ($cmd eq 'in') {
+            my @ranges = split / /, $args;
+            my $s = '';
+            for my $range (@ranges) {
+                my ($f, $t) = split /-/, $range;
+                $f = fmt_char($f, 1);
+                $t = fmt_char($t, 1);
+                if ($f eq $t) {
+                    $s .= $f;
+
+                } else {
+                    $s .= "$f-$t";
+                }
+            }
+
+            $edges{$pc} = [[$pc + 1, "[$s]"]];
+
+        } elsif ($cmd eq 'assert') {
+            $edges{$pc} = [[$pc + 1, "$args"]];
 
         } elsif ($cmd eq 'match') {
             $match{$pc} = 1;
@@ -115,4 +146,19 @@ while (my ($from, $arcs) = each %edges) {
 print <<'_EOC_';
 }
 _EOC_
+
+sub fmt_char {
+    my $n = shift;
+    my $in_char_class = shift;
+    my $c = chr($n);
+    if ($in_char_class && $c eq '-') {
+        return "\\-";
+    }
+
+    my $c2 = $char_table{$c};
+    if (defined $c2) {
+        return $c2;
+    }
+    return $c;
+}
 

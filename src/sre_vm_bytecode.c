@@ -33,7 +33,7 @@ sre_program_dump(sre_program_t *prog)
             break;
 
         case SRE_OPCODE_CHAR:
-            printf("%2d. char %c\n", (int) (pc - start), pc->v.ch);
+            printf("%2d. char %d\n", (int) (pc - start), (int) pc->v.ch);
             break;
 
         case SRE_OPCODE_IN:
@@ -68,6 +68,42 @@ sre_program_dump(sre_program_t *prog)
 
         case SRE_OPCODE_SAVE:
             printf("%2d. save %d\n", (int) (pc - start), pc->v.group);
+            break;
+
+        case SRE_OPCODE_ASSERT:
+            printf("%2d. assert ", (int) (pc - start));
+
+            switch (pc->v.assertion_type) {
+            case SRE_REGEX_ASSERTION_BIG_A:
+                printf("\\A");
+                break;
+
+            case SRE_REGEX_ASSERTION_CARET:
+                printf("^");
+                break;
+
+            case SRE_REGEX_ASSERTION_SMALL_Z:
+                printf("\\z");
+                break;
+
+            case SRE_REGEX_ASSERTION_BIG_B:
+                printf("\\B");
+                break;
+
+            case SRE_REGEX_ASSERTION_SMALL_B:
+                printf("\\b");
+                break;
+
+            case SRE_REGEX_ASSERTION_DOLLAR:
+                printf("$");
+                break;
+
+            default:
+                printf("?");
+                break;
+            }
+
+            printf("\n");
             break;
 
         default:

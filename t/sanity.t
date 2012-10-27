@@ -645,3 +645,219 @@ re1 and re2 are wrong here.
 --- re: [\e]
 --- s eval: " \e"
 
+
+
+=== TEST 106: \A
+--- re: \Ahello
+--- s eval: "hello"
+
+
+
+=== TEST 107: \A
+--- re: \Ahello
+--- s eval: "blah\nhello"
+
+
+
+=== TEST 108: ^
+--- re: ^hello
+--- s eval: "hello"
+
+
+
+=== TEST 109: ^
+--- re: ^hello
+--- s eval: "blah\nhello"
+
+
+
+=== TEST 110: ^ not match
+--- re: ^ello
+--- s eval: "blah\nhello"
+
+
+
+=== TEST 111: ^
+--- re: (a.*(^hello))
+--- s eval: "blah\nhello"
+
+
+
+=== TEST 112: ^
+--- re: ^
+--- s:
+
+
+
+=== TEST 113: ^
+--- re: (^)+
+--- s: "\n\n\n"
+
+
+
+=== TEST 114: \z
+--- re: hello\z
+--- s eval: "blah\nhello"
+
+
+
+=== TEST 115: \z
+--- re: hello\z
+--- s eval: "blah\nhello\n"
+
+
+
+=== TEST 116: $
+--- re: hello$
+--- s eval: "blah\nhello"
+
+
+
+=== TEST 117: $
+--- re: hello$
+--- s eval: "blah\nhello\n"
+
+
+
+=== TEST 118: $
+--- re: hell$
+--- s eval: "blah\nhello\n"
+
+
+
+=== TEST 119: $
+--- re: \w+$
+--- s eval: "blah\nhello"
+
+
+
+=== TEST 120: $
+--- re: .*(\w+)$
+--- s eval: "blah\nhello"
+
+
+
+=== TEST 121: $
+--- re: .*(\w+)$\n
+--- s eval: "blah\nhello"
+
+
+
+=== TEST 122: $
+--- re: ((\w+)$\n?)+
+--- s eval: "a\nb"
+
+
+
+=== TEST 123: $
+--- re: ((\w+)$\n?)+
+--- s eval: "abc\ndef"
+
+
+
+=== TEST 124: \b
+--- re: ab\b
+--- s eval: "ab\ndef"
+
+
+
+=== TEST 125: \b
+--- re: ab\b
+--- s eval: "abdef"
+
+
+
+=== TEST 126: \b
+--- re: ([+a])\b([-b])
+--- s eval: "ab"
+
+
+
+=== TEST 127: \b
+--- re: ([+a])\b([-b])
+--- s eval: "a-"
+
+
+
+=== TEST 128: \b
+--- re: ([+a])\b([-b])
+--- s eval: "+-"
+
+
+
+=== TEST 129: \b
+--- re: ([+a])\b([-b])
+--- s eval: "+b"
+
+
+
+=== TEST 130: \b
+--- re: ([+a])\b\b([-b])
+--- s eval: "+b"
+
+
+
+=== TEST 131: \b
+--- re: \b([-b])
+--- s eval: "b"
+
+
+
+=== TEST 132: \b
+--- re: \b([-b])
+--- s eval: "-"
+
+
+
+=== TEST 133: \b\z
+--- re: a\b\z
+--- s eval: "a\n"
+
+
+
+=== TEST 134: \B
+--- re: ([+a])\B([-b])
+--- s eval: "ab"
+
+
+
+=== TEST 135: \B
+--- re: ([+a])\B([-b])
+--- s eval: "a-"
+
+
+
+=== TEST 136: \B
+--- re: ([+a])\B([-b])
+--- s eval: "+-"
+
+
+
+=== TEST 137: \B
+--- re: ([+a])\B([-b])
+--- s eval: "+b"
+
+
+
+=== TEST 138: \B
+--- re: ([+a])\B\B([-b])
+--- s eval: "+b"
+
+
+
+=== TEST 139: \B
+--- re: \B([-b])
+--- s eval: "b"
+
+
+
+=== TEST 140: \B
+--- re: \B([-b])
+--- s eval: "-"
+
+
+
+=== TEST 141: \B\z
+--- re: a\B\z
+--- s eval: "a\n"
+

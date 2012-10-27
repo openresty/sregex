@@ -30,7 +30,18 @@ typedef enum {
     SRE_REGEX_TYPE_PLUS     = 8,
     SRE_REGEX_TYPE_CLASS    = 9,
     SRE_REGEX_TYPE_NCLASS   = 10,
+    SRE_REGEX_TYPE_ASSERT   = 11,
 } sre_regex_type_t;
+
+
+typedef enum {
+    SRE_REGEX_ASSERTION_SMALL_B    = 0,
+    SRE_REGEX_ASSERTION_BIG_B      = 1,
+    SRE_REGEX_ASSERTION_BIG_A      = 2,
+    SRE_REGEX_ASSERTION_SMALL_Z    = 3,
+    SRE_REGEX_ASSERTION_CARET      = 4,
+    SRE_REGEX_ASSERTION_DOLLAR     = 5
+} sre_regex_assertion_type_t;
 
 
 typedef struct sre_regex_range_s  sre_regex_range_t;
@@ -58,6 +69,8 @@ struct sre_regex_s {
     sre_regex_range_t   *range;
     unsigned             group;
     unsigned             greedy; /* :1 */
+
+    sre_regex_assertion_type_t   assertion_type:8;
 };
 
 

@@ -16,7 +16,7 @@ sre_regex_create(sre_pool_t *pool, sre_regex_type_t type, sre_regex_t *left,
 {
     sre_regex_t   *r;
 
-    r = sre_palloc(pool, sizeof(sre_regex_t));
+    r = sre_pcalloc(pool, sizeof(sre_regex_t));
     if (r == NULL) {
         return NULL;
     }
@@ -24,9 +24,6 @@ sre_regex_create(sre_pool_t *pool, sre_regex_type_t type, sre_regex_t *left,
     r->type = type;
     r->left = left;
     r->right = right;
-    r->greedy = 0;
-    r->group = 0;
-    r->range = NULL;
 
     return r;
 }
@@ -55,7 +52,7 @@ sre_regex_dump(sre_regex_t *r)
         break;
 
     case SRE_REGEX_TYPE_LIT:
-        printf("Lit(%c)", r->ch);
+        printf("Lit(%d)", (int) r->ch);
         break;
 
     case SRE_REGEX_TYPE_DOT:
@@ -119,6 +116,40 @@ sre_regex_dump(sre_regex_t *r)
             printf("[%d, %d]", range->from, range->to);
         }
 
+        printf(")");
+        break;
+
+    case SRE_REGEX_TYPE_ASSERT:
+        printf("ASSERT(");
+        switch (r->assertion_type) {
+            case SRE_REGEX_ASSERTION_BIG_A:
+                printf("\\A");
+                break;
+
+            case SRE_REGEX_ASSERTION_CARET:
+                printf("^");
+                break;
+
+            case SRE_REGEX_ASSERTION_DOLLAR:
+                printf("$");
+                break;
+
+            case SRE_REGEX_ASSERTION_SMALL_Z:
+                printf("\\z");
+                break;
+
+            case SRE_REGEX_ASSERTION_BIG_B:
+                printf("\\B");
+                break;
+
+            case SRE_REGEX_ASSERTION_SMALL_B:
+                printf("\\b");
+                break;
+
+            default:
+                printf("???");
+                break;
+        }
         printf(")");
         break;
 

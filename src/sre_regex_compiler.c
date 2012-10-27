@@ -87,6 +87,10 @@ sre_program_len(sre_regex_t *r)
     case SRE_REGEX_TYPE_PLUS:
         return 1 +  sre_program_len(r->left);
 
+    case SRE_REGEX_TYPE_ASSERT:
+        return 1;
+
+    case SRE_REGEX_TYPE_NIL:
     default:
         /* impossible to reach here */
         return 0;
@@ -250,9 +254,15 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
 
         break;
 
+    case SRE_REGEX_TYPE_ASSERT:
+        pc->opcode = SRE_OPCODE_ASSERT;
+        pc->v.assertion_type = r->assertion_type;
+        pc++;
+
+        break;
+
     case SRE_REGEX_TYPE_NIL:
         /* do nothing */
-        break;
 
     default:
         /* impossible to reach here */
