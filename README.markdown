@@ -41,6 +41,12 @@ The following Perl 5 regex syntax features have already been implemented.
     \s            match a whitespace character ([ \f\n\r\t])
     \S            match a non-whitespace character ([^ \f\n\r\t])
 
+    \h            match a horizontal whitespace character
+    \H            match a non-horizontal- whitespace character
+
+    \v            match a vertical whitespace character
+    \V            match a non-vertical-whitespace character
+
     \w            match a "word" character ([A-Za-z0-9_])
     \W            match a non-"word" character ([^A-Za-z0-9_])
 
@@ -74,6 +80,7 @@ The following escaping sequences are supported:
     \f          form feed
     \a          alarm
     \e          escape
+    \b          backspace (in character class only)
 
 Escaping a regex meta character yields the literal character itself, like `\{` and `\.`.
 
