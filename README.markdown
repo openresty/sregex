@@ -42,13 +42,15 @@ The following Perl 5 regex syntax features have already been implemented.
     \S            match a non-whitespace character ([^ \f\n\r\t])
 
     \h            match a horizontal whitespace character
-    \H            match a non-horizontal- whitespace character
+    \H            match a character that isn't horizontal whitespace
 
     \v            match a vertical whitespace character
-    \V            match a non-vertical-whitespace character
+    \V            match a character that isn't vertical whitespace
 
     \w            match a "word" character ([A-Za-z0-9_])
     \W            match a non-"word" character ([^A-Za-z0-9_])
+
+    \N            match a character that isn't a newline
 
     ab            concatenation; first match a, and then b
     a|b           alternation; match a or b

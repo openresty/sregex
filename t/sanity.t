@@ -933,3 +933,9 @@ re1 and re2 are wrong here.
 --- re: [^][]+
 --- s eval: "ab[[[[]]]]"
 
+
+
+=== TEST 154: \N
+--- re: \N+
+--- s eval: "hello!\r\t "
+

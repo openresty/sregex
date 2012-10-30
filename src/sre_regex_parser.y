@@ -525,6 +525,29 @@ yylex(void)
             yylval.re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
+        case 'N':
+            /* \N is defined as [^\n] */
+
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NCLASS, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            if (range == NULL) {
+                break;
+            }
+
+            range->from = '\n';
+            range->to = '\n';
+            range->next = NULL;
+
+            r->range = range;
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_CHAR_CLASS;
+
         case 'h':
             r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
                                  NULL);
