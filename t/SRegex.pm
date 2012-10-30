@@ -92,7 +92,7 @@ sub run_test ($) {
                 warn $res;
             }
 
-            if ($s =~ m/$re/sm) {
+            if ($s =~ m/$re/sma) {
                 my $expected_cap = fmt_cap(\@-, \@+);
 
                 if (defined $block->cap) {

@@ -861,3 +861,75 @@ re1 and re2 are wrong here.
 --- re: a\B\z
 --- s eval: "a\n"
 
+
+
+=== TEST 142: \h
+--- re: \h+
+--- s eval: "\f\r\t "
+
+
+
+=== TEST 143: \H
+--- re: \H+
+--- s eval: "\f\r\t "
+
+
+
+=== TEST 144: \v
+--- re: \v+
+--- s eval: " \t\n\x0b\f\r\x85\x86"
+
+
+
+=== TEST 145: \V
+--- re: \v+
+--- s eval: "\x86 \t\n\x0b\f\r\x85"
+
+
+
+=== TEST 146: \h
+--- re: [\h]+
+--- s eval: "\f\r\t "
+
+
+
+=== TEST 147: \H
+--- re: [\H]+
+--- s eval: "\f\r\t "
+
+
+
+=== TEST 148: \v
+--- re: [\v]+
+--- s eval: " \t\n\x0b\f\r\x85\x86"
+
+
+
+=== TEST 149: \V
+--- re: [\v]+
+--- s eval: "\x86 \t\n\x0b\f\r\x85"
+
+
+
+=== TEST 150: [\b]
+--- re: [\b]+
+--- s eval: "a\b\b"
+
+
+
+=== TEST 151: [[]]
+--- re: [[]]+
+--- s eval: "a[[[[]]]]"
+
+
+
+=== TEST 152: [][]
+--- re: [][]+
+--- s eval: "a[[[[]]]]"
+
+
+
+=== TEST 153: [][]
+--- re: [^][]+
+--- s eval: "ab[[[[]]]]"
+
