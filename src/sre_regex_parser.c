@@ -3032,6 +3032,11 @@ yylex(void)
 process_char:
                 if (seen_dash) {
                     last->to = c;
+
+                    if (last->to < last->from) {
+                        return SRE_REGEX_TOKEN_BAD;
+                    }
+
                     seen_dash = 0;
                     no_dash = 1;
                     break;

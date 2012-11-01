@@ -1213,3 +1213,11 @@ re1 and re2 are wrong here.
 --- err
 [error] syntax error
 
+
+
+=== TEST 198: from > to
+--- re: [D-C]
+--- s: a
+--- err
+[error] syntax error
+
