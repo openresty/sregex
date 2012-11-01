@@ -1279,3 +1279,21 @@ re1 and re2 are wrong here.
 --- re: \!\,\@\\\/\%
 --- s: hello,!@\/%
 
+
+
+=== TEST 207: \c\X
+--- re: \c\X
+--- s eval: "\034X"
+
+
+
+=== TEST 208: \c\.
+--- re: \c\.
+--- s eval: "\034X"
+
+
+
+=== TEST 209: \c\
+--- re: \c\
+--- s eval: "\034X"
+
