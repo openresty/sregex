@@ -1253,3 +1253,29 @@ re1 and re2 are wrong here.
 --- err
 [error] syntax error
 
+
+
+=== TEST 203: unmatched ")"
+--- re: \(ab)
+--- s: hello(ab)
+--- err
+[error] syntax error
+
+
+
+=== TEST 204: unmatched "]"
+--- re: \[ab]
+--- s: hello[ab]
+
+
+
+=== TEST 205: escaped !, @, \, /, %, and ","
+--- re: [\!\,\@\\\/\%]+
+--- s: hello,!@\/%
+
+
+
+=== TEST 206: escaped !, @, \, /, %, and ,
+--- re: \!\,\@\\\/\%
+--- s: hello,!@\/%
+

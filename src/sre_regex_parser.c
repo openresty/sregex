@@ -1939,7 +1939,7 @@ yylex(void)
             return SRE_REGEX_TOKEN_BAD;
         }
 
-        if (strchr("_-|*+?():.^$\\[]{}", (int) c)) {
+        if (strchr("%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
             yylval.ch = c;
             return SRE_REGEX_TOKEN_CHAR;
         }
@@ -2761,7 +2761,7 @@ yylex(void)
                     break;
                 }
 
-                if (strchr("_-|*+?():.^$\\[]{}", (int) c)) {
+                if (strchr("%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
                     goto process_char;
                 }
 
