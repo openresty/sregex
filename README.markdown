@@ -121,17 +121,17 @@ Gnu make, perl 5.6.1+, and the Test::Base perl module are required.
 TODO
 ====
 
-1. implement a simplified version of the backreferences.
-1. implement the comment notation `(?#comment)`.
-1. implement the case-insensitive matching mode.
-1. implement the POSIX character class notation.
-1. allow '\0' be used in both the regex and the subject string.
-1. add an API for streaming processing.
-1. add an API for assembling multiple user regexes and return an ID indicating exactly which regex is matched (first), as well as the corresponding submatch captures.
-1. add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM).
-1. add a JIT compiler for the regex VM targeting x86_64 (and other architectures).
-1. implement the generalized look-around assertions like `(?=pattern)`, `(?!pattern)`, `(?<=pattern)`, and `(?<!pattern)`.
-1. implement the UTF-8, GBK, and Latin1 matching mode.
+* implement a simplified version of the backreferences.
+* implement the comment notation `(?#comment)`.
+* implement the case-insensitive matching mode.
+* implement the POSIX character class notation.
+* allow '\0' be used in both the regex and the subject string.
+* add an API for streaming processing.
+* add an API for assembling multiple user regexes and return an ID indicating exactly which regex is matched (first), as well as the corresponding submatch captures.
+* add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM).
+* add a JIT compiler for the regex VM targeting x86_64 (and other architectures).
+* implement the generalized look-around assertions like `(?=pattern)`, `(?!pattern)`, `(?<=pattern)`, and `(?<!pattern)`.
+* implement the UTF-8, GBK, and Latin1 matching mode.
 
 Author
 ======
