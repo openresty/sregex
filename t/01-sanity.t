@@ -1297,3 +1297,9 @@ re1 and re2 are wrong here.
 --- re: \c\
 --- s eval: "\034X"
 
+
+
+=== TEST 210: \C
+--- re: \C+
+--- s eval: "hello world!\n\r"
+

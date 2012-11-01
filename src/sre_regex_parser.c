@@ -2354,6 +2354,18 @@ yylex(void)
             yylval.re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
+        case 'C':
+            /* \C is defined as . */
+
+            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_DOT, NULL,
+                                 NULL);
+            if (r == NULL) {
+                break;
+            }
+
+            yylval.re = r;
+            return SRE_REGEX_TOKEN_CHAR_CLASS;
+
         case 'h':
             r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
                                  NULL);
@@ -2761,7 +2773,7 @@ yylex(void)
                     break;
                 }
 
-                if (strchr("%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
+                if (strchr("C%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
                     goto process_char;
                 }
 

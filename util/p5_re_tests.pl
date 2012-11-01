@@ -197,7 +197,7 @@ while (<$in>) {
         next;
     }
 
-    if ($re =~ m{\(\*(?:COMMIT|SKIP|ACCEPT|FAIL|F)\)|\(\?!\)}) {
+    if ($re =~ m{\(\*(?:COMMIT|SKIP|ACCEPT|THEN|FAIL|F)\)|\(\?!\)|\(\*(?:THEN|PRUNE|MARK|):.*?\)}) {
         $verbs++;
         next;
     }

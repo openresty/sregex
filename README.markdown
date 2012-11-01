@@ -31,6 +31,7 @@ The following Perl 5 regex syntax features have already been implemented.
     \B            match except at a word boundary
 
     .             match any char
+    \C            match a single C-language char (octet)
 
     [ab0-9]       character classes (positive)
     [^ab0-9]      character classes (negative)
