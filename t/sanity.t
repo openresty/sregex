@@ -1205,3 +1205,11 @@ re1 and re2 are wrong here.
 --- err
 [error] syntax error
 
+
+
+=== TEST 197: trailing \
+--- re: \
+--- s: a
+--- err
+[error] syntax error
+

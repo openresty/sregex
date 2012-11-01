@@ -288,6 +288,11 @@ yylex(void)
 
     if (c == '\\') {
         c = *sre_regex_str++;
+
+        if (c == '\0') {
+            return SRE_REGEX_TOKEN_BAD;
+        }
+
         if (strchr("_-|*+?():.^$\\[]{}", (int) c)) {
             yylval.ch = c;
             return SRE_REGEX_TOKEN_CHAR;
