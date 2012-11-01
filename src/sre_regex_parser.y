@@ -1477,7 +1477,7 @@ cquant_parsed:
             return SRE_REGEX_TOKEN_BAD;
         }
 
-        if (to > 0 && from > to) {
+        if (to >= 0 && from > to) {
             return SRE_REGEX_TOKEN_BAD;
         }
 

@@ -1197,3 +1197,11 @@ re1 and re2 are wrong here.
 --- re: a:\w+
 --- s eval: "a:hello"
 
+
+
+=== TEST 196: from > to and to == 0
+--- re: a{1,0}
+--- s: a
+--- err
+[error] syntax error
+

@@ -105,12 +105,14 @@ sub run_test ($) {
                 return;
             }
 
-            if ($s =~ m/$re/sma) {
-                my $expected_cap = fmt_cap(\@-, \@+);
+            if (defined $block->cap) {
+                my $expected_cap = $block->cap;
 
-                if (defined $block->cap) {
-                    $expected_cap = $block->cap;
-                }
+                ok($thompson_match, "$name - thompson vm should match");
+                ok($pike_match, "$name - pike vm should match");
+                is($pike_cap, $expected_cap, "$name - pike vm capture ok");
+            } elsif ($s =~ m/$re/sma) {
+                my $expected_cap = fmt_cap(\@-, \@+);
 
                 ok($thompson_match, "$name - thompson vm should match");
                 ok($pike_match, "$name - pike vm should match");
