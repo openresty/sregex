@@ -50,7 +50,7 @@ static sre_regex_t  *sre_regex_parsed;
 
 %start              regex
 
-%expect             28
+%expect             32
 
 %%
 
@@ -228,6 +228,15 @@ atom: '(' count alt ')'
 
     | SRE_REGEX_TOKEN_ASSERTION
     | SRE_REGEX_TOKEN_CHAR_CLASS
+    | ':'
+      {
+        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
+        if ($$ == NULL) {
+            YYABORT;
+        }
+
+        $$->ch = ':';
+      }
     ;
 
 %%

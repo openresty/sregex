@@ -93,6 +93,9 @@ sub run_test ($) {
                 warn $res;
             }
 
+            no warnings 'regexp';
+            no warnings 'syntax';
+
             eval {
                 $s =~ m/$re/sma;
             };

@@ -1191,3 +1191,9 @@ re1 and re2 are wrong here.
 --- re: [\cB8]+
 --- s eval: "a\0028"
 
+
+
+=== TEST 195: literal :
+--- re: a:\w+
+--- s eval: "a:hello"
+
