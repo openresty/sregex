@@ -38,3 +38,4 @@ a.*
 plot
 *.plist
 lines
+re_tests
