@@ -1221,3 +1221,35 @@ re1 and re2 are wrong here.
 --- err
 [error] syntax error
 
+
+
+=== TEST 199: the "possessive" quantifier form not supported
+--- re: a++
+--- s: a
+--- err
+[error] syntax error
+
+
+
+=== TEST 200: the "possessive" quantifier form not supported
+--- re: a*+
+--- s: a
+--- err
+[error] syntax error
+
+
+
+=== TEST 201: the "possessive" quantifier form not supported
+--- re: a?+
+--- s: a
+--- err
+[error] syntax error
+
+
+
+=== TEST 202: the "possessive" quantifier form not supported
+--- re: a{3}+
+--- s: a
+--- err
+[error] syntax error
+
