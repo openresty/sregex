@@ -1145,3 +1145,49 @@ re1 and re2 are wrong here.
 --- re: \018
 --- s eval: "a\n8"
 
+
+
+=== TEST 188: \cb
+--- re: \cb
+--- s eval: "a\0028"
+
+
+
+=== TEST 189: \cB
+--- re: \cB
+--- s eval: "a\0028"
+
+
+
+=== TEST 190: \c
+--- re: \c
+--- s eval: "a\0028"
+--- err
+[error] syntax error
+
+
+
+=== TEST 191: [\cb]
+--- re: [\cb]+
+--- s eval: "a\0028"
+
+
+
+=== TEST 192: \cB
+--- re: [\cB]+
+--- s eval: "a\0028"
+
+
+
+=== TEST 193: \c
+--- re: [\c]
+--- s eval: "a\0028"
+--- err
+[error] syntax error
+
+
+
+=== TEST 194: \cB8
+--- re: [\cB8]+
+--- s eval: "a\0028"
+

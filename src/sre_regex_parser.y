@@ -309,6 +309,23 @@ yylex(void)
         }
 
         switch (c) {
+        case 'c':
+            c = *sre_regex_str++;
+
+            if (c == '\0') {
+                return SRE_REGEX_TOKEN_BAD;
+            }
+
+            if (c >= 'a' && c <= 'z') {
+                c -= 32;
+            }
+
+            yylval.ch = (u_char) (c ^ 64);
+
+            dd("\\cK: %d", yylval.ch);
+
+            return SRE_REGEX_TOKEN_CHAR;
+
         case 'o':
             c = *sre_regex_str++;
             if (c != '{') {
@@ -928,6 +945,23 @@ yylex(void)
                 }
 
                 switch (c) {
+                case 'c':
+                    c = *sre_regex_str++;
+
+                    if (c == '\0') {
+                        return SRE_REGEX_TOKEN_BAD;
+                    }
+
+                    if (c >= 'a' && c <= 'z') {
+                        c -= 32;
+                    }
+
+                    c = (u_char) (c ^ 64);
+
+                    dd("\\cK: %d", yylval.ch);
+
+                    goto process_char;
+
                 case 'o':
                     c = *sre_regex_str++;
                     if (c != '{') {

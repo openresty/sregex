@@ -50,6 +50,8 @@ The following Perl 5 regex syntax features have already been implemented.
     \w            match a "word" character ([A-Za-z0-9_])
     \W            match a non-"word" character ([^A-Za-z0-9_])
 
+    \cK           control char (example: VT)
+
     \N            match a character that isn't a newline
 
     ab            concatenation; first match a, and then b
