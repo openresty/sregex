@@ -1595,18 +1595,24 @@ sre_regex_desugar_counted_repetition(sre_regex_t *subj,
         return subj;
     }
 
-    if (cquant->from == 0 && cquant->to == 0) {
-        return sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
-    }
-
     /* generate subj{from} first */
 
-    concat = subj;
-
-    for (i = 1; i < cquant->from; i++) {
-        concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, concat, subj);
+    if (cquant->from == 0) {
+        concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
         if (concat == NULL) {
             return NULL;
+        }
+
+        i = 0;
+
+    } else {
+        concat = subj;
+
+        for (i = 1; i < cquant->from; i++) {
+            concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, concat, subj);
+            if (concat == NULL) {
+                return NULL;
+            }
         }
     }
 

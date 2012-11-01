@@ -1303,3 +1303,15 @@ re1 and re2 are wrong here.
 --- re: \C+
 --- s eval: "hello world!\n\r"
 
+
+
+=== TEST 211: a{0,n}
+--- re: a{0,3}
+--- s:
+
+
+
+=== TEST 212: a{0,n}
+--- re: a{0,3}
+--- s: aaaa
+
