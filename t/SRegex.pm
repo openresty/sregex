@@ -53,8 +53,8 @@ sub run_test ($) {
     #warn "res:$res\nerr:$err\n";
 
     if (defined $block->err) {
-        $err =~ /.*:.*:.*: (.*\s)?/;
-        $err = $1;
+        $err =~ /\[error\] .*\n/;
+        $err = $&;
         is $err, $block->err, "$name - err expected";
 
     } elsif ($?) {
@@ -62,7 +62,8 @@ sub run_test ($) {
             pass("failed as expected");
 
         } else {
-            die "Failed to execute --- re for test $name: $err\n";
+            fail("failed to execute --- re for test $name: $err\n");
+            return;
         }
 
     } else {
@@ -90,6 +91,15 @@ sub run_test ($) {
                 }
                 warn "$name - thompson: $thompson_match, pike: $pike_match, cap: $cap\n";
                 warn $res;
+            }
+
+            eval {
+                $s =~ m/$re/sma;
+            };
+
+            if ($@) {
+                fail("$name - bad regex: $re: $@");
+                return;
             }
 
             if ($s =~ m/$re/sma) {
@@ -172,6 +182,14 @@ sub fmt_cap ($$) {
     for (my $i = 0; $i < $len; $i++) {
         my $f = $from->[$i];
         my $t = $to->[$i];
+
+        if (!defined $f) {
+            $f = -1;
+        }
+
+        if (!defined $t) {
+            $t = -1;
+        }
         push @caps, "($f, $t)";
     }
 

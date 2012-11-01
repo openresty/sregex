@@ -939,3 +939,209 @@ re1 and re2 are wrong here.
 --- re: \N+
 --- s eval: "hello!\r\t "
 
+
+
+=== TEST 155: \x{DD}
+--- re: \x{0a}
+--- s eval: "a\nb"
+
+
+
+=== TEST 156: \x{DD}
+--- re: \x{0a}b
+--- s eval: "a\nb"
+
+
+
+=== TEST 157: \x{DD}
+--- re: \x{0a
+--- s eval: "a\nb"
+--- err
+[error] syntax error
+
+
+
+=== TEST 158: \x{DD}
+--- re: \xa
+--- s eval: "a\nb"
+
+
+
+=== TEST 159: \xDD
+--- re: \x0a
+--- s eval: "a\nb"
+
+
+
+=== TEST 160: \xDD
+--- re: \x0ab
+--- s eval: "a\nb"
+
+
+
+=== TEST 161: \xDD
+--- re: [\x0ab]+
+--- s eval: "a\nb"
+
+
+
+=== TEST 162: \xD
+--- re: [\xa]+
+--- s eval: "a\nb"
+
+
+
+=== TEST 163: \xDD
+--- re: \x0a!
+--- s eval: "a\n!"
+
+
+
+=== TEST 164: \xDD
+--- re: \xa!
+--- s eval: "a\n!"
+
+
+
+=== TEST 165: \x{DD}
+--- re: \x{a}b
+--- s eval: "a\nb"
+
+
+
+=== TEST 166: \x{DD}
+--- re: \x{A}b
+--- s eval: "a\nb"
+
+
+
+=== TEST 167: \x{DD}
+--- re: [\x{A}b]+
+--- s eval: "a\nb"
+
+
+
+=== TEST 168: \o{dd}
+--- re: \o{12}
+--- s eval: "a\nb"
+
+
+
+=== TEST 169: \o{ddd}
+--- re: \o{012}b
+--- s eval: "a\nb"
+
+
+
+=== TEST 170: \o{ddd}
+--- re: [\o{012}b]+
+--- s eval: "a\nb"
+
+
+
+=== TEST 171: \o{ddd}
+--- re: [\o{12}b]+
+--- s eval: "a\nb"
+
+
+
+=== TEST 172: \o{ddd}
+--- re: [\o{1}b]+
+--- s eval: "a\1b"
+
+
+
+=== TEST 173: \o{ddd}
+--- re: [\o{1
+--- s eval: "a\1b"
+--- err
+[error] syntax error
+
+
+
+=== TEST 174: \oDD
+--- re: \o12
+--- s eval: "a\nb"
+--- err
+[error] syntax error
+
+
+
+=== TEST 175: \oDD
+--- re: \o{12
+--- s eval: "a\nb"
+--- err
+[error] syntax error
+
+
+
+=== TEST 176: [\02]
+--- re: [\02]
+--- s eval: "a\2b"
+
+
+
+=== TEST 177: [\12]
+--- re: [\12]
+--- s eval: "a\nb"
+
+
+
+=== TEST 178:
+--- re: [\012]
+--- s eval: "a\nb"
+
+
+
+=== TEST 179:
+--- re: [\0123]
+--- s eval: "a\n3"
+
+
+
+=== TEST 180:
+--- re: [\0123]+
+--- s eval: "a\n3"
+
+
+
+=== TEST 181:
+--- re: [\0123]+
+--- s eval: "a\n23"
+
+
+
+=== TEST 182: [\012]
+--- re: [\018]
+--- s eval: "a\n8"
+
+
+
+=== TEST 183:
+--- re: \02
+--- s eval: "a\2b"
+
+
+
+=== TEST 184:
+--- re: \12
+--- s eval: "a\nb"
+
+
+
+=== TEST 185:
+--- re: \012
+--- s eval: "a\nb"
+
+
+
+=== TEST 186:
+--- re: \0123
+--- s eval: "a\n3"
+
+
+
+=== TEST 187: [\012]
+--- re: \018
+--- s eval: "a\n8"
+

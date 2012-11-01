@@ -1879,7 +1879,7 @@ yylex(void)
 {
     u_char               c;
     int                  from, to;
-    unsigned             i, n, seen_dash, no_dash;
+    unsigned             i, n, seen_dash, no_dash, seen_curly_bracket;
     sre_regex_t         *r;
     sre_regex_range_t   *range, *last = NULL;
     sre_regex_type_t     type;
@@ -1912,18 +1912,147 @@ yylex(void)
     }
 
     c = *sre_regex_str++;
-    if (strchr("-|*+?():.^$", (int) c)) {
+    if (strchr("|*+?():.^$", (int) c)) {
         return c;
     }
 
     if (c == '\\') {
         c = *sre_regex_str++;
-        if (strchr("-|*+?():.^$\\[]{}", (int) c)) {
+        if (strchr("_-|*+?():.^$\\[]{}", (int) c)) {
             yylval.ch = c;
             return SRE_REGEX_TOKEN_CHAR;
         }
 
+        if (c >= '0' && c <= '7') {
+
+            n = c - '0';
+            i = 1;
+
+            for (;;) {
+                c = *sre_regex_str;
+
+                if (c < '0' || c > '7') {
+                    yylval.ch = (u_char) n;
+                    return SRE_REGEX_TOKEN_CHAR;
+                }
+
+                n = (c - '0') + (n << 3);
+
+                sre_regex_str++;
+
+                if (++i == 3) {
+                    yylval.ch = (u_char) n;
+                    return SRE_REGEX_TOKEN_CHAR;
+                }
+            }
+        }
+
         switch (c) {
+        case 'o':
+            c = *sre_regex_str++;
+            if (c != '{') {
+                return SRE_REGEX_TOKEN_BAD;
+            }
+
+            c = *sre_regex_str++;
+
+            n = 0;
+            i = 0;
+
+            for (;;) {
+                dd("%d: hex digit: %c (%d)", (int) i, (int) c, c);
+
+                if (c >= '0' && c <= '7') {
+                    n = (c - '0') + (n << 3);
+
+                } else if (c == '}') {
+                    yylval.ch = (u_char) n;
+                    return SRE_REGEX_TOKEN_CHAR;
+
+                } else if (c == '\0') {
+                    return SRE_REGEX_TOKEN_BAD;
+
+                } else {
+                    sre_regex_str--;
+                    break;
+                }
+
+                if (++i == 3) {
+                    dd("cur: '%c' (%d)", *sre_regex_str, *sre_regex_str);
+
+                    if (*sre_regex_str++ != '}') {
+                        return SRE_REGEX_TOKEN_BAD;
+                    }
+
+                    break;
+                }
+
+                c = *sre_regex_str++;
+            }
+
+            dd("\\o{...}: %u, next: %c", n, *sre_regex_str);
+
+            yylval.ch = (u_char) n;
+            return SRE_REGEX_TOKEN_CHAR;
+
+        case 'x':
+            c = *sre_regex_str++;
+            if (c == '{') {
+                c = *sre_regex_str++;
+                seen_curly_bracket = 1;
+
+            } else {
+                seen_curly_bracket = 0;
+            }
+
+            n = 0;
+            i = 0;
+
+            for (;;) {
+                dd("%d: hex digit: %c (%d)", (int) i, (int) c, c);
+
+                if (c >= '0' && c <= '9') {
+                    n = (c - '0') + (n << 4);
+
+                } else if (c >= 'A' && c <= 'F') {
+                    n = (c - 'A' + 10) + (n << 4);
+
+                } else if (c >= 'a' && c <= 'f') {
+                    n = (c - 'a' + 10) + (n << 4);
+
+                } else if (seen_curly_bracket) {
+                    if (c != '}') {
+                        return SRE_REGEX_TOKEN_BAD;
+                    }
+
+                    yylval.ch = (u_char) n;
+                    return SRE_REGEX_TOKEN_CHAR;
+
+                } else {
+                    sre_regex_str--;
+                    break;
+                }
+
+                if (++i == 2) {
+                    if (seen_curly_bracket) {
+                        dd("cur: '%c' (%d)", *sre_regex_str, *sre_regex_str);
+
+                        if (*sre_regex_str++ != '}') {
+                            return SRE_REGEX_TOKEN_BAD;
+                        }
+                    }
+
+                    break;
+                }
+
+                c = *sre_regex_str++;
+            }
+
+            dd("\\x{...}: %u, next: %c", n, *sre_regex_str);
+
+            yylval.ch = (u_char) n;
+            return SRE_REGEX_TOKEN_CHAR;
+
         case 'B':
             r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL,
                                  NULL);
@@ -2413,7 +2542,135 @@ yylex(void)
             case '\\':
                 c = *sre_regex_str++;
 
+                if (c >= '0' && c <= '7') {
+
+                    n = c - '0';
+                    i = 1;
+
+                    for (;;) {
+                        c = *sre_regex_str;
+
+                        if (c < '0' || c > '7') {
+                            c = (u_char) n;
+                            goto process_char;
+                        }
+
+                        n = (c - '0') + (n << 3);
+
+                        sre_regex_str++;
+
+                        if (++i == 3) {
+                            c = (u_char) n;
+                            goto process_char;
+                        }
+                    }
+                }
+
                 switch (c) {
+                case 'o':
+                    c = *sre_regex_str++;
+                    if (c != '{') {
+                        return SRE_REGEX_TOKEN_BAD;
+                    }
+
+                    c = *sre_regex_str++;
+
+                    n = 0;
+                    i = 0;
+
+                    for (;;) {
+                        dd("%d: oct digit: %c (%d)", (int) i, (int) c, c);
+
+                        if (c >= '0' && c <= '7') {
+                            n = (c - '0') + (n << 3);
+
+                        } else if (c == '}') {
+                            c = (u_char) n;
+                            goto process_char;
+
+                        } else {
+                            return SRE_REGEX_TOKEN_BAD;
+                        }
+
+                        if (++i == 3) {
+                            dd("cur: '%c' (%d)", *sre_regex_str, *sre_regex_str);
+
+                            if (*sre_regex_str++ != '}') {
+                                return SRE_REGEX_TOKEN_BAD;
+                            }
+
+                            break;
+                        }
+
+                        c = *sre_regex_str++;
+                    }
+
+                    dd("\\x{...}: %u, next: %c", n, *sre_regex_str);
+
+                    c = (u_char) n;
+                    goto process_char;
+
+                case 'x':
+                    c = *sre_regex_str++;
+                    if (c == '{') {
+                        c = *sre_regex_str++;
+                        seen_curly_bracket = 1;
+
+                    } else {
+                        seen_curly_bracket = 0;
+                    }
+
+                    n = 0;
+                    i = 0;
+
+                    for (;;) {
+                        dd("%d: hex digit: %c (%d)", (int) i, (int) c, c);
+
+                        if (c >= '0' && c <= '9') {
+                            n = (c - '0') + (n << 4);
+
+                        } else if (c >= 'A' && c <= 'F') {
+                            n = (c - 'A' + 10) + (n << 4);
+
+                        } else if (c >= 'a' && c <= 'f') {
+                            n = (c - 'a' + 10) + (n << 4);
+
+                        } else if (seen_curly_bracket) {
+                            if (c != '}') {
+                                return SRE_REGEX_TOKEN_BAD;
+                            }
+
+                            c = (u_char) n;
+                            goto process_char;
+
+                        } else if (c == '\0') {
+                            return SRE_REGEX_TOKEN_BAD;
+
+                        } else {
+                            sre_regex_str--;
+                            break;
+                        }
+
+                        if (++i == 2) {
+                            if (seen_curly_bracket) {
+                                dd("cur: '%c' (%d)", *sre_regex_str, *sre_regex_str);
+
+                                if (*sre_regex_str++ != '}') {
+                                    return SRE_REGEX_TOKEN_BAD;
+                                }
+                            }
+
+                            break;
+                        }
+
+                        c = *sre_regex_str++;
+                    }
+
+                    dd("\\x{...}: %u, next: %c", n, *sre_regex_str);
+
+                    c = (u_char) n;
+                    goto process_char;
+
                 case 't':
                     c = '\t';
                     goto process_char;
@@ -2449,7 +2706,7 @@ yylex(void)
                     break;
                 }
 
-                if (strchr("-|*+?():.^$\\[]{}", (int) c)) {
+                if (strchr("_-|*+?():.^$\\[]{}", (int) c)) {
                     goto process_char;
                 }
 

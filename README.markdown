@@ -117,7 +117,7 @@ Gnu make, perl 5.6.1+, and the Test::Base perl module are required.
 TODO
 ====
 
-1. implement more escaping sequences like `\x{}`, `\x00`, `\o{}`, and `\000`.
+1. allow '\0' be used in both the regex and the subject string.
 1. add an API for streaming processing.
 1. add an API for assembling multiple user regexes and return an ID indicating exactly which regex is matched (first), as well as the corresponding submatch captures.
 1. add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM).
