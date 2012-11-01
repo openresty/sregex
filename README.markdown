@@ -83,6 +83,8 @@ The following escaping sequences are supported:
     \a          alarm
     \e          escape
     \b          backspace (in character class only)
+    \x{}, \x00  character whose ordinal is the given hexadecimal number
+    \o{}, \000  character whose ordinal is the given octal number
 
 Escaping a regex meta character yields the literal character itself, like `\{` and `\.`.
 
