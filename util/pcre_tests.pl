@@ -63,7 +63,7 @@ open my $in, $infile
 my ($re, $flags);
 while (<$in>) {
     if (!$start) {
-        if (!m!^/[^\-]{2}!) {
+        if (!m!^/[^\-]!) {
             next;
         }
 
@@ -72,9 +72,20 @@ while (<$in>) {
 
     next if /^\s*$/;
 
+    if (m{^/--}) {
+        undef $start;
+        next;
+    }
+
     if (m{^/(.*)/(\S*)}) {
         $re = $1;
         $flags = $2;
+        next;
+
+    }
+
+    if (m{^/}) {
+        undef $start;
         next;
     }
 
@@ -173,7 +184,7 @@ while (<$in>) {
         next;
     }
 
-    if ($re =~ m/\\0{3}/ || $re =~ m/\\0\b/) {
+    if ($re =~ m/\\0{3}|\\0\b|\\x0\b|\\x00/) {
         $null_char++;
         next;
     }
@@ -267,10 +278,19 @@ my $n = 0;
 for my $test (@tests) {
     my ($re, $flags, $s, $ln, $err, $skip) = @$test;
     $n++;
+
+    if ($s eq '\\') {
+        $s = '';
+
+    } else {
+        $s =~ s/\\B/\\\\B/g;
+    }
+
+    #$s =~ s/\\$/\\\\/;
     print $out <<_EOC_;
 === TEST $n: $infile:$ln
 --- re: $re
---- s: $s
+--- s eval: "$s"
 _EOC_
 
     if ($err) {
