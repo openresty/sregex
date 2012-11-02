@@ -95,6 +95,7 @@ sub run_test ($) {
 
             no warnings 'regexp';
             no warnings 'syntax';
+            no warnings 'deprecated';
 
             eval {
                 $s =~ m/$re/sma;
