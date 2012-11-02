@@ -17,6 +17,7 @@
 
 #include <sre_regex_parser.h>
 #include <sre_palloc.h>
+#include <ctype.h>
 
 
 static int yylex(void);
@@ -293,7 +294,12 @@ yylex(void)
             return SRE_REGEX_TOKEN_BAD;
         }
 
-        if (strchr("%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
+        if (!isprint(c)) {
+            yylval.ch = c;
+            return SRE_REGEX_TOKEN_CHAR;
+        }
+
+        if (strchr("'\" iM%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
             yylval.ch = c;
             return SRE_REGEX_TOKEN_CHAR;
         }
@@ -1127,7 +1133,11 @@ yylex(void)
                     break;
                 }
 
-                if (strchr("C%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
+                if (!isprint(c)) {
+                    goto process_char;
+                }
+
+                if (strchr("'\" iMzC%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
                     goto process_char;
                 }
 
@@ -1494,7 +1504,7 @@ process_char:
 cquant_parsed:
         dd("from = %d, to = %d, next: %d", from, to, sre_regex_str[0]);
 
-        if (from >= 100 || to >= 100) {
+        if (from >= 500 || to >= 500) {
             dd("from or to too large: %d %d", from, to);
             return SRE_REGEX_TOKEN_BAD;
         }
