@@ -7,6 +7,12 @@
  */
 
 
+#ifndef DDEBUG
+#define DDEBUG 0
+#endif
+#include <ddebug.h>
+
+
 #include <sre_regex_parser.h>
 #include <sre_regex_compiler.h>
 #include <sre_vm_thompson.h>
@@ -14,21 +20,40 @@
 
 
 static void usage(void);
+static void process_string(u_char *s, size_t len, sre_pool_t *pool,
+    sre_program_t *prog, int *ovector, unsigned ovecsize, unsigned ncaps);
 
 
 int
 main(int argc, char **argv)
 {
-    int                  i, j;
+    int                  i, n;
     sre_pool_t          *pool;
     sre_regex_t         *re;
     sre_program_t       *prog;
     unsigned             ncaps;
     int                 *ovector;
     unsigned             ovecsize;
+    u_char              *s, *p;
+    size_t               len;
+    unsigned             from_stdin;
 
     if (argc < 2) {
         usage();
+    }
+
+    i = 1;
+
+    if (strcmp(argv[i], "--stdin") == 0) {
+        from_stdin = 1;
+        i++;
+
+    } else {
+        from_stdin = 0;
+
+        if (argc < 3) {
+            usage();
+        }
     }
 
     pool = sre_create_pool(4096);
@@ -36,10 +61,12 @@ main(int argc, char **argv)
         return 2;
     }
 
-    re = sre_regex_parse(pool, (u_char *) argv[1], &ncaps);
+    re = sre_regex_parse(pool, (u_char *) argv[i], &ncaps);
     if (re == NULL) {
         return 2;
     }
+
+    i++;
 
     sre_regex_dump(re);
     printf("\n");
@@ -59,33 +86,51 @@ main(int argc, char **argv)
         return 2;
     }
 
-    for (i = 2; i < argc; i++) {
-        printf("#%d %s (len %d)\n", i - 1, argv[i], (int) strlen(argv[i]));
+    dd("binary: %d, i = %d", binary, i);
 
-        printf("thompson ");
+    if (from_stdin) {
 
-        if (sre_vm_thompson_exec(pool, prog, (u_char *) argv[i]) == SRE_OK) {
-            printf("match\n");
-
-        } else {
-            printf("no match\n");
-        }
-
-        printf("pike ");
-
-        if (sre_vm_pike_exec(pool, prog, (u_char *) argv[i], ovector, ovecsize)
-            == SRE_OK)
-        {
-            printf("match");
-
-            for (j = 0; j < 2 * (ncaps + 1); j += 2) {
-                printf(" (%d, %d)", ovector[j], ovector[j + 1]);
+        for (;;) {
+            len = (size_t) getchar();
+            if (len == EOF) {
+                break;
             }
 
-            printf("\n");
+            s = malloc(len);
+            if (s == NULL) {
+                return 2;
+            }
 
-        } else {
-            printf("no match\n");
+            n = fread(s, 1, len, stdin);
+            if (n < len) {
+                fprintf(stderr, "failed to read %d bytes of string from "
+                        "stdin (only read %d bytes).", (int) len, n);
+
+                free(s);
+                return 2;
+            }
+
+            process_string(s, len, pool, prog, ovector, ovecsize, ncaps);
+
+            free(s);
+        }
+
+    } else {
+
+        for (; i < argc; i++) {
+            len = strlen(argv[i]);
+            p = (u_char *) argv[i];
+
+            s = malloc(len);
+            if (s == NULL) {
+                return 2;
+            }
+
+            memcpy(s, p, len);
+
+            process_string(s, len, pool, prog, ovector, ovecsize, ncaps);
+
+            free(s);
         }
     }
 
@@ -96,9 +141,46 @@ main(int argc, char **argv)
 
 
 static void
+process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
+    int *ovector, unsigned int ovecsize, unsigned ncaps)
+{
+    int         i;
+
+    printf("## %.*s (len %d)\n", (int) len, s, (int) len);
+
+    printf("thompson ");
+
+    if (sre_vm_thompson_exec(pool, prog, s, len) == SRE_OK) {
+        printf("match\n");
+
+    } else {
+        printf("no match\n");
+    }
+
+    printf("pike ");
+
+    if (sre_vm_pike_exec(pool, prog, s, len, ovector, ovecsize)
+        == SRE_OK)
+    {
+        printf("match");
+
+        for (i = 0; i < 2 * (ncaps + 1); i += 2) {
+            printf(" (%d, %d)", ovector[i], ovector[i + 1]);
+        }
+
+        printf("\n");
+
+    } else {
+        printf("no match\n");
+    }
+}
+
+
+static void
 usage(void)
 {
-    fprintf(stderr, "usage: re regexp string...\n");
+    fprintf(stderr, "usage: sregex regexp string...\n");
+    fprintf(stderr, "       sregex --stdin regexp\n");
     exit(2);
 }
 

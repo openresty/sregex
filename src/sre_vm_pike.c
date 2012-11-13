@@ -62,9 +62,9 @@ static int sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx,
 
 int
 sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
-    int *ovector, unsigned ovecsize)
+    size_t size, int *ovector, unsigned ovecsize)
 {
-    u_char                    *sp;
+    u_char                    *sp, *last;
     unsigned                   j, len;
     unsigned                   in;
     sre_capture_t             *cap, *matched;
@@ -106,7 +106,9 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
         return SRE_ERROR;
     }
 
-    for (sp = input; /* void */; sp++) {
+    last = input + size;
+
+    for (sp = input; sp <= last; sp++) {
         dd("=== pos %d (char %d).\n", (int)(sp - input), *sp & 0xFF);
 
         if (clist->head == NULL) {
@@ -136,7 +138,7 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
 
             switch (pc->opcode) {
             case SRE_OPCODE_IN:
-                if (*sp == '\0') {
+                if (sp == last) {
                     sre_capture_decr_ref(&ctx, cap);
                     break;
                 }
@@ -170,7 +172,7 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
                 break;
 
             case SRE_OPCODE_NOTIN:
-                if (*sp == '\0') {
+                if (sp == last) {
                     sre_capture_decr_ref(&ctx, cap);
                     break;
                 }
@@ -207,14 +209,24 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
 
                 dd("matching char %d against %d", *sp, pc->v.ch);
 
-                if (*sp != pc->v.ch) {
+                if (sp == last || *sp != pc->v.ch) {
                     sre_capture_decr_ref(&ctx, cap);
                     break;
                 }
 
+                if (sre_vm_pike_add_thread(&ctx, nlist, pc + 1, cap,
+                                           (int) (sp - input + 1))
+                    != SRE_OK)
+                {
+                    prog->tag = ctx.tag;
+                    return SRE_ERROR;
+                }
+
+                break;
+
             case SRE_OPCODE_ANY:
 
-                if (*sp == '\0') {
+                if (sp == last) {
                     sre_capture_decr_ref(&ctx, cap);
                     break;
                 }
@@ -232,7 +244,7 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
             case SRE_OPCODE_ASSERT:
                 switch (pc->v.assertion_type) {
                 case SRE_REGEX_ASSERTION_SMALL_Z:
-                    if (*sp != '\0') {
+                    if (sp != last) {
                         break;
                     }
 
@@ -240,7 +252,7 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
 
                 case SRE_REGEX_ASSERTION_DOLLAR:
 
-                    if (*sp != '\0' && *sp != '\n') {
+                    if (sp != last && *sp != '\n') {
                         break;
                     }
 
@@ -248,7 +260,7 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
 
                 case SRE_REGEX_ASSERTION_BIG_B:
 
-                    if (t->seen_word ^ sre_isword(*sp)) {
+                    if (t->seen_word ^ (sp != last && sre_isword(*sp))) {
                         break;
                     }
 
@@ -258,7 +270,7 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
 
                 case SRE_REGEX_ASSERTION_SMALL_B:
 
-                    if ((t->seen_word ^ sre_isword(*sp)) == 0) {
+                    if ((t->seen_word ^ (sp != last && sre_isword(*sp))) == 0) {
                         break;
                     }
 
@@ -344,7 +356,7 @@ step_done:
             nlist->head = NULL;
         }
 
-        if (*sp == '\0') {
+        if (sp == last) {
             break;
         }
     } /* for */

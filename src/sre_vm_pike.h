@@ -16,7 +16,7 @@
 
 
 int sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
-    int *ovector, unsigned ovecsize);
+    size_t len, int *ovector, unsigned ovecsize);
 
 
 #endif /* _SRE_VM_PIKE_H_INCLUDED_ */

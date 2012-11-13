@@ -1,6 +1,7 @@
 package t::SRegex;
 
 
+use bytes;
 use Test::Base -Base;
 use IPC::Run3;
 use Cwd;
@@ -41,14 +42,16 @@ sub run_test ($) {
 
     my ($res, $err);
 
-    my @cmd = ("./sregex", $re, $s);
+    my $stdin = bytes::chr(bytes::length $s) . $s;
+
+    my @cmd = ("./sregex", "--stdin", $re);
 
     if ($UseValgrind) {
         warn "$name\n";
         @cmd =  ('valgrind', '-q', '--leak-check=full', @cmd);
     }
 
-    run3 \@cmd, undef, \$res, \$err;
+    run3 \@cmd, \$stdin, \$res, \$err;
 
     #warn "res:$res\nerr:$err\n";
 

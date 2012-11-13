@@ -1315,3 +1315,9 @@ re1 and re2 are wrong here.
 --- re: a{0,3}
 --- s: aaaa
 
+
+
+=== TEST 213: \0 in target string
+--- re: a
+--- s eval: "\0aaaa"
+

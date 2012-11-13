@@ -41,9 +41,10 @@ static sre_vm_thompson_thread_list_t *sre_vm_thompson_thread_list_create(
 
 
 int
-sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
+sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
+    size_t size)
 {
-    u_char                          *sp;
+    u_char                          *sp, *last;
     unsigned                         i, j, len;
     unsigned                         in;
     sre_vm_range_t                  *range;
@@ -69,7 +70,9 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
 
     sre_vm_thompson_add_thread(&ctx, clist, prog->start, input);
 
-    for (sp = input; /* void */; sp++) {
+    last = input + size;
+
+    for (sp = input; sp <= last; sp++) {
         dd("=== pos %d (char %d).\n", (int)(sp - input), *sp & 0xFF);
 
         if (clist->count == 0) {
@@ -89,7 +92,7 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
 
             switch (pc->opcode) {
             case SRE_OPCODE_IN:
-                if (*sp == '\0') {
+                if (sp == last) {
                     break;
                 }
 
@@ -114,7 +117,7 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
                 break;
 
             case SRE_OPCODE_NOTIN:
-                if (*sp == '\0') {
+                if (sp == last) {
                     break;
                 }
 
@@ -139,12 +142,15 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
                 break;
 
             case SRE_OPCODE_CHAR:
-                if (*sp != pc->v.ch) {
+                if (sp == last || *sp != pc->v.ch) {
                     break;
                 }
 
+                sre_vm_thompson_add_thread(&ctx, nlist, pc + 1, sp + 1);
+                break;
+
             case SRE_OPCODE_ANY:
-                if (*sp == '\0') {
+                if (sp == last) {
                     break;
                 }
 
@@ -154,21 +160,21 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
             case SRE_OPCODE_ASSERT:
                 switch (pc->v.assertion_type) {
                 case SRE_REGEX_ASSERTION_SMALL_Z:
-                    if (*sp != '\0') {
+                    if (sp != last) {
                         break;
                     }
 
                     goto assertion_hold;
 
                 case SRE_REGEX_ASSERTION_DOLLAR:
-                    if (*sp != '\0' && *sp != '\n') {
+                    if (sp != last && *sp != '\n') {
                         break;
                     }
 
                     goto assertion_hold;
 
                 case SRE_REGEX_ASSERTION_BIG_B:
-                    if (t->seen_word ^ sre_isword(*sp)) {
+                    if (t->seen_word ^ (sp != last && sre_isword(*sp))) {
                         dd("\\B assertion failed: %u %c", t->seen_word, *sp);
                         break;
                     }
@@ -179,7 +185,7 @@ sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input)
 
 
                 case SRE_REGEX_ASSERTION_SMALL_B:
-                    if ((t->seen_word ^ sre_isword(*sp)) == 0) {
+                    if ((t->seen_word ^ (sp != last && sre_isword(*sp))) == 0) {
                         dd("\\b assertion failed: %u %c", t->seen_word, *sp);
                         break;
                     }
@@ -223,7 +229,7 @@ assertion_hold:
         nlist = tmp;
 
         nlist->count = 0;
-        if (*sp == '\0') {
+        if (sp == last) {
             break;
         }
     } /* for */
@@ -280,7 +286,7 @@ sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
 
         case SRE_REGEX_ASSERTION_SMALL_B:
         case SRE_REGEX_ASSERTION_BIG_B:
-            seen_word = sre_isword(sp[-1]);
+            seen_word = (sp != ctx->start && sre_isword(sp[-1]));
             dd("seen word: %u %c", seen_word, *sp);
             break;
 

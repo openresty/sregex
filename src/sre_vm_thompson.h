@@ -15,7 +15,8 @@
 #include <sre_vm_bytecode.h>
 
 
-int sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input);
+int sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
+    size_t len);
 
 
 #endif /* _SRE_VM_THOMPSON_H_INCLUDED_ */
