@@ -404,7 +404,7 @@ warn "skipped $code_assertions code assertions, ",
 sub usage {
     die <<_EOC_;
 Usage:
-    $0 -o <outfile> /path/to/perl-5.x.x/t/re/re_tests
+    $0 -o <outfile> /path/to/pcre-x.xx/testdata/testinput1
 _EOC_
 }
 
