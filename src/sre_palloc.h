@@ -58,18 +58,22 @@ struct sre_pool_large_s {
 typedef struct sre_pool_s  sre_pool_t;
 
 
+#if !(SRE_USE_VALGRIND)
 typedef struct {
     u_char               *last;
     u_char               *end;
     sre_pool_t           *next;
     unsigned              failed;
 } sre_pool_data_t;
+#endif
 
 
 struct sre_pool_s {
+#if !(SRE_USE_VALGRIND)
     sre_pool_data_t       d;
     size_t                max;
     sre_pool_t           *current;
+#endif
     sre_pool_large_t     *large;
     sre_pool_cleanup_t   *cleanup;
 };

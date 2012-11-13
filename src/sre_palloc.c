@@ -8,7 +8,9 @@
 #include <sre_palloc.h>
 
 
+#if !(SRE_USE_VALGRIND)
 static void *sre_palloc_block(sre_pool_t *pool, size_t size);
+#endif
 static void *sre_palloc_large(sre_pool_t *pool, size_t size);
 static void * sre_memalign(size_t alignment, size_t size);
 
@@ -18,11 +20,17 @@ sre_create_pool(size_t size)
 {
     sre_pool_t  *p;
 
+#if (SRE_USE_VALGRIND)
+    size = sizeof(sre_pool_t);
+    p = malloc(size);
+#else
     p = sre_memalign(SRE_POOL_ALIGNMENT, size);
+#endif
     if (p == NULL) {
         return NULL;
     }
 
+#if !(SRE_USE_VALGRIND)
     p->d.last = (u_char *) p + sizeof(sre_pool_t);
     p->d.end = (u_char *) p + size;
     p->d.next = NULL;
@@ -32,6 +40,8 @@ sre_create_pool(size_t size)
     p->max = (size < SRE_MAX_ALLOC_FROM_POOL) ? size : SRE_MAX_ALLOC_FROM_POOL;
 
     p->current = p;
+#endif
+
     p->large = NULL;
     p->cleanup = NULL;
 
@@ -42,7 +52,11 @@ sre_create_pool(size_t size)
 void
 sre_destroy_pool(sre_pool_t *pool)
 {
+#if !(SRE_USE_VALGRIND)
     sre_pool_t          *p, *n;
+#else
+    sre_pool_large_t    *n;
+#endif
     sre_pool_large_t    *l;
     sre_pool_cleanup_t  *c;
 
@@ -52,12 +66,33 @@ sre_destroy_pool(sre_pool_t *pool)
         }
     }
 
+#if (SRE_USE_VALGRIND)
+    if (pool->large == NULL) {
+        free(pool);
+        return;
+    }
+#endif
+
+#if (SRE_USE_VALGRIND)
+    for (l = pool->large; l; l = n) {
+        if (l->alloc) {
+            free(l->alloc);
+            n = l->next;
+            free(l);
+
+        } else {
+            n = l->next;
+        }
+    }
+#else
     for (l = pool->large; l; l = l->next) {
         if (l->alloc) {
             free(l->alloc);
         }
     }
+#endif
 
+#if !(SRE_USE_VALGRIND)
     for (p = pool, n = pool->d.next; /* void */; p = n, n = n->d.next) {
         free(p);
 
@@ -65,13 +100,19 @@ sre_destroy_pool(sre_pool_t *pool)
             break;
         }
     }
+#else
+    pool->large = NULL;
+    free(pool);
+#endif
 }
 
 
 void
 sre_reset_pool(sre_pool_t *pool)
 {
+#if !(SRE_USE_VALGRIND)
     sre_pool_t        *p;
+#endif
     sre_pool_large_t  *l;
 
     for (l = pool->large; l; l = l->next) {
@@ -82,15 +123,18 @@ sre_reset_pool(sre_pool_t *pool)
 
     pool->large = NULL;
 
+#if !(SRE_USE_VALGRIND)
     for (p = pool; p; p = p->d.next) {
         p->d.last = (u_char *) p + sizeof(sre_pool_t);
     }
+#endif
 }
 
 
 void *
 sre_palloc(sre_pool_t *pool, size_t size)
 {
+#if !(SRE_USE_VALGRIND)
     u_char      *m;
     sre_pool_t  *p;
 
@@ -113,6 +157,7 @@ sre_palloc(sre_pool_t *pool, size_t size)
 
         return sre_palloc_block(pool, size);
     }
+#endif
 
     return sre_palloc_large(pool, size);
 }
@@ -121,6 +166,7 @@ sre_palloc(sre_pool_t *pool, size_t size)
 void *
 sre_pnalloc(sre_pool_t *pool, size_t size)
 {
+#if !(SRE_USE_VALGRIND)
     u_char      *m;
     sre_pool_t  *p;
 
@@ -143,11 +189,13 @@ sre_pnalloc(sre_pool_t *pool, size_t size)
 
         return sre_palloc_block(pool, size);
     }
+#endif
 
     return sre_palloc_large(pool, size);
 }
 
 
+#if !(SRE_USE_VALGRIND)
 static void *
 sre_palloc_block(sre_pool_t *pool, size_t size)
 {
@@ -186,6 +234,7 @@ sre_palloc_block(sre_pool_t *pool, size_t size)
 
     return m;
 }
+#endif
 
 
 static void *
@@ -213,7 +262,11 @@ sre_palloc_large(sre_pool_t *pool, size_t size)
         }
     }
 
+#if (SRE_USE_VALGRIND)
+    large = malloc(sizeof(sre_pool_large_t));
+#else
     large = sre_palloc(pool, sizeof(sre_pool_large_t));
+#endif
     if (large == NULL) {
         free(p);
         return NULL;
@@ -255,15 +308,28 @@ sre_pmemalign(sre_pool_t *pool, size_t size, size_t alignment)
 int
 sre_pfree(sre_pool_t *pool, void *p)
 {
-    sre_pool_large_t  *l;
+    sre_pool_large_t   *l;
+#if (SRE_USE_VALGRIND)
+    sre_pool_large_t  **next;
+
+    next = &pool->large;
+#endif
 
     for (l = pool->large; l; l = l->next) {
         if (p == l->alloc) {
             free(l->alloc);
             l->alloc = NULL;
 
+#if (SRE_USE_VALGRIND)
+            *next = l->next;
+            free(l);
+#endif
             return SRE_OK;
         }
+
+#if (SRE_USE_VALGRIND)
+        next = &l->next;
+#endif
     }
 
     return SRE_DECLINED;

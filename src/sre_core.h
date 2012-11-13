@@ -16,6 +16,11 @@
 #include <string.h>
 
 
+#ifndef SRE_USE_VALGRIND
+#define SRE_USE_VALGRIND  0
+#endif
+
+
 #define  SRE_OK          0
 #define  SRE_ERROR      -1
 #define  SRE_AGAIN      -2

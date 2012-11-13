@@ -37,7 +37,15 @@ perl -e 'use strict; use warnings;
                     if (length($&) > length($indent)) {
                         next;
                     }
+
+                } elsif (/^\#else/) {
+                    undef $seen;
+                    next;
+
+                } elsif (/^\#endif$/) {
+                    next
                 }
+
                 if (!/\bif\b.*? [=!]= NULL/) {
                     warn "not check NULL: $fname: line $.: $saved$_";
                 }
@@ -48,6 +56,7 @@ perl -e 'use strict; use warnings;
     }' `ls src/sre_*.[cy]`
 
 ack '_log_error\(NGX_[^L]' src/sre_*.[ch]
+ack '\#define\s+SRE_USE_VALGRIND\s+[1-9]' src/sre_core.h
 
 echo done.
 

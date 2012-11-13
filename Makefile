@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS = -fpic -g -Wall -Werror -O -Isrc
-JOBS=1
+jobs=1
 
 pwd = $(shell pwd)
 
@@ -44,10 +44,10 @@ clean:
 	    src/*.output sregex *.so *.a
 
 test: all
-	prove -j$(JOBS) -r t
+	prove -j$(jobs) -r t
 
 valtest: all
-	TEST_SREGEX_USE_VALGRIND=1 prove -j$(JOBS) -r t
+	TEST_SREGEX_USE_VALGRIND=1 prove -j$(jobs) -r t
 
 clang: $(plist_vfiles)
 
