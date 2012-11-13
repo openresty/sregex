@@ -35,7 +35,7 @@ my $esc_R = 0;
 my $esc_x_unicode = 0;
 my $esc_o_unicode = 0;
 my $esc_Z = 0;
-my $null_char = 0;
+#my $null_char = 0;
 my $lookaround = 0;
 my $named_cap = 0;
 my $branch_reset = 0;
@@ -184,10 +184,10 @@ while (<$in>) {
         next;
     }
 
-    if ($re =~ m/\\0{3}|\\0\b|\\x0\b|\\x00/) {
-        $null_char++;
-        next;
-    }
+    #if ($re =~ m/\\0{3}|\\0\b|\\x0\b|\\x00/) {
+        #$null_char++;
+        #next;
+    #}
 
     if ($re =~ m/(?:[\*\+\?]|\{\d+(?:,(?:\d+)?)?\})\+/) {
         $possessive++;
@@ -385,7 +385,7 @@ warn "skipped $code_assertions code assertions, ",
     "$esc_R \\R tests, ",
     "$esc_o_unicode \\o{} for Unicode code point tests, ",
     "$esc_x_unicode \\x{} for Unicode code point tests, ",
-    "$null_char \\0 tests, ",
+    #"$null_char \\0 tests, ",
     "$lookaround look-around tests, ",
     "$esc_Z \\Z tests, ",
     "$esc_K \\K tests, ",
