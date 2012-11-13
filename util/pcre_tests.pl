@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
-# generate .t file from the re_tests file in the perl 5 source tree's
-# t/re/re_tests file
+# generate .t file from the testinput* files in the PCRE source tree's
+# testdata/ directory.
 
 use strict;
 use warnings;
