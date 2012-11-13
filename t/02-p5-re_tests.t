@@ -4223,157 +4223,175 @@ __DATA__
 
 
 
-=== TEST 684: re_tests:1484
+=== TEST 684: re_tests:1483
+--- re: [\0]
+--- s eval: "\000"
+
+
+
+=== TEST 685: re_tests:1484
 --- re: [\07]
 --- s eval: "\007"
 
 
 
-=== TEST 685: re_tests:1485
+=== TEST 686: re_tests:1485
 --- re: [\07]
 --- s eval: "7\000"
 
 
 
-=== TEST 686: re_tests:1486
+=== TEST 687: re_tests:1486
 --- re: [\006]
 --- s eval: "\006"
 
 
 
-=== TEST 687: re_tests:1487
+=== TEST 688: re_tests:1487
 --- re: [\006]
 --- s eval: "6\000"
 
 
 
-=== TEST 688: re_tests:1490
+=== TEST 689: re_tests:1488
+--- re: [\0005]
+--- s eval: "\0005"
+
+
+
+=== TEST 690: re_tests:1489
+--- re: [\0005]
+--- s eval: "5\000"
+
+
+
+=== TEST 691: re_tests:1490
 --- re: [\_]
 --- s eval: "_"
 
 
 
-=== TEST 689: re_tests:1493
+=== TEST 692: re_tests:1493
 --- re: (q1|.)*(q2|.)*(x(a|bc)*y){2,}
 --- s eval: "xayxay"
 
 
 
-=== TEST 690: re_tests:1494
+=== TEST 693: re_tests:1494
 --- re: (q1|.)*(q2|.)*(x(a|bc)*y){2,3}
 --- s eval: "xayxay"
 
 
 
-=== TEST 691: re_tests:1495
+=== TEST 694: re_tests:1495
 --- re: (q1|z)*(q2|z)*z{15}-.*?(x(a|bc)*y){2,3}Z
 --- s eval: "zzzzzzzzzzzzzzzz-xayxayxayxayZ"
 
 
 
-=== TEST 692: re_tests:1497
+=== TEST 695: re_tests:1497
 --- re: (?:(?:)foo|bar|zot|rt78356)
 --- s eval: "foo"
 
 
 
-=== TEST 693: re_tests:1518
+=== TEST 696: re_tests:1518
 --- re: s
 --- s eval: "\x{17F}"
 
 
 
-=== TEST 694: re_tests:1519
+=== TEST 697: re_tests:1519
 --- re: s
 --- s eval: "\x{17F}"
 
 
 
-=== TEST 695: re_tests:1520
+=== TEST 698: re_tests:1520
 --- re: s
 --- s eval: "S"
 
 
 
-=== TEST 696: re_tests:1530
+=== TEST 699: re_tests:1530
 --- re: ^.*\d\H
 --- s eval: "X1"
 
 
 
-=== TEST 697: re_tests:1531
+=== TEST 700: re_tests:1531
 --- re: ^.*\d\V
 --- s eval: "X1"
 
 
 
-=== TEST 698: re_tests:1539
+=== TEST 701: re_tests:1539
 --- re: [s\xDF]
 --- s eval: "\xDFs"
 
 
 
-=== TEST 699: re_tests:1544
+=== TEST 702: re_tests:1544
 --- re: ff
 --- s eval: "\x{FB00}\x{FB01}"
 
 
 
-=== TEST 700: re_tests:1545
+=== TEST 703: re_tests:1545
 --- re: ff
 --- s eval: "\x{FB01}\x{FB00}"
 
 
 
-=== TEST 701: re_tests:1546
+=== TEST 704: re_tests:1546
 --- re: fi
 --- s eval: "\x{FB01}\x{FB00}"
 
 
 
-=== TEST 702: re_tests:1547
+=== TEST 705: re_tests:1547
 --- re: fi
 --- s eval: "\x{FB00}\x{FB01}"
 
 
 
-=== TEST 703: re_tests:1551
+=== TEST 706: re_tests:1551
 --- re: ffiffl
 --- s eval: "abcdef\x{FB03}\x{FB04}"
 
 
 
-=== TEST 704: re_tests:1552
+=== TEST 707: re_tests:1552
 --- re: \xdf\xdf
 --- s eval: "abcdefssss"
 
 
 
-=== TEST 705: re_tests:1554
+=== TEST 708: re_tests:1554
 --- re: st
 --- s eval: "\x{DF}\x{FB05}"
 
 
 
-=== TEST 706: re_tests:1555
+=== TEST 709: re_tests:1555
 --- re: ssst
 --- s eval: "\x{DF}\x{FB05}"
 
 
 
-=== TEST 707: re_tests:1563
+=== TEST 710: re_tests:1563
 --- re: s\xDF
 --- s eval: "\xDFs"
 
 
 
-=== TEST 708: re_tests:1564
+=== TEST 711: re_tests:1564
 --- re: sst
 --- s eval: "s\N{LATIN SMALL LIGATURE ST}"
 
 
 
-=== TEST 709: re_tests:1565
+=== TEST 712: re_tests:1565
 --- re: sst
 --- s eval: "s\N{LATIN SMALL LIGATURE LONG S T}"
 

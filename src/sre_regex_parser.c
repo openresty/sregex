@@ -1896,7 +1896,7 @@ yylex(void)
 {
     u_char               c;
     int                  from, to;
-    unsigned             i, n, seen_dash, no_dash, seen_curly_bracket;
+    unsigned             i, n, num, seen_dash, no_dash, seen_curly_bracket;
     sre_regex_t         *r;
     sre_regex_range_t   *range, *last = NULL;
     sre_regex_type_t     type;
@@ -1952,23 +1952,23 @@ yylex(void)
 
         if (c >= '0' && c <= '7') {
 
-            n = c - '0';
+            num = c - '0';
             i = 1;
 
             for (;;) {
                 c = *sre_regex_str;
 
                 if (c < '0' || c > '7') {
-                    yylval.ch = (u_char) n;
+                    yylval.ch = (u_char) num;
                     return SRE_REGEX_TOKEN_CHAR;
                 }
 
-                n = (c - '0') + (n << 3);
+                num = (c - '0') + (num << 3);
 
                 sre_regex_str++;
 
                 if (++i == 3) {
-                    yylval.ch = (u_char) n;
+                    yylval.ch = (u_char) num;
                     return SRE_REGEX_TOKEN_CHAR;
                 }
             }
@@ -2000,17 +2000,17 @@ yylex(void)
 
             c = *sre_regex_str++;
 
-            n = 0;
+            num = 0;
             i = 0;
 
             for (;;) {
                 dd("%d: hex digit: %c (%d)", (int) i, (int) c, c);
 
                 if (c >= '0' && c <= '7') {
-                    n = (c - '0') + (n << 3);
+                    num = (c - '0') + (num << 3);
 
                 } else if (c == '}') {
-                    yylval.ch = (u_char) n;
+                    yylval.ch = (u_char) num;
                     return SRE_REGEX_TOKEN_CHAR;
 
                 } else if (c == '\0') {
@@ -2034,9 +2034,9 @@ yylex(void)
                 c = *sre_regex_str++;
             }
 
-            dd("\\o{...}: %u, next: %c", n, *sre_regex_str);
+            dd("\\o{...}: %u, next: %c", num, *sre_regex_str);
 
-            yylval.ch = (u_char) n;
+            yylval.ch = (u_char) num;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'x':
@@ -2049,27 +2049,27 @@ yylex(void)
                 seen_curly_bracket = 0;
             }
 
-            n = 0;
+            num = 0;
             i = 0;
 
             for (;;) {
                 dd("%d: hex digit: %c (%d)", (int) i, (int) c, c);
 
                 if (c >= '0' && c <= '9') {
-                    n = (c - '0') + (n << 4);
+                    num = (c - '0') + (num << 4);
 
                 } else if (c >= 'A' && c <= 'F') {
-                    n = (c - 'A' + 10) + (n << 4);
+                    num = (c - 'A' + 10) + (num << 4);
 
                 } else if (c >= 'a' && c <= 'f') {
-                    n = (c - 'a' + 10) + (n << 4);
+                    num = (c - 'a' + 10) + (num << 4);
 
                 } else if (seen_curly_bracket) {
                     if (c != '}') {
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
-                    yylval.ch = (u_char) n;
+                    yylval.ch = (u_char) num;
                     return SRE_REGEX_TOKEN_CHAR;
 
                 } else {
@@ -2092,9 +2092,9 @@ yylex(void)
                 c = *sre_regex_str++;
             }
 
-            dd("\\x{...}: %u, next: %c", n, *sre_regex_str);
+            dd("\\x{...}: %u, next: %c", num, *sre_regex_str);
 
-            yylval.ch = (u_char) n;
+            yylval.ch = (u_char) num;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'B':
@@ -2565,11 +2565,16 @@ yylex(void)
             n++;
 
             c = *sre_regex_str++;
+
+            dd("read char: %d", c);
+
             switch (c) {
             case '\0':
                 return SRE_REGEX_TOKEN_BAD;
 
             case ']':
+                dd("n == %d", n);
+
                 if (n == 1) {
                     goto process_char;
                 }
@@ -2600,23 +2605,29 @@ yylex(void)
 
                 if (c >= '0' && c <= '7') {
 
-                    n = c - '0';
+                    num = c - '0';
                     i = 1;
+
+                    dd("\\ddd: %d", num);
 
                     for (;;) {
                         c = *sre_regex_str;
 
                         if (c < '0' || c > '7') {
-                            c = (u_char) n;
+                            dd("c before: %d", c);
+
+                            c = (u_char) num;
+
+                            dd("c after: %d", c);
                             goto process_char;
                         }
 
-                        n = (c - '0') + (n << 3);
+                        num = (c - '0') + (num << 3);
 
                         sre_regex_str++;
 
                         if (++i == 3) {
-                            c = (u_char) n;
+                            c = (u_char) num;
                             goto process_char;
                         }
                     }
@@ -2648,17 +2659,17 @@ yylex(void)
 
                     c = *sre_regex_str++;
 
-                    n = 0;
+                    num = 0;
                     i = 0;
 
                     for (;;) {
                         dd("%d: oct digit: %c (%d)", (int) i, (int) c, c);
 
                         if (c >= '0' && c <= '7') {
-                            n = (c - '0') + (n << 3);
+                            num = (c - '0') + (num << 3);
 
                         } else if (c == '}') {
-                            c = (u_char) n;
+                            c = (u_char) num;
                             goto process_char;
 
                         } else {
@@ -2678,9 +2689,9 @@ yylex(void)
                         c = *sre_regex_str++;
                     }
 
-                    dd("\\x{...}: %u, next: %c", n, *sre_regex_str);
+                    dd("\\x{...}: %u, next: %c", num, *sre_regex_str);
 
-                    c = (u_char) n;
+                    c = (u_char) num;
                     goto process_char;
 
                 case 'x':
@@ -2693,27 +2704,27 @@ yylex(void)
                         seen_curly_bracket = 0;
                     }
 
-                    n = 0;
+                    num = 0;
                     i = 0;
 
                     for (;;) {
                         dd("%d: hex digit: %c (%d)", (int) i, (int) c, c);
 
                         if (c >= '0' && c <= '9') {
-                            n = (c - '0') + (n << 4);
+                            num = (c - '0') + (num << 4);
 
                         } else if (c >= 'A' && c <= 'F') {
-                            n = (c - 'A' + 10) + (n << 4);
+                            num = (c - 'A' + 10) + (num << 4);
 
                         } else if (c >= 'a' && c <= 'f') {
-                            n = (c - 'a' + 10) + (n << 4);
+                            num = (c - 'a' + 10) + (num << 4);
 
                         } else if (seen_curly_bracket) {
                             if (c != '}') {
                                 return SRE_REGEX_TOKEN_BAD;
                             }
 
-                            c = (u_char) n;
+                            c = (u_char) num;
                             goto process_char;
 
                         } else if (c == '\0') {
@@ -2739,9 +2750,9 @@ yylex(void)
                         c = *sre_regex_str++;
                     }
 
-                    dd("\\x{...}: %u, next: %c", n, *sre_regex_str);
+                    dd("\\x{...}: %u, next: %c", num, *sre_regex_str);
 
-                    c = (u_char) n;
+                    c = (u_char) num;
                     goto process_char;
 
                 case 't':
@@ -3052,6 +3063,8 @@ yylex(void)
 
             default:
 process_char:
+                dd("next: %d", *sre_regex_str);
+
                 if (seen_dash) {
                     last->to = c;
 
