@@ -12,7 +12,9 @@
 #endif
 #include <ddebug.h>
 
+
 #include <sre_regex_compiler.h>
+#include <assert.h>
 
 
 static unsigned sre_program_len(sre_regex_t *r);
@@ -52,6 +54,8 @@ sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
     pc->opcode = SRE_OPCODE_MATCH;
     pc++;
 
+    assert(pc - prog->start == n);
+
     prog->len = pc - prog->start;
     prog->tag = 0;
 
@@ -67,7 +71,7 @@ sre_program_len(sre_regex_t *r)
         return 2 + sre_program_len(r->left) + sre_program_len(r->right);
 
     case SRE_REGEX_TYPE_CAT:
-        return 2 + sre_program_len(r->left) + sre_program_len(r->right);
+        return sre_program_len(r->left) + sre_program_len(r->right);
 
     case SRE_REGEX_TYPE_LIT:
     case SRE_REGEX_TYPE_DOT:
