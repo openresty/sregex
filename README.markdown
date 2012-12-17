@@ -107,7 +107,7 @@ There is no proper API nor ABI for the library yet.
 
 There's a simple executable that can be used to exercise the engine:
 
-    $ ./sregex 'a|ab' 'blab'
+    $ ./sregex-cli 'a|ab' 'blab'
 
 Test Suite
 ==========

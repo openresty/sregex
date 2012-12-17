@@ -25,9 +25,9 @@ plist_vfiles=$(patsubst src/%.c,%.plist,$(lib_c_files)) src/sregex.c
 .PHONY: all clean test val
 .PRECIOUS: src/sre_regex_parser.c
 
-all: libsregex.so libsregex.a sregex
+all: libsregex.so libsregex.a sregex-cli
 
-sregex: src/sregex.o libsregex.so
+sregex-cli: src/sre_cli.o libsregex.so
 	$(CC) -o $@ -Wl,-rpath,$(pwd) $< -L. -lsregex
 
 libsregex.so: $(lib_o_files)
@@ -45,7 +45,7 @@ src/%.c: src/%.y
 
 clean:
 	rm -f src/*.o core $(TARGET) src/sre_regex_parser.c \
-	    src/*.output sregex *.so *.a
+	    src/*.output sregex-cli *.so *.a
 
 test: all
 	prove -j$(jobs) -r t

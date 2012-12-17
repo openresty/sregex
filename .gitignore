@@ -30,7 +30,7 @@ src/pike.[ch]
 src/sre_regex_parser.output
 *.so
 *.a
-sregex
+sregex-cli
 go
 releng
 reindex

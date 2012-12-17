@@ -44,7 +44,7 @@ sub run_test ($) {
 
     my $stdin = bytes::chr(bytes::length $s) . $s;
 
-    my @cmd = ("./sregex", "--stdin", $re);
+    my @cmd = ("./sregex-cli", "--stdin", $re);
 
     if ($UseValgrind) {
         warn "$name\n";
