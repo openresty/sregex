@@ -146,7 +146,7 @@ This module is licensed under the BSD license.
 
 Copyright (C) 2012, by Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>.
 
-Copyright (c) 2007-2009 Russ Cox, Google Inc. All rights reserved.
+Copyright (C) 2007-2009 Russ Cox, Google Inc. All rights reserved.
 
 All rights reserved.
 
