@@ -146,10 +146,14 @@ process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
     int *ovector, unsigned int ovecsize, unsigned ncaps)
 {
     int                          i, rc;
+    u_char                      *p;
     sre_vm_thompson_ctx_t       *tctx;
     /* sre_vm_pike_ctx_t           *pctx; */
 
     printf("## %.*s (len %d)\n", (int) len, s, (int) len);
+
+    p = malloc(1);
+    assert(p);
 
     printf("thompson ");
 
@@ -187,11 +191,20 @@ process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
     assert(tctx);
 
     for (i = 0; i <= len; i++) {
-        rc = sre_vm_thompson_exec(tctx, &s[i], (i == len) ? 0 : 1, i == len);
+        if (i == len) {
+            rc = sre_vm_thompson_exec(tctx, NULL, 0 /* len */, 1 /* eof */);
+
+        } else {
+            p[0] = s[i];
+
+            rc = sre_vm_thompson_exec(tctx, p, 1 /* len */, 0 /* eof */);
+        }
 
         switch (rc) {
         case SRE_AGAIN:
-            /* printf("again"); */
+#if 0
+            printf("again");
+#endif
             continue;
 
         case SRE_OK:
@@ -231,6 +244,8 @@ process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
     } else {
         printf("no match\n");
     }
+
+    free(p);
 }
 
 

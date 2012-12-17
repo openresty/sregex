@@ -1,6 +1,10 @@
-CC=gcc
-CFLAGS = -fpic -g -Wall -Werror -O -Isrc
-jobs=1
+CC = gcc
+CFLAGS += -fpic -g -Wall -Werror -O -Isrc
+jobs = 1
+
+ifeq ($(use_valgrind), 1)
+    CFLAGS += -DSRE_USE_VALGRIND=1
+endif
 
 pwd = $(shell pwd)
 
@@ -18,7 +22,7 @@ lib_o_files = $(patsubst %.c,%.o,$(lib_c_files))
 h_files=$(wildcard src/*.h)
 plist_vfiles=$(patsubst src/%.c,%.plist,$(lib_c_files)) src/sregex.c
 
-.PHONY: all clean test
+.PHONY: all clean test val
 .PRECIOUS: src/sre_regex_parser.c
 
 all: libsregex.so libsregex.a sregex
@@ -46,7 +50,10 @@ clean:
 test: all
 	prove -j$(jobs) -r t
 
-valtest: all
+val:
+	$(MAKE) use_valgrind=1 all -B -j$(jobs)
+
+valtest: val
 	TEST_SREGEX_USE_VALGRIND=1 prove -j$(jobs) -r t
 
 clang: $(plist_vfiles)
