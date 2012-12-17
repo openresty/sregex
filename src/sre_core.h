@@ -27,6 +27,9 @@
 #define  SRE_DECLINED   -5
 
 
+#define SRE_UNSET_PTR   (void *) -1
+
+
 #define sre_memzero(buf, n)  (void) memset(buf, 0, n)
 #define sre_nelems(a)        (sizeof(a)/sizeof((a)[0]))
 

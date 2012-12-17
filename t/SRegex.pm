@@ -85,7 +85,7 @@ sub run_test ($) {
 
         } else {
 
-            my ($thompson_match, $pike_match, $pike_cap) = parse_res($res);
+            my ($thompson_match, $splitted_thompson_match, $pike_match, $pike_cap) = parse_res($res);
 
             if ($ENV{TEST_SREGEX_VERBOSE}) {
                 my $cap = $pike_cap;
@@ -113,17 +113,22 @@ sub run_test ($) {
                 my $expected_cap = $block->cap;
 
                 ok($thompson_match, "$name - thompson vm should match");
+                ok($splitted_thompson_match, "$name - splitted thompson vm should match");
+
                 ok($pike_match, "$name - pike vm should match");
                 is($pike_cap, $expected_cap, "$name - pike vm capture ok");
             } elsif ($s =~ m/$re/sma) {
                 my $expected_cap = fmt_cap(\@-, \@+);
 
                 ok($thompson_match, "$name - thompson vm should match");
+                ok($splitted_thompson_match, "$name - splitted thompson vm should match");
+
                 ok($pike_match, "$name - pike vm should match");
                 is($pike_cap, $expected_cap, "$name - pike vm capture ok");
 
             } else {
                 ok(!$thompson_match, "$name - thompson vm should not match");
+                ok(!$splitted_thompson_match, "$name - splitted thompson vm should not match");
                 ok(!$pike_match, "$name - pike vm should not match");
             }
         }
@@ -135,7 +140,7 @@ sub parse_res ($) {
     my $res = shift;
     open my $in, '<', \$res or die $!;
 
-    my ($thompson_match, $pike_match, $pike_cap);
+    my ($thompson_match, $splitted_thompson_match, $pike_match, $pike_cap);
 
     while (<$in>) {
         if (/^thompson (.+)/) {
@@ -154,13 +159,33 @@ sub parse_res ($) {
 
             } else {
                 warn "unknown thompson result: $res\n";
+                $thompson_match = 0;
+            }
+
+        } elsif (/^splitted thompson (.+)/) {
+            my $res = $1;
+
+            if (defined $splitted_thompson_match) {
+                warn "duplicate splitted thompson result: $_";
+                next;
+            }
+
+            if ($res eq 'match') {
+                $splitted_thompson_match = 1;
+
+            } elsif ($res eq 'no match') {
+                $splitted_thompson_match = 0;
+
+            } else {
+                warn "unknown splitted thompson result: $res\n";
+                $splitted_thompson_match = 0;
             }
 
         } elsif (/^pike (.+)/) {
             my $res = $1;
 
             if (defined $pike_match) {
-                warn "duplicate thompson result: $_";
+                warn "duplicate pike result: $_";
                 next;
             }
 
@@ -179,7 +204,7 @@ sub parse_res ($) {
         }
     }
 
-    return ($thompson_match, $pike_match, $pike_cap);
+    return ($thompson_match, $splitted_thompson_match, $pike_match, $pike_cap);
 }
 
 

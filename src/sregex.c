@@ -17,6 +17,7 @@
 #include <sre_regex_compiler.h>
 #include <sre_vm_thompson.h>
 #include <sre_vm_pike.h>
+#include <assert.h>
 
 
 static void usage(void);
@@ -144,18 +145,75 @@ static void
 process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
     int *ovector, unsigned int ovecsize, unsigned ncaps)
 {
-    int         i;
+    int                          i, rc;
+    sre_vm_thompson_ctx_t       *tctx;
+    /* sre_vm_pike_ctx_t           *pctx; */
 
     printf("## %.*s (len %d)\n", (int) len, s, (int) len);
 
     printf("thompson ");
 
-    if (sre_vm_thompson_exec(pool, prog, s, len) == SRE_OK) {
-        printf("match\n");
+    tctx = sre_vm_thompson_init(pool, prog);
+    assert(tctx);
 
-    } else {
+    rc = sre_vm_thompson_exec(tctx, s, len, 1);
+
+    switch (rc) {
+    case SRE_OK:
+        printf("match\n");
+        break;
+
+    case SRE_DECLINED:
         printf("no match\n");
+        break;
+
+    case SRE_AGAIN:
+        printf("again\n");
+        break;
+
+    case SRE_ERROR:
+        printf("error\n");
+        break;
+
+    default:
+        assert(rc);
     }
+
+    sre_vm_thompson_finalize(tctx);
+
+    printf("splitted thompson ");
+
+    tctx = sre_vm_thompson_init(pool, prog);
+    assert(tctx);
+
+    for (i = 0; i <= len; i++) {
+        rc = sre_vm_thompson_exec(tctx, &s[i], (i == len) ? 0 : 1, i == len);
+
+        switch (rc) {
+        case SRE_AGAIN:
+            /* printf("again"); */
+            continue;
+
+        case SRE_OK:
+            printf("match\n");
+            break;
+
+        case SRE_DECLINED:
+            printf("no match\n");
+            break;
+
+        case SRE_ERROR:
+            printf("error\n");
+            break;
+
+        default:
+            assert(rc);
+        }
+
+        break;
+    }
+
+    sre_vm_thompson_finalize(tctx);
 
     printf("pike ");
 

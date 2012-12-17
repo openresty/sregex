@@ -15,8 +15,17 @@
 #include <sre_vm_bytecode.h>
 
 
-int sre_vm_thompson_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
-    size_t len);
+struct sre_vm_thompson_ctx_s;
+typedef struct sre_vm_thompson_ctx_s  sre_vm_thompson_ctx_t;
+
+
+sre_vm_thompson_ctx_t *sre_vm_thompson_init(sre_pool_t *pool,
+    sre_program_t *prog);
+
+int sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, u_char *input,
+    size_t len, unsigned eof);
+
+void sre_vm_thompson_finalize(sre_vm_thompson_ctx_t *ctx);
 
 
 #endif /* _SRE_VM_THOMPSON_H_INCLUDED_ */
