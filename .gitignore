@@ -40,3 +40,4 @@ plot
 lines
 re_tests
 testinput1
+*.png
