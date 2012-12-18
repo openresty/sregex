@@ -127,10 +127,37 @@ Test Suite
 
 The test suite is driven by Perl.
 
+To run the test suite
+
     make test
 
-Gnu make, perl 5.6.1+, and the Test::Base perl module are required.
+Gnu make, perl 5.6.1+, and the following Perl CPAN modules are required:
 
+* Cwd
+* IPC::Run3
+* Test::Base
+* Test::LongString
+
+If you already have `perl` installed in your system, you can use the following
+command to install these CPAN modules (you may need to run it using `root`):
+
+    cpan Cwd IPC::Run3 Test::Base Test::LongString
+
+You can also run the test suite using the Valgrind Memcheck tool to check
+memory issues in sregex:
+
+    make valtest
+
+Because we have a huge test suite, to run the test suite in parallel, you can specify
+the parallelism level with the `jobs` `make` variable, as in
+
+    make test jobs=8
+
+or similarly
+
+    make valtest jobs=8
+
+So the test suite will run in 8 parallel jobs (assuming you have 8 CPU cores).
 
 TODO
 ====
