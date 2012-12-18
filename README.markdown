@@ -14,7 +14,11 @@ Already rewrote the code base of Russ Cox's re1 library using the nginx coding s
 
 Already ported the Thompson and Pike VM backends to sregex. The former is just for yes-or-no matching, and the latter also supports submatch capturing.
 
-At the moment, I haven't added support for streaming matching to the API, but this should be easy.
+The full streaming matching API for the sregex engine has already been implemented,
+for both the Pike and Thompson regex VMs. The submatch capturing also supports streaming processing.
+When the state machine is yielded (that is, returning `SRE_AGAIN` on the current input data chunk,
+sregex will always output the current value ranges for each submatch capture in the user-supplied
+`ovector` array.
 
 Syntax Supported
 ================
@@ -122,12 +126,11 @@ Gnu make, perl 5.6.1+, and the Test::Base perl module are required.
 TODO
 ====
 
+* implement the case-insensitive matching mode.
 * implement a simplified version of the backreferences.
 * implement the comment notation `(?#comment)`.
-* implement the case-insensitive matching mode.
 * implement the POSIX character class notation.
 * allow '\0' be used in both the regex and the subject string.
-* add an API for streaming processing.
 * add an API for assembling multiple user regexes and return an ID indicating exactly which regex is matched (first), as well as the corresponding submatch captures.
 * add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM).
 * add a JIT compiler for the regex VM targeting x86_64 (and other architectures).
