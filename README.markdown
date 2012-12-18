@@ -129,7 +129,7 @@ The `sregex-cli` command-line interface can be used as a convenient way to exerc
 Test Suite
 ==========
 
-The test suite is driven by Perl.
+The test suite is driven by Perl 5.
 
 To run the test suite
 
