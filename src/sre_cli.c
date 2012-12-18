@@ -340,8 +340,8 @@ process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
 static void
 usage(void)
 {
-    fprintf(stderr, "usage: sregex regexp string...\n");
-    fprintf(stderr, "       sregex --stdin regexp\n");
+    fprintf(stderr, "usage: sregex-cli regexp string...\n");
+    fprintf(stderr, "       sregex-cli --stdin regexp\n");
     exit(2);
 }
 
