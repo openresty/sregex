@@ -148,12 +148,15 @@ process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
     int                          i, rc;
     u_char                      *p;
     sre_vm_thompson_ctx_t       *tctx;
-    /* sre_vm_pike_ctx_t           *pctx; */
+    sre_vm_pike_ctx_t           *pctx;
+    unsigned                     gen_empty_buf;
 
     printf("## %.*s (len %d)\n", (int) len, s, (int) len);
 
     p = malloc(1);
-    assert(p);
+    if (p == NULL) {
+        exit(2);
+    }
 
     printf("thompson ");
 
@@ -230,9 +233,13 @@ process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
 
     printf("pike ");
 
-    if (sre_vm_pike_exec(pool, prog, s, len, ovector, ovecsize)
-        == SRE_OK)
-    {
+    pctx = sre_vm_pike_init(pool, prog, ovector, ovecsize);
+    assert(pctx);
+
+    rc = sre_vm_pike_exec(pctx, s, len, 1 /* eof */);
+
+    switch (rc) {
+    case SRE_OK:
         printf("match");
 
         for (i = 0; i < 2 * (ncaps + 1); i += 2) {
@@ -240,10 +247,83 @@ process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
         }
 
         printf("\n");
+        break;
 
-    } else {
+    case SRE_AGAIN:
+        printf("again\n");
+        break;
+
+    case SRE_DECLINED:
         printf("no match\n");
+        break;
+
+    case SRE_ERROR:
+        printf("error\n");
+        break;
+
+    default:
+        assert(rc);
+        break;
     }
+
+    sre_vm_pike_finalize(pctx);
+
+    printf("splitted pike ");
+
+    pctx = sre_vm_pike_init(pool, prog, ovector, ovecsize);
+    assert(pctx);
+
+    gen_empty_buf = 1;
+
+    for (i = 0; i <= len; i++) {
+        if (i == len) {
+            rc = sre_vm_pike_exec(pctx, NULL, 0 /* len */, 1 /* eof */);
+
+        } else if (gen_empty_buf) {
+            rc = sre_vm_pike_exec(pctx, NULL, 0 /* len */, 0 /* eof */);
+            gen_empty_buf = 0;
+            i--;
+
+        } else {
+            p[0] = s[i];
+            rc = sre_vm_pike_exec(pctx, p, 1 /* len */, 0 /* eof */);
+            gen_empty_buf = 1;
+        }
+
+        switch (rc) {
+        case SRE_OK:
+            printf("match");
+
+            for (i = 0; i < 2 * (ncaps + 1); i += 2) {
+                printf(" (%d, %d)", ovector[i], ovector[i + 1]);
+            }
+
+            printf("\n");
+            break;
+
+        case SRE_AGAIN:
+#if 0
+            printf("again\n");
+#endif
+            continue;
+
+        case SRE_DECLINED:
+            printf("no match\n");
+            break;
+
+        case SRE_ERROR:
+            printf("error\n");
+            break;
+
+        default:
+            assert(rc);
+            break;
+        }
+
+        break;
+    }
+
+    sre_vm_pike_finalize(pctx);
 
     free(p);
 }

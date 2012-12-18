@@ -20,7 +20,7 @@ lib_c_files = \
 
 lib_o_files = $(patsubst %.c,%.o,$(lib_c_files))
 h_files=$(wildcard src/*.h)
-plist_vfiles=$(patsubst src/%.c,%.plist,$(lib_c_files)) src/sregex.c
+plist_vfiles=$(patsubst src/%.c,%.plist,$(lib_c_files))
 
 .PHONY: all clean test val
 .PRECIOUS: src/sre_regex_parser.c

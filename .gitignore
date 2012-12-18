@@ -27,6 +27,7 @@ src/parser.c
 src/thompson.c
 src/thompson.h
 src/pike.[ch]
+src/cli.[ch]
 src/sre_regex_parser.output
 *.so
 *.a

@@ -43,14 +43,24 @@ typedef struct {
 } sre_vm_pike_thread_list_t;
 
 
-typedef struct {
+struct sre_vm_pike_ctx_s {
     unsigned                 tag;
-    u_char                  *start;
+    unsigned                 processed_bytes;
+    u_char                  *buffer;
     sre_pool_t              *pool;
     sre_program_t           *program;
+    sre_capture_t           *matched;
     sre_capture_t           *free_capture;
     sre_vm_pike_thread_t    *free_threads;
-} sre_vm_pike_ctx_t;
+
+    int                     *ovector;
+    unsigned                 ovecsize;
+
+    sre_vm_pike_thread_list_t       *current_threads;
+    sre_vm_pike_thread_list_t       *next_threads;
+
+    unsigned                 first_buf; /* :1 */
+} ;
 
 
 static sre_vm_pike_thread_list_t *sre_vm_pike_thread_list_create(
@@ -60,56 +70,105 @@ static int sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx,
     int pos);
 
 
-int
-sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
-    size_t size, int *ovector, unsigned ovecsize)
+sre_vm_pike_ctx_t *
+sre_vm_pike_init(sre_pool_t *pool, sre_program_t *prog, int *ovector,
+    unsigned ovecsize)
 {
-    u_char                    *sp, *last;
-    unsigned                   j, len;
-    unsigned                   in;
-    sre_capture_t             *cap, *matched;
-    sre_vm_range_t            *range;
-    sre_instruction_t         *pc;
-    sre_vm_pike_ctx_t          ctx;
-    sre_vm_pike_thread_t      *t;
-    sre_vm_pike_thread_list_t *clist, *nlist, *tmp;
-    sre_vm_pike_thread_list_t  list;
+    unsigned                         len;
+    sre_vm_pike_ctx_t               *ctx;
+    sre_vm_pike_thread_list_t       *clist, *nlist;
 
-    matched = NULL;
-
-    cap = sre_capture_create(pool, ovecsize, 1);
-    if (cap == NULL) {
-        return SRE_ERROR;
+    ctx = sre_palloc(pool, sizeof(sre_vm_pike_ctx_t));
+    if (ctx == NULL) {
+        return NULL;
     }
+
+    ctx->pool = pool;
+    ctx->program = prog;
+
+    ctx->tag = prog->tag + 1;
 
     len = prog->len;
 
     clist = sre_vm_pike_thread_list_create(pool, len);
     if (clist == NULL) {
-        return SRE_ERROR;
+        return NULL;
     }
+
+    ctx->current_threads = clist;
 
     nlist = sre_vm_pike_thread_list_create(pool, len);
     if (nlist == NULL) {
-        return SRE_ERROR;
+        return NULL;
     }
 
-    ctx.tag = prog->tag + 1;
-    ctx.start = input;
-    ctx.program = prog;
-    ctx.pool = pool;
-    ctx.free_capture = NULL;
-    ctx.free_threads = NULL;
+    ctx->next_threads = nlist;
 
-    if (sre_vm_pike_add_thread(&ctx, clist, prog->start, cap, 0) != SRE_OK) {
-        prog->tag = ctx.tag;
-        return SRE_ERROR;
+    ctx->program = prog;
+    ctx->pool = pool;
+    ctx->free_capture = NULL;
+    ctx->free_threads = NULL;
+    ctx->processed_bytes = 0;
+    ctx->matched = NULL;
+
+    ctx->ovecsize = ovecsize;
+    ctx->ovector = ovector;
+
+    ctx->first_buf = 1;
+
+    return ctx;
+}
+
+
+void
+sre_vm_pike_finalize(sre_vm_pike_ctx_t *ctx)
+{
+}
+
+
+int
+sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
+    unsigned eof)
+{
+    u_char                    *sp, *last;
+    unsigned                   j;
+    unsigned                   in;
+    sre_pool_t                *pool;
+    sre_program_t             *prog;
+    sre_capture_t             *cap, *matched;
+    sre_vm_range_t            *range;
+    sre_instruction_t         *pc;
+    sre_vm_pike_thread_t      *t;
+    sre_vm_pike_thread_list_t *clist, *nlist, *tmp;
+    sre_vm_pike_thread_list_t  list;
+
+    pool = ctx->pool;
+    prog = ctx->program;
+    clist = ctx->current_threads;
+    nlist = ctx->next_threads;
+    matched = ctx->matched;
+
+    ctx->buffer = input;
+
+    if (ctx->first_buf) {
+        ctx->first_buf = 0;
+
+        cap = sre_capture_create(pool, ctx->ovecsize, 1);
+        if (cap == NULL) {
+            return SRE_ERROR;
+        }
+
+        if (sre_vm_pike_add_thread(ctx, clist, prog->start, cap, 0) != SRE_OK) {
+            prog->tag = ctx->tag;
+            return SRE_ERROR;
+        }
     }
 
     last = input + size;
 
-    for (sp = input; sp <= last; sp++) {
-        dd("=== pos %d (char %d).\n", (int)(sp - input), *sp & 0xFF);
+    for (sp = input; sp < last || (eof && sp == last); sp++) {
+        dd("=== pos %d (char %d).\n", (int)(sp - input),
+           sp < input ? (*sp & 0xFF) : 0);
 
         if (clist->head == NULL) {
             dd("clist empty. abort.");
@@ -124,7 +183,7 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
         fprintf(stderr, "\n");
 #endif
 
-        ctx.tag++;
+        ctx->tag++;
 
         while (clist->head) {
             t = clist->head;
@@ -133,13 +192,13 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
             pc = t->pc;
             cap = t->capture;
 
-            dd("--- #%u: pc %d: opcode %d\n", ctx.tag, (int)(pc - prog->start),
+            dd("--- #%u: pc %d: opcode %d\n", ctx->tag, (int)(pc - prog->start),
                pc->opcode);
 
             switch (pc->opcode) {
             case SRE_OPCODE_IN:
-                if (sp == last) {
-                    sre_capture_decr_ref(&ctx, cap);
+                if (eof && sp == last) {
+                    sre_capture_decr_ref(ctx, cap);
                     break;
                 }
 
@@ -157,23 +216,23 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
                 }
 
                 if (!in) {
-                    sre_capture_decr_ref(&ctx, cap);
+                    sre_capture_decr_ref(ctx, cap);
                     break;
                 }
 
-                if (sre_vm_pike_add_thread(&ctx, nlist, pc + 1, cap,
+                if (sre_vm_pike_add_thread(ctx, nlist, pc + 1, cap,
                                            (int) (sp - input + 1))
                     != SRE_OK)
                 {
-                    prog->tag = ctx.tag;
+                    prog->tag = ctx->tag;
                     return SRE_ERROR;
                 }
 
                 break;
 
             case SRE_OPCODE_NOTIN:
-                if (sp == last) {
-                    sre_capture_decr_ref(&ctx, cap);
+                if (eof && sp == last) {
+                    sre_capture_decr_ref(ctx, cap);
                     break;
                 }
 
@@ -191,15 +250,15 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
                 }
 
                 if (in) {
-                    sre_capture_decr_ref(&ctx, cap);
+                    sre_capture_decr_ref(ctx, cap);
                     break;
                 }
 
-                if (sre_vm_pike_add_thread(&ctx, nlist, pc + 1, cap,
+                if (sre_vm_pike_add_thread(ctx, nlist, pc + 1, cap,
                                            (int) (sp - input + 1))
                     != SRE_OK)
                 {
-                    prog->tag = ctx.tag;
+                    prog->tag = ctx->tag;
                     return SRE_ERROR;
                 }
 
@@ -209,16 +268,16 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
 
                 dd("matching char %d against %d", *sp, pc->v.ch);
 
-                if (sp == last || *sp != pc->v.ch) {
-                    sre_capture_decr_ref(&ctx, cap);
+                if ((eof && sp == last) || *sp != pc->v.ch) {
+                    sre_capture_decr_ref(ctx, cap);
                     break;
                 }
 
-                if (sre_vm_pike_add_thread(&ctx, nlist, pc + 1, cap,
+                if (sre_vm_pike_add_thread(ctx, nlist, pc + 1, cap,
                                            (int) (sp - input + 1))
                     != SRE_OK)
                 {
-                    prog->tag = ctx.tag;
+                    prog->tag = ctx->tag;
                     return SRE_ERROR;
                 }
 
@@ -226,16 +285,16 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
 
             case SRE_OPCODE_ANY:
 
-                if (sp == last) {
-                    sre_capture_decr_ref(&ctx, cap);
+                if (eof && sp == last) {
+                    sre_capture_decr_ref(ctx, cap);
                     break;
                 }
 
-                if (sre_vm_pike_add_thread(&ctx, nlist, pc + 1, cap,
+                if (sre_vm_pike_add_thread(ctx, nlist, pc + 1, cap,
                                            (int) (sp - input + 1))
                     != SRE_OK)
                 {
-                    prog->tag = ctx.tag;
+                    prog->tag = ctx->tag;
                     return SRE_ERROR;
                 }
 
@@ -244,7 +303,7 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
             case SRE_OPCODE_ASSERT:
                 switch (pc->v.assertion_type) {
                 case SRE_REGEX_ASSERTION_SMALL_Z:
-                    if (sp != last) {
+                    if (!eof || sp != last) {
                         break;
                     }
 
@@ -252,7 +311,7 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
 
                 case SRE_REGEX_ASSERTION_DOLLAR:
 
-                    if (sp != last && *sp != '\n') {
+                    if ((!eof || sp != last) && *sp != '\n') {
                         break;
                     }
 
@@ -286,14 +345,14 @@ sre_vm_pike_exec(sre_pool_t *pool, sre_program_t *prog, u_char *input,
                 break;
 
 assertion_hold:
-                ctx.tag--;
+                ctx->tag--;
 
                 list.head = NULL;
-                if (sre_vm_pike_add_thread(&ctx, &list, pc + 1, cap,
+                if (sre_vm_pike_add_thread(ctx, &list, pc + 1, cap,
                                            (int)(sp - input))
                     != SRE_OK)
                 {
-                    prog->tag = ctx.tag + 1;
+                    prog->tag = ctx->tag + 1;
                     return SRE_ERROR;
                 }
 
@@ -302,7 +361,7 @@ assertion_hold:
                     clist->head = list.head;
                 }
 
-                ctx.tag++;
+                ctx->tag++;
                 break;
 
             case SRE_OPCODE_MATCH:
@@ -314,19 +373,19 @@ assertion_hold:
                     sre_capture_dump(matched);
 #endif
 
-                    sre_capture_decr_ref(&ctx, matched);
+                    sre_capture_decr_ref(ctx, matched);
                 }
 
                 matched = cap;
 
-                sre_vm_pike_free_thread(&ctx, t);
+                sre_vm_pike_free_thread(ctx, t);
 
                 while (clist->head) {
                     t = clist->head;
                     clist->head = t->next;
 
-                    sre_capture_decr_ref(&ctx, t->capture);
-                    sre_vm_pike_free_thread(&ctx, t);
+                    sre_capture_decr_ref(ctx, t->capture);
+                    sre_vm_pike_free_thread(ctx, t);
                 }
 
                 goto step_done;
@@ -342,7 +401,7 @@ assertion_hold:
                 break;
             }
 
-            sre_vm_pike_free_thread(&ctx, t);
+            sre_vm_pike_free_thread(ctx, t);
         } /* while */
 
 step_done:
@@ -351,8 +410,8 @@ step_done:
         nlist = tmp;
 
         if (nlist->head) {
-            *nlist->next = ctx.free_threads;
-            ctx.free_threads = nlist->head;
+            *nlist->next = ctx->free_threads;
+            ctx->free_threads = nlist->head;
             nlist->head = NULL;
         }
 
@@ -361,16 +420,29 @@ step_done:
         }
     } /* for */
 
-    if (matched) {
+    ctx->matched = matched;
+
+    if (matched && (sp != last || eof)) {
         dd("matched: %p", matched);
-        memcpy(ovector, matched->vector, ovecsize);
+        memcpy(ctx->ovector, matched->vector, ctx->ovecsize);
         /* sre_capture_decr_ref(matched, freecap); */
-        prog->tag = ctx.tag;
+        prog->tag = ctx->tag;
+        ctx->processed_bytes += sp - input;
         return SRE_OK;
     }
 
-    prog->tag = ctx.tag;
-    return SRE_DECLINED;
+    prog->tag = ctx->tag;
+
+    ctx->processed_bytes += sp - input;
+    ctx->current_threads = clist;
+    ctx->next_threads = nlist;
+
+    if (eof) {
+        return SRE_DECLINED;
+    }
+
+    dd("processed bytes: %u", ctx->processed_bytes);
+    return SRE_AGAIN;
 }
 
 
@@ -443,7 +515,10 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
            pc->v.group);
 #endif
 
-        cap = sre_capture_update(ctx->pool, capture, pc->v.group, pos,
+        dd("processed bytes: %u, pos: %u", ctx->processed_bytes, pos);
+
+        cap = sre_capture_update(ctx->pool, capture, pc->v.group,
+                                 ctx->processed_bytes + pos,
                                  &ctx->free_capture);
         if (cap == NULL) {
             return SRE_ERROR;
@@ -459,14 +534,14 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
     case SRE_OPCODE_ASSERT:
         switch (pc->v.assertion_type) {
         case SRE_REGEX_ASSERTION_BIG_A:
-            if (pos != 0) {
+            if (ctx->processed_bytes > 0 || pos != 0) {
                 break;
             }
 
             return sre_vm_pike_add_thread(ctx, l, pc + 1, capture, pos);
 
         case SRE_REGEX_ASSERTION_CARET:
-            if (pos != 0 && ctx->start[pos - 1] != '\n') {
+            if (pos != 0 && ctx->buffer[pos - 1] != '\n') {
                 break;
             }
 
@@ -481,7 +556,7 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
                     seen_word = 0;
 
                 } else {
-                    c = ctx->start[pos - 1];
+                    c = ctx->buffer[pos - 1];
                     seen_word = sre_isword(c);
                 }
 
