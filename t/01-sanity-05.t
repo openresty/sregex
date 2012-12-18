@@ -88,3 +88,10 @@ __DATA__
 --- re: a
 --- s eval: "\0aaaa"
 
+
+
+=== TEST 14: temporary captures
+--- re: (?:a|(ab))cd
+--- s: babcd
+--- temp_cap: [(1, -1)(1, -1)] [(1, -1)(1, -1)] [(1, -1)(1, 3)] [(1, -1)(1, 3)] [(1, 5)(1, 3)]
+

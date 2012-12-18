@@ -68,6 +68,7 @@ static sre_vm_pike_thread_list_t *sre_vm_pike_thread_list_create(
 static int sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx,
     sre_vm_pike_thread_list_t *l, sre_instruction_t *pc, sre_capture_t *capture,
     int pos);
+static void sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx);
 
 
 sre_vm_pike_ctx_t *
@@ -131,7 +132,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
     unsigned eof)
 {
     u_char                    *sp, *last;
-    unsigned                   j;
+    unsigned                   i;
     unsigned                   in;
     sre_pool_t                *pool;
     sre_program_t             *prog;
@@ -203,11 +204,11 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
                 }
 
                 in = 0;
-                for (j = 0; j < pc->v.ranges->count; j++) {
-                    range = &pc->v.ranges->head[j];
+                for (i = 0; i < pc->v.ranges->count; i++) {
+                    range = &pc->v.ranges->head[i];
 
                     dd("testing %d for [%d, %d] (%u)", *sp, range->from,
-                       range->to, j);
+                       range->to, i);
 
                     if (*sp >= range->from && *sp <= range->to) {
                         in = 1;
@@ -237,11 +238,11 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
                 }
 
                 in = 0;
-                for (j = 0; j < pc->v.ranges->count; j++) {
-                    range = &pc->v.ranges->head[j];
+                for (i = 0; i < pc->v.ranges->count; i++) {
+                    range = &pc->v.ranges->head[i];
 
                     dd("testing %d for [%d, %d] (%u)", *sp, range->from,
-                       range->to, j);
+                       range->to, i);
 
                     if (*sp >= range->from && *sp <= range->to) {
                         in = 1;
@@ -266,7 +267,8 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
             case SRE_OPCODE_CHAR:
 
-                dd("matching char %d against %d", *sp, pc->v.ch);
+                dd("matching char %d against %d", sp != last ? *sp : 0,
+                   pc->v.ch);
 
                 if (sp == last || *sp != pc->v.ch) {
                     sre_capture_decr_ref(ctx, cap);
@@ -442,7 +444,52 @@ step_done:
     }
 
     dd("processed bytes: %u", ctx->processed_bytes);
+
+    sre_vm_pike_prepare_temp_captures(ctx);
+
     return SRE_AGAIN;
+}
+
+
+static void
+sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx)
+{
+    int                      i, a, b;
+    int                      ngroups;
+    sre_capture_t           *cap;
+    sre_vm_pike_thread_t    *t;
+
+    t = ctx->current_threads->head;
+    if (t) {
+
+        ngroups = ctx->ovecsize / sizeof(int);
+
+        dd("ngroups: %d", ngroups);
+
+        memcpy(ctx->ovector, t->capture->vector, ctx->ovecsize);
+
+        for (t = t->next; t; t = t->next) {
+            cap = t->capture;
+
+            for (i = 0; i < ngroups; i += 2) {
+                a = ctx->ovector[i];
+                b = cap->vector[i];
+
+                if (b != -1 && (a == -1 || b < a)) {
+                    dd("setting group %d to %d", i, cap->vector[i]);
+                    ctx->ovector[i] = b;
+                }
+
+                a = ctx->ovector[i + 1];
+                b = cap->vector[i + 1];
+
+                if (b != -1 && (a == -1 || b > a)) {
+                    dd("setting group %d to %d", i + 1, cap->vector[i + 1]);
+                    ctx->ovector[i + 1] = b;
+                }
+            }
+        }
+    }
 }
 
 

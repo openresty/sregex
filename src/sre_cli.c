@@ -87,8 +87,6 @@ main(int argc, char **argv)
         return 2;
     }
 
-    dd("binary: %d, i = %d", binary, i);
-
     if (from_stdin) {
 
         for (;;) {
@@ -145,7 +143,7 @@ static void
 process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
     int *ovector, unsigned int ovecsize, unsigned ncaps)
 {
-    int                          i, rc;
+    int                          i, j, rc;
     u_char                      *p;
     sre_vm_thompson_ctx_t       *tctx;
     sre_vm_pike_ctx_t           *pctx;
@@ -295,15 +293,28 @@ process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
         } else {
             p[0] = s[i];
             rc = sre_vm_pike_exec(pctx, p, 1 /* len */, 0 /* eof */);
+
+#if 1
+            if (rc == SRE_AGAIN) {
+                printf("[");
+                for (j = 0; j < 2 * (ncaps + 1); j += 2) {
+                    printf("(%d, %d)", ovector[j], ovector[j + 1]);
+                }
+                printf("] ");
+            }
+#endif
+
             gen_empty_buf = 1;
         }
+
+        dd("i = %d, rc = %d", i, rc);
 
         switch (rc) {
         case SRE_OK:
             printf("match");
 
-            for (i = 0; i < 2 * (ncaps + 1); i += 2) {
-                printf(" (%d, %d)", ovector[i], ovector[i + 1]);
+            for (j = 0; j < 2 * (ncaps + 1); j += 2) {
+                printf(" (%d, %d)", ovector[j], ovector[j + 1]);
             }
 
             printf("\n");

@@ -86,7 +86,8 @@ sub run_test ($) {
         } else {
 
             my ($thompson_match, $splitted_thompson_match, $pike_match, $pike_cap,
-                $splitted_pike_match, $splitted_pike_cap) = parse_res($res);
+                $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap)
+                = parse_res($res);
 
             if ($ENV{TEST_SREGEX_VERBOSE}) {
                 my $cap = $pike_cap;
@@ -122,6 +123,10 @@ sub run_test ($) {
                 ok($splitted_pike_match, "$name - splitted pike vm should match");
                 is($splitted_pike_cap, $expected_cap, "$name - splitted pike vm capture ok");
 
+                if (defined $block->temp_cap) {
+                    is($splitted_pike_temp_cap, $block->temp_cap, "$name - splitted pike vm temporary capture ok");
+                }
+
             } elsif ($s =~ m/$re/sma) {
                 my $expected_cap = fmt_cap(\@-, \@+);
 
@@ -133,6 +138,10 @@ sub run_test ($) {
 
                 ok($splitted_pike_match, "$name - splitted pike vm should match");
                 is($splitted_pike_cap, $expected_cap, "$name - splitted pike vm capture ok");
+
+                if (defined $block->temp_cap) {
+                    is($splitted_pike_temp_cap, $block->temp_cap, "$name - splitted pike vm temporary capture ok");
+                }
 
             } else {
                 ok(!$thompson_match, "$name - thompson vm should not match");
@@ -150,7 +159,7 @@ sub parse_res ($) {
     open my $in, '<', \$res or die $!;
 
     my ($thompson_match, $splitted_thompson_match, $pike_match, $pike_cap,
-        $splitted_pike_match, $splitted_pike_cap);
+        $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap);
 
     while (<$in>) {
         if (/^thompson (.+)/) {
@@ -215,6 +224,11 @@ sub parse_res ($) {
         } elsif (/^splitted pike (.+)/) {
             my $res = $1;
 
+            if ($res =~ s/^(?:\s*\[(?:\(-?\d+, -?\d+\))+\])+\s*//) {
+                $splitted_pike_temp_cap = $&;
+                $splitted_pike_temp_cap =~ s/^\s+|\s+$//g;
+            }
+
             if (defined $splitted_pike_match) {
                 warn "duplicate splitted pike result: $_";
                 next;
@@ -237,7 +251,7 @@ sub parse_res ($) {
     }
 
     return ($thompson_match, $splitted_thompson_match, $pike_match, $pike_cap,
-        $splitted_pike_match, $splitted_pike_cap);
+        $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap);
 }
 
 
