@@ -6,9 +6,13 @@ libsregex - A non-backtracking regex engine library for large data streams
 Status
 ======
 
-This library is *not* usable yet and still under early development.
+This library is already quite usable but still under early development. The API is still in flux
+and may be changed quickly without notice.
 
-This is a pure C library.
+This is a pure C library that is designed to have zero dependencies.
+
+No pathological regexes exist for this regex engine because it does not
+use a backtracking algorithm at all.
 
 Already rewrote the code base of Russ Cox's re1 library using the nginx coding style (yes, I love it!), also incorparated a clone of the nginx memory pool into it for memory management.
 
