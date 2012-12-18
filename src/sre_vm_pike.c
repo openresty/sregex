@@ -197,7 +197,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
             switch (pc->opcode) {
             case SRE_OPCODE_IN:
-                if (eof && sp == last) {
+                if (sp == last) {
                     sre_capture_decr_ref(ctx, cap);
                     break;
                 }
@@ -231,7 +231,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
                 break;
 
             case SRE_OPCODE_NOTIN:
-                if (eof && sp == last) {
+                if (sp == last) {
                     sre_capture_decr_ref(ctx, cap);
                     break;
                 }
@@ -268,7 +268,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
                 dd("matching char %d against %d", *sp, pc->v.ch);
 
-                if ((eof && sp == last) || *sp != pc->v.ch) {
+                if (sp == last || *sp != pc->v.ch) {
                     sre_capture_decr_ref(ctx, cap);
                     break;
                 }
@@ -285,7 +285,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
             case SRE_OPCODE_ANY:
 
-                if (eof && sp == last) {
+                if (sp == last) {
                     sre_capture_decr_ref(ctx, cap);
                     break;
                 }
@@ -303,7 +303,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
             case SRE_OPCODE_ASSERT:
                 switch (pc->v.assertion_type) {
                 case SRE_REGEX_ASSERTION_SMALL_Z:
-                    if (!eof || sp != last) {
+                    if (sp != last) {
                         break;
                     }
 
@@ -311,7 +311,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
                 case SRE_REGEX_ASSERTION_DOLLAR:
 
-                    if ((!eof || sp != last) && *sp != '\n') {
+                    if (sp != last && *sp != '\n') {
                         break;
                     }
 
@@ -534,7 +534,7 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
     case SRE_OPCODE_ASSERT:
         switch (pc->v.assertion_type) {
         case SRE_REGEX_ASSERTION_BIG_A:
-            if (ctx->processed_bytes > 0 || pos != 0) {
+            if (pos != 0) {
                 break;
             }
 

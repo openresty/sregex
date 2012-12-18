@@ -206,14 +206,14 @@ sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, u_char *input, size_t size,
             case SRE_OPCODE_ASSERT:
                 switch (pc->v.assertion_type) {
                 case SRE_REGEX_ASSERTION_SMALL_Z:
-                    if (!eof || sp != last) {
+                    if (sp != last) {
                         break;
                     }
 
                     goto assertion_hold;
 
                 case SRE_REGEX_ASSERTION_DOLLAR:
-                    if ((!eof || sp != last) && *sp != '\n') {
+                    if (sp != last && *sp != '\n') {
                         break;
                     }
 
