@@ -193,14 +193,22 @@ process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
     tctx = sre_vm_thompson_init(pool, prog);
     assert(tctx);
 
+    gen_empty_buf = 1;
+
     for (i = 0; i <= len; i++) {
         if (i == len) {
             rc = sre_vm_thompson_exec(tctx, NULL, 0 /* len */, 1 /* eof */);
+
+        } else if (gen_empty_buf) {
+            rc = sre_vm_thompson_exec(tctx, NULL, 0 /* len */, 0 /* eof */);
+            gen_empty_buf = 0;
+            i--;
 
         } else {
             p[0] = s[i];
 
             rc = sre_vm_thompson_exec(tctx, p, 1 /* len */, 0 /* eof */);
+            gen_empty_buf = 1;
         }
 
         switch (rc) {

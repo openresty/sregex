@@ -32,10 +32,12 @@ struct sre_vm_thompson_ctx_s {
     sre_pool_t          *pool;
     sre_program_t       *program;
     unsigned             tag;
-    u_char              *start;  /* start pointer for the stream */
+    u_char              *buffer;
 
     sre_vm_thompson_thread_list_t       *current_threads;
     sre_vm_thompson_thread_list_t       *next_threads;
+
+    unsigned             first_buf;     /* :1 */
 };
 
 
@@ -77,8 +79,8 @@ sre_vm_thompson_init(sre_pool_t *pool, sre_program_t *prog)
 
     ctx->next_threads = nlist;
 
-    ctx->start = SRE_UNSET_PTR;
     ctx->tag = prog->tag + 1;
+    ctx->first_buf = 1;
 
     return ctx;
 }
@@ -106,11 +108,11 @@ sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, u_char *input, size_t size,
     prog = ctx->program;
     clist = ctx->current_threads;
     nlist = ctx->next_threads;
+    ctx->buffer = input;
 
-    if (ctx->start == SRE_UNSET_PTR) {
-        ctx->start = input;
+    if (ctx->first_buf) {
+        ctx->first_buf = 0;
         sre_vm_thompson_add_thread(ctx, clist, prog->start, input);
-
     }
 
     last = input + size;
@@ -321,8 +323,8 @@ sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
     case SRE_OPCODE_ASSERT:
         switch (pc->v.assertion_type) {
         case SRE_REGEX_ASSERTION_BIG_A:
-            if (sp != ctx->start) {
-                dd("\\A assertion failed: %d", (int) (sp - ctx->start));
+            if (sp != ctx->buffer) {
+                dd("\\A assertion failed: %d", (int) (sp - ctx->buffer));
                 return;
             }
 
@@ -330,7 +332,7 @@ sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
             return;
 
         case SRE_REGEX_ASSERTION_CARET:
-            if (sp != ctx->start && sp[-1] != '\n') {
+            if (sp != ctx->buffer && sp[-1] != '\n') {
                 return;
             }
 
@@ -339,7 +341,7 @@ sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
 
         case SRE_REGEX_ASSERTION_SMALL_B:
         case SRE_REGEX_ASSERTION_BIG_B:
-            seen_word = (sp != ctx->start && sre_isword(sp[-1]));
+            seen_word = (sp != ctx->buffer && sre_isword(sp[-1]));
             dd("seen word: %u %c", seen_word, *sp);
             break;
 
