@@ -20,6 +20,9 @@ When the state machine is yielded (that is, returning `SRE_AGAIN` on the current
 sregex will always output the current value ranges for each submatch capture in the user-supplied
 `ovector` array.
 
+Almost all the relevant test cases for the PCRE 8.31 and Perl 5.16.1 have been imported into sregex's test suite
+and all tests are passing right now.
+
 Syntax Supported
 ================
 
@@ -104,12 +107,18 @@ Build
 
 Gnu make and gcc are required.
 
+It will build `libsregex.so`, `libsregex.a`, and the command-line utility `sregex-cli`
+in the current working directory.
+
 Usage
 =====
 
-There is no proper API nor ABI for the library yet.
+There is no formal API nor ABI for the library yet. Please check out the sregex-cli
+command-line utility's source for usage:
 
-There's a simple executable that can be used to exercise the engine:
+https://github.com/agentzh/sregex/blob/master/src/sre_cli.c#L1
+
+The `sregex-cli` command-line interface can be used as a convenient way to exercise the engine:
 
     $ ./sregex-cli 'a|ab' 'blab'
 
