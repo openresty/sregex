@@ -174,3 +174,45 @@ sre_regex_error(char *fmt, ...)
     va_end(arg);
 }
 
+
+sre_regex_range_t *
+sre_regex_turn_char_class_caseless(sre_pool_t *pool, sre_regex_range_t *range)
+{
+    sre_regex_range_t    *r, *nr;
+
+    for (r = range; r; r = r->next) {
+        if (r->to >= 'A' && r->from <= 'Z') {
+            /* overlap with A-Z */
+
+            nr = sre_palloc(pool, sizeof(sre_regex_range_t));
+            if (nr == NULL) {
+                return NULL;
+            }
+
+            nr->from = sre_max(r->from, 'A') + 32;
+            nr->to = sre_min(r->to, 'Z') + 32;
+            nr->next = r->next;
+
+            r->next = nr;
+            r = nr;
+
+        } else if (r->to >= 'a' && r->from <= 'z') {
+            /* overlap with a-z */
+
+            nr = sre_palloc(pool, sizeof(sre_regex_range_t));
+            if (nr == NULL) {
+                return NULL;
+            }
+
+            nr->from = sre_max(r->from, 'a') - 32;
+            nr->to = sre_min(r->to, 'z') - 32;
+            nr->next = r->next;
+
+            r->next = nr;
+            r = nr;
+        }
+    }
+
+    return range;
+}
+

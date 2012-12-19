@@ -89,11 +89,12 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_regex_t *subj,
 static unsigned      sre_regex_group;
 static sre_pool_t   *sre_regex_pool;
 static sre_regex_t  *sre_regex_parsed;
+static int           sre_regex_flags;
 
 
 
 /* Line 268 of yacc.c  */
-#line 97 "src/sre_regex_parser.c"
+#line 98 "src/sre_regex_parser.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -136,7 +137,7 @@ typedef union YYSTYPE
 {
 
 /* Line 293 of yacc.c  */
-#line 35 "src/sre_regex_parser.y"
+#line 36 "src/sre_regex_parser.y"
 
     sre_regex_t         *re;
     u_char               ch;
@@ -146,7 +147,7 @@ typedef union YYSTYPE
 
 
 /* Line 293 of yacc.c  */
-#line 150 "src/sre_regex_parser.c"
+#line 151 "src/sre_regex_parser.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -158,7 +159,7 @@ typedef union YYSTYPE
 
 
 /* Line 343 of yacc.c  */
-#line 162 "src/sre_regex_parser.c"
+#line 163 "src/sre_regex_parser.c"
 
 #ifdef short
 # undef short
@@ -451,11 +452,11 @@ static const yytype_int8 yyrhs[] =
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_uint16 yyrline[] =
 {
-       0,    58,    58,    66,    67,    77,    78,    86,    95,    96,
-     107,   116,   127,   136,   147,   156,   164,   173,   177,   187,
-     192,   202,   210,   220,   230,   231,   232
+       0,    59,    59,    67,    68,    78,    79,    87,    96,    97,
+     108,   117,   128,   137,   148,   157,   165,   174,   178,   188,
+     193,   242,   250,   260,   270,   271,   281
 };
 #endif
 
@@ -1402,7 +1403,7 @@ yyreduce:
         case 2:
 
 /* Line 1806 of yacc.c  */
-#line 59 "src/sre_regex_parser.y"
+#line 60 "src/sre_regex_parser.y"
     {
         sre_regex_parsed = (yyvsp[(1) - (2)].re);
         return SRE_OK;
@@ -1412,7 +1413,7 @@ yyreduce:
   case 4:
 
 /* Line 1806 of yacc.c  */
-#line 68 "src/sre_regex_parser.y"
+#line 69 "src/sre_regex_parser.y"
     {
         (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ALT, (yyvsp[(1) - (3)].re), (yyvsp[(3) - (3)].re));
         if ((yyval.re) == NULL) {
@@ -1424,7 +1425,7 @@ yyreduce:
   case 6:
 
 /* Line 1806 of yacc.c  */
-#line 79 "src/sre_regex_parser.y"
+#line 80 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, (yyvsp[(1) - (2)].re), (yyvsp[(2) - (2)].re));
             if ((yyval.re) == NULL) {
@@ -1436,7 +1437,7 @@ yyreduce:
   case 7:
 
 /* Line 1806 of yacc.c  */
-#line 86 "src/sre_regex_parser.y"
+#line 87 "src/sre_regex_parser.y"
     {
         (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1448,7 +1449,7 @@ yyreduce:
   case 9:
 
 /* Line 1806 of yacc.c  */
-#line 97 "src/sre_regex_parser.y"
+#line 98 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_STAR, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1463,7 +1464,7 @@ yyreduce:
   case 10:
 
 /* Line 1806 of yacc.c  */
-#line 108 "src/sre_regex_parser.y"
+#line 109 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_STAR, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1476,7 +1477,7 @@ yyreduce:
   case 11:
 
 /* Line 1806 of yacc.c  */
-#line 117 "src/sre_regex_parser.y"
+#line 118 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_PLUS, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1491,7 +1492,7 @@ yyreduce:
   case 12:
 
 /* Line 1806 of yacc.c  */
-#line 128 "src/sre_regex_parser.y"
+#line 129 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_PLUS, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1504,7 +1505,7 @@ yyreduce:
   case 13:
 
 /* Line 1806 of yacc.c  */
-#line 137 "src/sre_regex_parser.y"
+#line 138 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_QUEST, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1519,7 +1520,7 @@ yyreduce:
   case 14:
 
 /* Line 1806 of yacc.c  */
-#line 148 "src/sre_regex_parser.y"
+#line 149 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_QUEST, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1532,7 +1533,7 @@ yyreduce:
   case 15:
 
 /* Line 1806 of yacc.c  */
-#line 157 "src/sre_regex_parser.y"
+#line 158 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_desugar_counted_repetition((yyvsp[(1) - (2)].re), &(yyvsp[(2) - (2)].cquant), 1 /* greedy */);
             if ((yyval.re) == NULL) {
@@ -1544,7 +1545,7 @@ yyreduce:
   case 16:
 
 /* Line 1806 of yacc.c  */
-#line 165 "src/sre_regex_parser.y"
+#line 166 "src/sre_regex_parser.y"
     {
             (yyval.re) = sre_regex_desugar_counted_repetition((yyvsp[(1) - (3)].re), &(yyvsp[(2) - (3)].cquant), 0 /* greedy */);
             if ((yyval.re) == NULL) {
@@ -1556,14 +1557,14 @@ yyreduce:
   case 17:
 
 /* Line 1806 of yacc.c  */
-#line 173 "src/sre_regex_parser.y"
+#line 174 "src/sre_regex_parser.y"
     { (yyval.group) = ++sre_regex_group; }
     break;
 
   case 18:
 
 /* Line 1806 of yacc.c  */
-#line 178 "src/sre_regex_parser.y"
+#line 179 "src/sre_regex_parser.y"
     {
         (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_PAREN, (yyvsp[(3) - (4)].re), NULL);
         if ((yyval.re) == NULL) {
@@ -1577,7 +1578,7 @@ yyreduce:
   case 19:
 
 /* Line 1806 of yacc.c  */
-#line 188 "src/sre_regex_parser.y"
+#line 189 "src/sre_regex_parser.y"
     {
         (yyval.re) = (yyvsp[(4) - (5)].re);
       }
@@ -1586,21 +1587,60 @@ yyreduce:
   case 20:
 
 /* Line 1806 of yacc.c  */
-#line 193 "src/sre_regex_parser.y"
+#line 194 "src/sre_regex_parser.y"
     {
-        (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
-        if ((yyval.re) == NULL) {
-            YYABORT;
-        }
+        if ((sre_regex_flags & SRE_REGEX_CASELESS)
+            && (((yyvsp[(1) - (1)].ch) >= 'A' && (yyvsp[(1) - (1)].ch) <= 'Z')
+                || ((yyvsp[(1) - (1)].ch) >= 'a' && (yyvsp[(1) - (1)].ch) <= 'z')))
+        {
+            (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
+                                 NULL);
+            if ((yyval.re) == NULL) {
+                YYABORT;
+            }
 
-        (yyval.re)->ch = (yyvsp[(1) - (1)].ch);
+            (yyval.re)->range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            if ((yyval.re)->range == NULL) {
+                YYABORT;
+            }
+
+            (yyval.re)->range->from = (yyvsp[(1) - (1)].ch);
+            (yyval.re)->range->to = (yyvsp[(1) - (1)].ch);
+
+            (yyval.re)->range->next = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            if ((yyval.re)->range->next == NULL) {
+                YYABORT;
+            }
+
+            if ((yyvsp[(1) - (1)].ch) <= 'Z') {
+                /* upper case */
+                (yyval.re)->range->next->from = (yyvsp[(1) - (1)].ch) + 32;
+                (yyval.re)->range->next->to = (yyvsp[(1) - (1)].ch) + 32;
+
+            } else {
+                /* lower case */
+
+                (yyval.re)->range->next->from = (yyvsp[(1) - (1)].ch) - 32;
+                (yyval.re)->range->next->to = (yyvsp[(1) - (1)].ch) - 32;
+            }
+
+            (yyval.re)->range->next->next = NULL;
+
+        } else {
+            (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
+            if ((yyval.re) == NULL) {
+                YYABORT;
+            }
+
+            (yyval.re)->ch = (yyvsp[(1) - (1)].ch);
+        }
       }
     break;
 
   case 21:
 
 /* Line 1806 of yacc.c  */
-#line 203 "src/sre_regex_parser.y"
+#line 243 "src/sre_regex_parser.y"
     {
         (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_DOT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1612,7 +1652,7 @@ yyreduce:
   case 22:
 
 /* Line 1806 of yacc.c  */
-#line 211 "src/sre_regex_parser.y"
+#line 251 "src/sre_regex_parser.y"
     {
         (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1626,7 +1666,7 @@ yyreduce:
   case 23:
 
 /* Line 1806 of yacc.c  */
-#line 221 "src/sre_regex_parser.y"
+#line 261 "src/sre_regex_parser.y"
     {
         (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1637,10 +1677,24 @@ yyreduce:
       }
     break;
 
+  case 25:
+
+/* Line 1806 of yacc.c  */
+#line 272 "src/sre_regex_parser.y"
+    {
+        if (sre_regex_flags & SRE_REGEX_CASELESS) {
+            (yyval.re)->range = sre_regex_turn_char_class_caseless(sre_regex_pool, (yyvsp[(1) - (1)].re)->range);
+            if ((yyval.re) == NULL) {
+                YYABORT;
+            }
+        }
+      }
+    break;
+
   case 26:
 
 /* Line 1806 of yacc.c  */
-#line 233 "src/sre_regex_parser.y"
+#line 282 "src/sre_regex_parser.y"
     {
         (yyval.re) = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1654,7 +1708,7 @@ yyreduce:
 
 
 /* Line 1806 of yacc.c  */
-#line 1658 "src/sre_regex_parser.c"
+#line 1712 "src/sre_regex_parser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1885,7 +1939,7 @@ yyreturn:
 
 
 /* Line 2067 of yacc.c  */
-#line 243 "src/sre_regex_parser.y"
+#line 292 "src/sre_regex_parser.y"
 
 
 static u_char *sre_regex_str;
@@ -3211,13 +3265,14 @@ yyerror(char *s)
 
 
 sre_regex_t *
-sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps)
+sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags)
 {
     sre_regex_t     *re, *r;
 
     sre_regex_str     = src;
     sre_regex_pool    = pool;
     sre_regex_group   = 0;
+    sre_regex_flags   = flags;
 
     if (yyparse() != SRE_OK) {
         return NULL;

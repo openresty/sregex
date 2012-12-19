@@ -29,6 +29,7 @@ int
 main(int argc, char **argv)
 {
     int                  i, n;
+    int                  flags = 0;
     sre_pool_t          *pool;
     sre_regex_t         *re;
     sre_program_t       *prog;
@@ -37,23 +38,26 @@ main(int argc, char **argv)
     unsigned             ovecsize;
     u_char              *s, *p;
     size_t               len;
-    unsigned             from_stdin;
+    unsigned             from_stdin = 0;
 
     if (argc < 2) {
         usage();
     }
 
-    i = 1;
+    for (i = 1; i < argc; i++) {
+        if (argv[i][0] != '-') {
+            break;
+        }
 
-    if (strcmp(argv[i], "--stdin") == 0) {
-        from_stdin = 1;
-        i++;
+        if (strncmp(argv[i], "--stdin", sizeof("--stdin") - 1) == 0) {
+            from_stdin = 1;
 
-    } else {
-        from_stdin = 0;
+        } else if (strncmp(argv[i], "-i", 2) == 0) {
+            flags |= SRE_REGEX_CASELESS;
 
-        if (argc < 3) {
-            usage();
+        } else {
+            fprintf(stderr, "unknown option: %s\n", argv[i]);
+            exit(1);
         }
     }
 
@@ -62,7 +66,7 @@ main(int argc, char **argv)
         return 2;
     }
 
-    re = sre_regex_parse(pool, (u_char *) argv[i], &ncaps);
+    re = sre_regex_parse(pool, (u_char *) argv[i], &ncaps, flags);
     if (re == NULL) {
         return 2;
     }

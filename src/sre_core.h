@@ -33,6 +33,9 @@
 #define sre_memzero(buf, n)  (void) memset(buf, 0, n)
 #define sre_nelems(a)        (sizeof(a)/sizeof((a)[0]))
 
+#define sre_min(a, b)        ((a) <= (b) ? (a) : (b))
+#define sre_max(a, b)        ((a) >= (b) ? (a) : (b))
+
 #define sre_isword(c)                                                       \
     (((c) >= '0' && (c) <= '9')                                             \
      || ((c) >= 'A' && (c) <= 'Z')                                          \

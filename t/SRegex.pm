@@ -40,11 +40,26 @@ sub run_test ($) {
         die "No --- re specified for test $name\n";
     }
 
+    my $flags = $block->flags;
+
+    #warn "flags: $flags\n";
+
+    my ($prefix, @opts);
+    if ($flags) {
+        $prefix = "(?$flags)";
+        while ($flags =~ /./g) {
+           push @opts, "-$&";
+        }
+
+    } else {
+        $prefix = "";
+    }
+
     my ($res, $err);
 
     my $stdin = bytes::chr(bytes::length $s) . $s;
 
-    my @cmd = ("./sregex-cli", "--stdin", $re);
+    my @cmd = ("./sregex-cli", "--stdin", @opts, $re);
 
     if ($UseValgrind) {
         warn "$name\n";
@@ -103,7 +118,7 @@ sub run_test ($) {
             no warnings 'deprecated';
 
             eval {
-                $s =~ m/$re/sma;
+                $s =~ m/$prefix$re/sma;
             };
 
             if ($@) {
@@ -127,7 +142,7 @@ sub run_test ($) {
                     is($splitted_pike_temp_cap, $block->temp_cap, "$name - splitted pike vm temporary capture ok");
                 }
 
-            } elsif ($s =~ m/$re/sma) {
+            } elsif ($s =~ m/$prefix$re/sma) {
                 my $expected_cap = fmt_cap(\@-, \@+);
 
                 ok($thompson_match, "$name - thompson vm should match");

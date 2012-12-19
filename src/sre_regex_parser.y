@@ -29,6 +29,7 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_regex_t *subj,
 static unsigned      sre_regex_group;
 static sre_pool_t   *sre_regex_pool;
 static sre_regex_t  *sre_regex_parsed;
+static int           sre_regex_flags;
 
 %}
 
@@ -191,12 +192,51 @@ atom: '(' count alt ')'
 
     | SRE_REGEX_TOKEN_CHAR
       {
-        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
-        if ($$ == NULL) {
-            YYABORT;
-        }
+        if ((sre_regex_flags & SRE_REGEX_CASELESS)
+            && (($1 >= 'A' && $1 <= 'Z')
+                || ($1 >= 'a' && $1 <= 'z')))
+        {
+            $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
+                                 NULL);
+            if ($$ == NULL) {
+                YYABORT;
+            }
 
-        $$->ch = $1;
+            $$->range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            if ($$->range == NULL) {
+                YYABORT;
+            }
+
+            $$->range->from = $1;
+            $$->range->to = $1;
+
+            $$->range->next = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            if ($$->range->next == NULL) {
+                YYABORT;
+            }
+
+            if ($1 <= 'Z') {
+                /* upper case */
+                $$->range->next->from = $1 + 32;
+                $$->range->next->to = $1 + 32;
+
+            } else {
+                /* lower case */
+
+                $$->range->next->from = $1 - 32;
+                $$->range->next->to = $1 - 32;
+            }
+
+            $$->range->next->next = NULL;
+
+        } else {
+            $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
+            if ($$ == NULL) {
+                YYABORT;
+            }
+
+            $$->ch = $1;
+        }
       }
 
     | '.'
@@ -229,6 +269,15 @@ atom: '(' count alt ')'
 
     | SRE_REGEX_TOKEN_ASSERTION
     | SRE_REGEX_TOKEN_CHAR_CLASS
+      {
+        if (sre_regex_flags & SRE_REGEX_CASELESS) {
+            $$->range = sre_regex_turn_char_class_caseless(sre_regex_pool, $1->range);
+            if ($$ == NULL) {
+                YYABORT;
+            }
+        }
+      }
+
     | ':'
       {
         $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
@@ -1565,13 +1614,14 @@ yyerror(char *s)
 
 
 sre_regex_t *
-sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps)
+sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags)
 {
     sre_regex_t     *re, *r;
 
     sre_regex_str     = src;
     sre_regex_pool    = pool;
     sre_regex_group   = 0;
+    sre_regex_flags   = flags;
 
     if (yyparse() != SRE_OK) {
         return NULL;

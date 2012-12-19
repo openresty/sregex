@@ -18,6 +18,11 @@
 typedef struct sre_regex_s  sre_regex_t;
 
 
+enum {
+    SRE_REGEX_CASELESS = 1
+} sre_regex_flag_t;
+
+
 typedef enum {
     SRE_REGEX_TYPE_NIL      = 0,
     SRE_REGEX_TYPE_ALT      = 1,
@@ -78,6 +83,9 @@ sre_regex_t *sre_regex_create(sre_pool_t *pool, sre_regex_type_t type,
     sre_regex_t *left, sre_regex_t *right);
 void sre_regex_dump(sre_regex_t *re);
 void sre_regex_error(char *fmt, ...);
+sre_regex_range_t *
+    sre_regex_turn_char_class_caseless(sre_pool_t *pool,
+        sre_regex_range_t *range);
 
 
 #endif /* _SRE_REGEX_H_INCLUDED_ */

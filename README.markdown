@@ -18,6 +18,8 @@ Already rewrote the code base of Russ Cox's re1 library using the nginx coding s
 
 Already ported the Thompson and Pike VM backends to sregex. The former is just for yes-or-no matching, and the latter also supports submatch capturing.
 
+Implemented the case-insensitive matching mode via the `SRE_REGEX_CASELESS` flag.
+
 The full streaming matching API for the sregex engine has already been implemented,
 for both the Pike and Thompson regex VMs. The submatch capturing also supports streaming processing.
 When the state machine is yielded (that is, returning `SRE_AGAIN` on the current input data chunk),
@@ -124,7 +126,11 @@ https://github.com/agentzh/sregex/blob/master/src/sre_cli.c#L1
 
 The `sregex-cli` command-line interface can be used as a convenient way to exercise the engine:
 
-    $ ./sregex-cli 'a|ab' 'blab'
+    ./sregex-cli 'a|ab' 'blab'
+
+It also supports the `-i` option which does case-insensitive matching:
+
+    ./sregex-cli -i 'A|AB' 'blab'
 
 Test Suite
 ==========
@@ -166,7 +172,7 @@ So the test suite will run in 8 parallel jobs (assuming you have 8 CPU cores).
 TODO
 ====
 
-* implement the case-insensitive matching mode.
+* implement the `(?i)` and `(?-i)` regex syntax.
 * implement a simplified version of the backreferences.
 * implement the comment notation `(?#comment)`.
 * implement the POSIX character class notation.

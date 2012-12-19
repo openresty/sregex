@@ -95,3 +95,38 @@ __DATA__
 --- s: babcd
 --- temp_cap: [(1, -1)(1, -1)] [(1, -1)(1, -1)] [(1, -1)(1, 3)] [(1, -1)(1, 3)] [(1, 5)(1, 3)]
 
+
+
+=== TEST 15: /i - in
+--- re: [abd-f]+
+--- s: bFEBADaC
+--- flags: i
+
+
+
+=== TEST 16: /i - not in
+--- re: [^abd-f]+
+--- s: bFEBADaCz-
+--- flags: i
+
+
+
+=== TEST 17: /i - testinput1:1685
+--- re: word (?:[a-zA-Z0-9]+ ){0,300}otherword
+--- s eval: "word cat dog elephant mussel cow horse canary baboon snake shark the quick brown fox and the lazy dog and several other words getting close to thirty by now I hope"
+--- flags: i
+
+
+
+=== TEST 18: /i - char
+--- re: hello
+--- s: ZAhHElLO
+--- flags: i
+
+
+
+=== TEST 19: /i - char
+--- re: hello
+--- s: ZAHhello
+--- flags: i
+

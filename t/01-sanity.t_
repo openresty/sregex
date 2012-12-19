@@ -1328,3 +1328,38 @@ re1 and re2 are wrong here.
 --- s: babcd
 --- temp_cap: [(1, -1)(1, -1)] [(1, -1)(1, -1)] [(1, -1)(1, 3)] [(1, -1)(1, 3)] [(1, 5)(1, 3)]
 
+
+
+=== TEST 215: /i - in
+--- re: [abd-f]+
+--- s: bFEBADaC
+--- flags: i
+
+
+
+=== TEST 216: /i - not in
+--- re: [^abd-f]+
+--- s: bFEBADaCz-
+--- flags: i
+
+
+
+=== TEST 217: /i - testinput1:1685
+--- re: word (?:[a-zA-Z0-9]+ ){0,300}otherword
+--- s eval: "word cat dog elephant mussel cow horse canary baboon snake shark the quick brown fox and the lazy dog and several other words getting close to thirty by now I hope"
+--- flags: i
+
+
+
+=== TEST 218: /i - char
+--- re: hello
+--- s: ZAhHElLO
+--- flags: i
+
+
+
+=== TEST 219: /i - char
+--- re: hello
+--- s: ZAHhello
+--- flags: i
+
