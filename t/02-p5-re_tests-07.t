@@ -9,66 +9,77 @@ __DATA__
 === TEST 1: re_tests:429
 --- re: (((((((((a)))))))))
 --- s eval: "A"
+--- flags: i
 
 
 
 === TEST 2: re_tests:430
 --- re: (?:(?:(?:(?:(?:(?:(?:(?:(?:(a))))))))))
 --- s eval: "A"
+--- flags: i
 
 
 
 === TEST 3: re_tests:431
 --- re: (?:(?:(?:(?:(?:(?:(?:(?:(?:(a|b|c))))))))))
 --- s eval: "C"
+--- flags: i
 
 
 
 === TEST 4: re_tests:432
 --- re: multiple words of text
 --- s eval: "UH-UH"
+--- flags: i
 
 
 
 === TEST 5: re_tests:433
 --- re: multiple words
 --- s eval: "MULTIPLE WORDS, YEAH"
+--- flags: i
 
 
 
 === TEST 6: re_tests:434
 --- re: (.*)c(.*)
 --- s eval: "ABCDE"
+--- flags: i
 
 
 
 === TEST 7: re_tests:435
 --- re: \((.*), (.*)\)
 --- s eval: "(A, B)"
+--- flags: i
 
 
 
 === TEST 8: re_tests:436
 --- re: [k]
 --- s eval: "AB"
+--- flags: i
 
 
 
 === TEST 9: re_tests:437
 --- re: abcd
 --- s eval: "ABCD"
+--- flags: i
 
 
 
 === TEST 10: re_tests:438
 --- re: a(bc)d
 --- s eval: "ABCD"
+--- flags: i
 
 
 
 === TEST 11: re_tests:439
 --- re: a[-]?c
 --- s eval: "AC"
+--- flags: i
 
 
 

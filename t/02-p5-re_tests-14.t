@@ -81,24 +81,28 @@ __DATA__
 === TEST 13: re_tests:1395
 --- re: >\d+$ \n
 --- s eval: ">10\n"
+--- flags: i
 
 
 
 === TEST 14: re_tests:1396
 --- re: >\d+$ \n
 --- s eval: ">1\n"
+--- flags: i
 
 
 
 === TEST 15: re_tests:1397
 --- re: \d+$ \n
 --- s eval: ">10\n"
+--- flags: i
 
 
 
 === TEST 16: re_tests:1398
 --- re: >\d\d$ \n
 --- s eval: ">10\n"
+--- flags: i
 
 
 
@@ -287,18 +291,21 @@ __DATA__
 === TEST 46: re_tests:1518
 --- re: s
 --- s eval: "\x{17F}"
+--- flags: i
 
 
 
 === TEST 47: re_tests:1519
 --- re: s
 --- s eval: "\x{17F}"
+--- flags: i
 
 
 
 === TEST 48: re_tests:1520
 --- re: s
 --- s eval: "S"
+--- flags: i
 
 
 

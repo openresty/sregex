@@ -1117,276 +1117,322 @@ __DATA__
 === TEST 181: re_tests:308
 --- re: abc
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 182: re_tests:309
 --- re: abc
 --- s eval: "XBC"
+--- flags: i
 
 
 
 === TEST 183: re_tests:310
 --- re: abc
 --- s eval: "AXC"
+--- flags: i
 
 
 
 === TEST 184: re_tests:311
 --- re: abc
 --- s eval: "ABX"
+--- flags: i
 
 
 
 === TEST 185: re_tests:312
 --- re: abc
 --- s eval: "XABCY"
+--- flags: i
 
 
 
 === TEST 186: re_tests:313
 --- re: abc
 --- s eval: "ABABC"
+--- flags: i
 
 
 
 === TEST 187: re_tests:314
 --- re: ab*c
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 188: re_tests:315
 --- re: ab*bc
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 189: re_tests:316
 --- re: ab*bc
 --- s eval: "ABBC"
+--- flags: i
 
 
 
 === TEST 190: re_tests:317
 --- re: ab*?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 191: re_tests:318
 --- re: ab{0,}?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 192: re_tests:319
 --- re: ab+?bc
 --- s eval: "ABBC"
+--- flags: i
 
 
 
 === TEST 193: re_tests:320
 --- re: ab+bc
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 194: re_tests:321
 --- re: ab+bc
 --- s eval: "ABQ"
+--- flags: i
 
 
 
 === TEST 195: re_tests:322
 --- re: ab{1,}bc
 --- s eval: "ABQ"
+--- flags: i
 
 
 
 === TEST 196: re_tests:323
 --- re: ab+bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 197: re_tests:324
 --- re: ab{1,}?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 198: re_tests:325
 --- re: ab{1,3}?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 199: re_tests:326
 --- re: ab{3,4}?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 200: re_tests:327
 --- re: ab{4,5}?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 201: re_tests:328
 --- re: ab??bc
 --- s eval: "ABBC"
+--- flags: i
 
 
 
 === TEST 202: re_tests:329
 --- re: ab??bc
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 203: re_tests:330
 --- re: ab{0,1}?bc
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 204: re_tests:331
 --- re: ab??bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 205: re_tests:332
 --- re: ab??c
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 206: re_tests:333
 --- re: ab{0,1}?c
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 207: re_tests:334
 --- re: ^abc$
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 208: re_tests:335
 --- re: ^abc$
 --- s eval: "ABCC"
+--- flags: i
 
 
 
 === TEST 209: re_tests:336
 --- re: ^abc
 --- s eval: "ABCC"
+--- flags: i
 
 
 
 === TEST 210: re_tests:337
 --- re: ^abc$
 --- s eval: "AABC"
+--- flags: i
 
 
 
 === TEST 211: re_tests:338
 --- re: abc$
 --- s eval: "AABC"
+--- flags: i
 
 
 
 === TEST 212: re_tests:339
 --- re: ^
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 213: re_tests:340
 --- re: $
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 214: re_tests:341
 --- re: a.c
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 215: re_tests:342
 --- re: a.c
 --- s eval: "AXC"
+--- flags: i
 
 
 
 === TEST 216: re_tests:343
 --- re: a\Nc
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 217: re_tests:344
 --- re: a.*?c
 --- s eval: "AXYZC"
+--- flags: i
 
 
 
 === TEST 218: re_tests:345
 --- re: a.*c
 --- s eval: "AXYZD"
+--- flags: i
 
 
 
 === TEST 219: re_tests:346
 --- re: a[bc]d
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 220: re_tests:347
 --- re: a[bc]d
 --- s eval: "ABD"
+--- flags: i
 
 
 
 === TEST 221: re_tests:348
 --- re: a[b-d]e
 --- s eval: "ABD"
+--- flags: i
 
 
 
 === TEST 222: re_tests:349
 --- re: a[b-d]e
 --- s eval: "ACE"
+--- flags: i
 
 
 
 === TEST 223: re_tests:350
 --- re: a[b-d]
 --- s eval: "AAC"
+--- flags: i
 
 
 
 === TEST 224: re_tests:351
 --- re: a[-b]
 --- s eval: "A-"
+--- flags: i
 
 
 
 === TEST 225: re_tests:352
 --- re: a[b-]
 --- s eval: "A-"
+--- flags: i
 
 
 
 === TEST 226: re_tests:353
 --- re: a[b-a]
 --- s eval: "-"
+--- flags: i
 --- err
 [error] syntax error
 
@@ -1395,6 +1441,7 @@ __DATA__
 === TEST 227: re_tests:354
 --- re: a[]b
 --- s eval: "-"
+--- flags: i
 --- err
 [error] syntax error
 
@@ -1403,6 +1450,7 @@ __DATA__
 === TEST 228: re_tests:355
 --- re: a[
 --- s eval: "-"
+--- flags: i
 --- err
 [error] syntax error
 
@@ -1411,72 +1459,84 @@ __DATA__
 === TEST 229: re_tests:356
 --- re: a]
 --- s eval: "A]"
+--- flags: i
 
 
 
 === TEST 230: re_tests:357
 --- re: a[]]b
 --- s eval: "A]B"
+--- flags: i
 
 
 
 === TEST 231: re_tests:358
 --- re: a[^bc]d
 --- s eval: "AED"
+--- flags: i
 
 
 
 === TEST 232: re_tests:359
 --- re: a[^bc]d
 --- s eval: "ABD"
+--- flags: i
 
 
 
 === TEST 233: re_tests:360
 --- re: a[^-b]c
 --- s eval: "ADC"
+--- flags: i
 
 
 
 === TEST 234: re_tests:361
 --- re: a[^-b]c
 --- s eval: "A-C"
+--- flags: i
 
 
 
 === TEST 235: re_tests:362
 --- re: a[^]b]c
 --- s eval: "A]C"
+--- flags: i
 
 
 
 === TEST 236: re_tests:363
 --- re: a[^]b]c
 --- s eval: "ADC"
+--- flags: i
 
 
 
 === TEST 237: re_tests:364
 --- re: ab|cd
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 238: re_tests:365
 --- re: ab|cd
 --- s eval: "ABCD"
+--- flags: i
 
 
 
 === TEST 239: re_tests:366
 --- re: ()ef
 --- s eval: "DEF"
+--- flags: i
 
 
 
 === TEST 240: re_tests:367
 --- re: *a
 --- s eval: "-"
+--- flags: i
 --- err
 [error] syntax error
 
@@ -1485,6 +1545,7 @@ __DATA__
 === TEST 241: re_tests:368
 --- re: (|*)b
 --- s eval: "-"
+--- flags: i
 --- err
 [error] syntax error
 
@@ -1493,6 +1554,7 @@ __DATA__
 === TEST 242: re_tests:369
 --- re: (*)b
 --- s eval: "-"
+--- flags: i
 --- err
 [error] syntax error
 
@@ -1501,12 +1563,14 @@ __DATA__
 === TEST 243: re_tests:370
 --- re: $b
 --- s eval: "B"
+--- flags: i
 
 
 
 === TEST 244: re_tests:371
 --- re: a\
 --- s eval: "-"
+--- flags: i
 --- err
 [error] syntax error
 
@@ -1515,30 +1579,35 @@ __DATA__
 === TEST 245: re_tests:372
 --- re: a\(b
 --- s eval: "A(B"
+--- flags: i
 
 
 
 === TEST 246: re_tests:373
 --- re: a\(*b
 --- s eval: "AB"
+--- flags: i
 
 
 
 === TEST 247: re_tests:374
 --- re: a\(*b
 --- s eval: "A((B"
+--- flags: i
 
 
 
 === TEST 248: re_tests:375
 --- re: a\\b
 --- s eval: "A\\B"
+--- flags: i
 
 
 
 === TEST 249: re_tests:376
 --- re: abc)
 --- s eval: "-"
+--- flags: i
 --- err
 [error] syntax error
 
@@ -1547,6 +1616,7 @@ __DATA__
 === TEST 250: re_tests:377
 --- re: (abc
 --- s eval: "-"
+--- flags: i
 --- err
 [error] syntax error
 
@@ -1555,30 +1625,35 @@ __DATA__
 === TEST 251: re_tests:378
 --- re: ((a))
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 252: re_tests:379
 --- re: (a)b(c)
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 253: re_tests:380
 --- re: a+b+c
 --- s eval: "AABBABC"
+--- flags: i
 
 
 
 === TEST 254: re_tests:381
 --- re: a{1,}b{1,}c
 --- s eval: "AABBABC"
+--- flags: i
 
 
 
 === TEST 255: re_tests:382
 --- re: a**
 --- s eval: "-"
+--- flags: i
 --- err
 [error] syntax error
 
@@ -1587,66 +1662,77 @@ __DATA__
 === TEST 256: re_tests:383
 --- re: a.+?c
 --- s eval: "ABCABC"
+--- flags: i
 
 
 
 === TEST 257: re_tests:384
 --- re: a.*?c
 --- s eval: "ABCABC"
+--- flags: i
 
 
 
 === TEST 258: re_tests:385
 --- re: a.{0,5}?c
 --- s eval: "ABCABC"
+--- flags: i
 
 
 
 === TEST 259: re_tests:386
 --- re: (a+|b)*
 --- s eval: "AB"
+--- flags: i
 
 
 
 === TEST 260: re_tests:387
 --- re: (a+|b){0,}
 --- s eval: "AB"
+--- flags: i
 
 
 
 === TEST 261: re_tests:388
 --- re: (a+|b)+
 --- s eval: "AB"
+--- flags: i
 
 
 
 === TEST 262: re_tests:389
 --- re: (a+|b){1,}
 --- s eval: "AB"
+--- flags: i
 
 
 
 === TEST 263: re_tests:390
 --- re: (a+|b)?
 --- s eval: "AB"
+--- flags: i
 
 
 
 === TEST 264: re_tests:391
 --- re: (a+|b){0,1}
 --- s eval: "AB"
+--- flags: i
 
 
 
 === TEST 265: re_tests:392
 --- re: (a+|b){0,1}?
 --- s eval: "AB"
+--- flags: i
 
 
 
 === TEST 266: re_tests:393
 --- re: )(
 --- s eval: "-"
+--- flags: i
 --- err
 [error] syntax error
 
@@ -1655,270 +1741,315 @@ __DATA__
 === TEST 267: re_tests:394
 --- re: [^ab]*
 --- s eval: "CDE"
+--- flags: i
 
 
 
 === TEST 268: re_tests:395
 --- re: abc
 --- s eval: ""
+--- flags: i
 
 
 
 === TEST 269: re_tests:396
 --- re: a*
 --- s eval: ""
+--- flags: i
 
 
 
 === TEST 270: re_tests:397
 --- re: ([abc])*d
 --- s eval: "ABBBCD"
+--- flags: i
 
 
 
 === TEST 271: re_tests:398
 --- re: ([abc])*bcd
 --- s eval: "ABCD"
+--- flags: i
 
 
 
 === TEST 272: re_tests:399
 --- re: a|b|c|d|e
 --- s eval: "E"
+--- flags: i
 
 
 
 === TEST 273: re_tests:400
 --- re: (a|b|c|d|e)f
 --- s eval: "EF"
+--- flags: i
 
 
 
 === TEST 274: re_tests:401
 --- re: abcd*efg
 --- s eval: "ABCDEFG"
+--- flags: i
 
 
 
 === TEST 275: re_tests:402
 --- re: ab*
 --- s eval: "XABYABBBZ"
+--- flags: i
 
 
 
 === TEST 276: re_tests:403
 --- re: ab*
 --- s eval: "XAYABBBZ"
+--- flags: i
 
 
 
 === TEST 277: re_tests:404
 --- re: (ab|cd)e
 --- s eval: "ABCDE"
+--- flags: i
 
 
 
 === TEST 278: re_tests:405
 --- re: [abhgefdc]ij
 --- s eval: "HIJ"
+--- flags: i
 
 
 
 === TEST 279: re_tests:406
 --- re: ^(ab|cd)e
 --- s eval: "ABCDE"
+--- flags: i
 
 
 
 === TEST 280: re_tests:407
 --- re: (abc|)ef
 --- s eval: "ABCDEF"
+--- flags: i
 
 
 
 === TEST 281: re_tests:408
 --- re: (a|b)c*d
 --- s eval: "ABCD"
+--- flags: i
 
 
 
 === TEST 282: re_tests:409
 --- re: (ab|ab*)bc
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 283: re_tests:410
 --- re: a([bc]*)c*
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 284: re_tests:411
 --- re: a([bc]*)(c*d)
 --- s eval: "ABCD"
+--- flags: i
 
 
 
 === TEST 285: re_tests:412
 --- re: a([bc]+)(c*d)
 --- s eval: "ABCD"
+--- flags: i
 
 
 
 === TEST 286: re_tests:413
 --- re: a([bc]*)(c+d)
 --- s eval: "ABCD"
+--- flags: i
 
 
 
 === TEST 287: re_tests:414
 --- re: a[bcd]*dcdcde
 --- s eval: "ADCDCDE"
+--- flags: i
 
 
 
 === TEST 288: re_tests:415
 --- re: a[bcd]+dcdcde
 --- s eval: "ADCDCDE"
+--- flags: i
 
 
 
 === TEST 289: re_tests:416
 --- re: (ab|a)b*c
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 290: re_tests:417
 --- re: ((a)(b)c)(d)
 --- s eval: "ABCD"
+--- flags: i
 
 
 
 === TEST 291: re_tests:418
 --- re: [a-zA-Z_][a-zA-Z0-9_]*
 --- s eval: "ALPHA"
+--- flags: i
 
 
 
 === TEST 292: re_tests:419
 --- re: ^a(bc+|b[eh])g|.h$
 --- s eval: "ABH"
+--- flags: i
 
 
 
 === TEST 293: re_tests:420
 --- re: (bc+d$|ef*g.|h?i(j|k))
 --- s eval: "EFFGZ"
+--- flags: i
 
 
 
 === TEST 294: re_tests:421
 --- re: (bc+d$|ef*g.|h?i(j|k))
 --- s eval: "IJ"
+--- flags: i
 
 
 
 === TEST 295: re_tests:422
 --- re: (bc+d$|ef*g.|h?i(j|k))
 --- s eval: "EFFG"
+--- flags: i
 
 
 
 === TEST 296: re_tests:423
 --- re: (bc+d$|ef*g.|h?i(j|k))
 --- s eval: "BCDD"
+--- flags: i
 
 
 
 === TEST 297: re_tests:424
 --- re: (bc+d$|ef*g.|h?i(j|k))
 --- s eval: "REFFGZ"
+--- flags: i
 
 
 
 === TEST 298: re_tests:425
 --- re: ((((((((((a))))))))))
 --- s eval: "A"
+--- flags: i
 
 
 
 === TEST 299: re_tests:427
 --- re: ((((((((((a))))))))))\041
 --- s eval: "AA"
+--- flags: i
 
 
 
 === TEST 300: re_tests:428
 --- re: ((((((((((a))))))))))\041
 --- s eval: "A!"
+--- flags: i
 
 
 
 === TEST 301: re_tests:429
 --- re: (((((((((a)))))))))
 --- s eval: "A"
+--- flags: i
 
 
 
 === TEST 302: re_tests:430
 --- re: (?:(?:(?:(?:(?:(?:(?:(?:(?:(a))))))))))
 --- s eval: "A"
+--- flags: i
 
 
 
 === TEST 303: re_tests:431
 --- re: (?:(?:(?:(?:(?:(?:(?:(?:(?:(a|b|c))))))))))
 --- s eval: "C"
+--- flags: i
 
 
 
 === TEST 304: re_tests:432
 --- re: multiple words of text
 --- s eval: "UH-UH"
+--- flags: i
 
 
 
 === TEST 305: re_tests:433
 --- re: multiple words
 --- s eval: "MULTIPLE WORDS, YEAH"
+--- flags: i
 
 
 
 === TEST 306: re_tests:434
 --- re: (.*)c(.*)
 --- s eval: "ABCDE"
+--- flags: i
 
 
 
 === TEST 307: re_tests:435
 --- re: \((.*), (.*)\)
 --- s eval: "(A, B)"
+--- flags: i
 
 
 
 === TEST 308: re_tests:436
 --- re: [k]
 --- s eval: "AB"
+--- flags: i
 
 
 
 === TEST 309: re_tests:437
 --- re: abcd
 --- s eval: "ABCD"
+--- flags: i
 
 
 
 === TEST 310: re_tests:438
 --- re: a(bc)d
 --- s eval: "ABCD"
+--- flags: i
 
 
 
 === TEST 311: re_tests:439
 --- re: a[-]?c
 --- s eval: "AC"
+--- flags: i
 
 
 
@@ -3227,18 +3358,21 @@ __DATA__
 === TEST 527: re_tests:887
 --- re: \.c(pp|xx|c)?$
 --- s eval: "Changes"
+--- flags: i
 
 
 
 === TEST 528: re_tests:888
 --- re: \.c(pp|xx|c)?$
 --- s eval: "IO.c"
+--- flags: i
 
 
 
 === TEST 529: re_tests:889
 --- re: (\.c(pp|xx|c)?$)
 --- s eval: "IO.c"
+--- flags: i
 
 
 
@@ -4092,24 +4226,28 @@ __DATA__
 === TEST 663: re_tests:1395
 --- re: >\d+$ \n
 --- s eval: ">10\n"
+--- flags: i
 
 
 
 === TEST 664: re_tests:1396
 --- re: >\d+$ \n
 --- s eval: ">1\n"
+--- flags: i
 
 
 
 === TEST 665: re_tests:1397
 --- re: \d+$ \n
 --- s eval: ">10\n"
+--- flags: i
 
 
 
 === TEST 666: re_tests:1398
 --- re: >\d\d$ \n
 --- s eval: ">10\n"
+--- flags: i
 
 
 
@@ -4298,18 +4436,21 @@ __DATA__
 === TEST 696: re_tests:1518
 --- re: s
 --- s eval: "\x{17F}"
+--- flags: i
 
 
 
 === TEST 697: re_tests:1519
 --- re: s
 --- s eval: "\x{17F}"
+--- flags: i
 
 
 
 === TEST 698: re_tests:1520
 --- re: s
 --- s eval: "S"
+--- flags: i
 
 
 
@@ -4328,70 +4469,82 @@ __DATA__
 === TEST 701: re_tests:1539
 --- re: [s\xDF]
 --- s eval: "\xDFs"
+--- flags: i
 
 
 
 === TEST 702: re_tests:1544
 --- re: ff
 --- s eval: "\x{FB00}\x{FB01}"
+--- flags: i
 
 
 
 === TEST 703: re_tests:1545
 --- re: ff
 --- s eval: "\x{FB01}\x{FB00}"
+--- flags: i
 
 
 
 === TEST 704: re_tests:1546
 --- re: fi
 --- s eval: "\x{FB01}\x{FB00}"
+--- flags: i
 
 
 
 === TEST 705: re_tests:1547
 --- re: fi
 --- s eval: "\x{FB00}\x{FB01}"
+--- flags: i
 
 
 
 === TEST 706: re_tests:1551
 --- re: ffiffl
 --- s eval: "abcdef\x{FB03}\x{FB04}"
+--- flags: i
 
 
 
 === TEST 707: re_tests:1552
 --- re: \xdf\xdf
 --- s eval: "abcdefssss"
+--- flags: i
 
 
 
 === TEST 708: re_tests:1554
 --- re: st
 --- s eval: "\x{DF}\x{FB05}"
+--- flags: i
 
 
 
 === TEST 709: re_tests:1555
 --- re: ssst
 --- s eval: "\x{DF}\x{FB05}"
+--- flags: i
 
 
 
 === TEST 710: re_tests:1563
 --- re: s\xDF
 --- s eval: "\xDFs"
+--- flags: i
 
 
 
 === TEST 711: re_tests:1564
 --- re: sst
 --- s eval: "s\N{LATIN SMALL LIGATURE ST}"
+--- flags: i
 
 
 
 === TEST 712: re_tests:1565
 --- re: sst
 --- s eval: "s\N{LATIN SMALL LIGATURE LONG S T}"
+--- flags: i
 

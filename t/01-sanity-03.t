@@ -291,12 +291,14 @@ __DATA__
 === TEST 48: \v
 --- re: [\v]+
 --- s eval: " \t\n\x0b\f\r\x85\x86"
+--- cap: (2, 7)
 
 
 
 === TEST 49: \V
---- re: [\v]+
+--- re: [\V]+
 --- s eval: "\x86 \t\n\x0b\f\r\x85"
+--- cap: (0, 3)
 
 
 

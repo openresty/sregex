@@ -89,6 +89,13 @@ while (<$in>) {
     if ($re =~ m{^([:\/'])(.*)\1(.*)}) {
         $re = $2;
         $flags = $3;
+
+        if ($flags =~ /i/) {
+            $flags = "i";
+
+        } else {
+            undef $flags;
+        }
     }
 
     $re =~ s/(\$\{\w+\})/$1/eeg;
@@ -251,24 +258,26 @@ for my $test (@tests) {
 --- s eval: "$s"
 _EOC_
 
+    if (defined $flags) {
+        print $out "--- flags: $flags\n";
+    }
+
     if ($err) {
         print $out "--- err\n[error] syntax error\n";
     }
 
-    if ($skip) {
-        print $out "--- SKIP\n";
-    }
-
     if ($re eq '^(a(b)?)+$' && $s eq 'aba') {
         print $out "--- cap: (0, 3) (2, 3) (1, 2)\n";
-    }
 
-    if ($re eq '^(aa(bb)?)+$' && $s eq 'aabbaa') {
+    } elsif ($re eq '^(aa(bb)?)+$' && $s eq 'aabbaa') {
         print $out "--- cap: (0, 6) (4, 6) (2, 4)\n";
+
+    } elsif ($re eq 'b\s^' && $s eq 'a\nb\n') {
+        print $out "--- cap: (2, 4)\n";
     }
 
-    if ($re eq 'b\s^' && $s eq 'a\nb\n') {
-        print $out "--- cap: (2, 4)\n";
+    if ($skip) {
+        print $out "--- SKIP\n";
     }
 
     print $out "\n";

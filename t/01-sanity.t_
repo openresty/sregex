@@ -902,12 +902,14 @@ re1 and re2 are wrong here.
 === TEST 148: \v
 --- re: [\v]+
 --- s eval: " \t\n\x0b\f\r\x85\x86"
+--- cap: (2, 7)
 
 
 
 === TEST 149: \V
---- re: [\v]+
+--- re: [\V]+
 --- s eval: "\x86 \t\n\x0b\f\r\x85"
+--- cap: (0, 3)
 
 
 

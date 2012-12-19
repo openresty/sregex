@@ -165,18 +165,21 @@ __DATA__
 === TEST 27: re_tests:887
 --- re: \.c(pp|xx|c)?$
 --- s eval: "Changes"
+--- flags: i
 
 
 
 === TEST 28: re_tests:888
 --- re: \.c(pp|xx|c)?$
 --- s eval: "IO.c"
+--- flags: i
 
 
 
 === TEST 29: re_tests:889
 --- re: (\.c(pp|xx|c)?$)
 --- s eval: "IO.c"
+--- flags: i
 
 
 

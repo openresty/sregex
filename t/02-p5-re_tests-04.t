@@ -195,120 +195,140 @@ __DATA__
 === TEST 31: re_tests:308
 --- re: abc
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 32: re_tests:309
 --- re: abc
 --- s eval: "XBC"
+--- flags: i
 
 
 
 === TEST 33: re_tests:310
 --- re: abc
 --- s eval: "AXC"
+--- flags: i
 
 
 
 === TEST 34: re_tests:311
 --- re: abc
 --- s eval: "ABX"
+--- flags: i
 
 
 
 === TEST 35: re_tests:312
 --- re: abc
 --- s eval: "XABCY"
+--- flags: i
 
 
 
 === TEST 36: re_tests:313
 --- re: abc
 --- s eval: "ABABC"
+--- flags: i
 
 
 
 === TEST 37: re_tests:314
 --- re: ab*c
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 38: re_tests:315
 --- re: ab*bc
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 39: re_tests:316
 --- re: ab*bc
 --- s eval: "ABBC"
+--- flags: i
 
 
 
 === TEST 40: re_tests:317
 --- re: ab*?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 41: re_tests:318
 --- re: ab{0,}?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 42: re_tests:319
 --- re: ab+?bc
 --- s eval: "ABBC"
+--- flags: i
 
 
 
 === TEST 43: re_tests:320
 --- re: ab+bc
 --- s eval: "ABC"
+--- flags: i
 
 
 
 === TEST 44: re_tests:321
 --- re: ab+bc
 --- s eval: "ABQ"
+--- flags: i
 
 
 
 === TEST 45: re_tests:322
 --- re: ab{1,}bc
 --- s eval: "ABQ"
+--- flags: i
 
 
 
 === TEST 46: re_tests:323
 --- re: ab+bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 47: re_tests:324
 --- re: ab{1,}?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 48: re_tests:325
 --- re: ab{1,3}?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 49: re_tests:326
 --- re: ab{3,4}?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 
 === TEST 50: re_tests:327
 --- re: ab{4,5}?bc
 --- s eval: "ABBBBC"
+--- flags: i
 
 
 

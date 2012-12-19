@@ -118,7 +118,7 @@ sub run_test ($) {
             no warnings 'deprecated';
 
             eval {
-                $s =~ m/$prefix$re/sma;
+                $s =~ m/$prefix$re/sm;
             };
 
             if ($@) {
@@ -142,8 +142,10 @@ sub run_test ($) {
                     is($splitted_pike_temp_cap, $block->temp_cap, "$name - splitted pike vm temporary capture ok");
                 }
 
-            } elsif ($s =~ m/$prefix$re/sma) {
+            } elsif ($s =~ m/$prefix$re/sm) {
                 my $expected_cap = fmt_cap(\@-, \@+);
+
+                #warn "regex: $prefix$re";
 
                 ok($thompson_match, "$name - thompson vm should match");
                 ok($splitted_thompson_match, "$name - splitted thompson vm should match");
