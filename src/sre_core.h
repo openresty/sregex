@@ -20,6 +20,9 @@
 #define SRE_USE_VALGRIND  0
 #endif
 
+#ifndef u_char
+#define u_char  uint8_t
+#endif
 
 #define  SRE_OK          0
 #define  SRE_ERROR      -1
