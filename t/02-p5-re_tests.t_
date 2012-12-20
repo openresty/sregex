@@ -4548,3 +4548,27 @@ __DATA__
 --- s eval: "s\N{LATIN SMALL LIGATURE LONG S T}"
 --- flags: i
 
+
+
+=== TEST 713: re_tests:1599
+--- re: [\h]
+--- s eval: "\x{A0}"
+
+
+
+=== TEST 714: re_tests:1600
+--- re: [\H]
+--- s eval: "\x{BF}"
+
+
+
+=== TEST 715: re_tests:1601
+--- re: [\H]
+--- s eval: "\x{A0}"
+
+
+
+=== TEST 716: re_tests:1602
+--- re: [\H]
+--- s eval: "\x{A1}"
+

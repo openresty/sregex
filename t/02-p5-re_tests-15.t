@@ -88,3 +88,27 @@ __DATA__
 --- s eval: "s\N{LATIN SMALL LIGATURE LONG S T}"
 --- flags: i
 
+
+
+=== TEST 13: re_tests:1599
+--- re: [\h]
+--- s eval: "\x{A0}"
+
+
+
+=== TEST 14: re_tests:1600
+--- re: [\H]
+--- s eval: "\x{BF}"
+
+
+
+=== TEST 15: re_tests:1601
+--- re: [\H]
+--- s eval: "\x{A0}"
+
+
+
+=== TEST 16: re_tests:1602
+--- re: [\H]
+--- s eval: "\x{A1}"
+
