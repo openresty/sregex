@@ -31,7 +31,7 @@ sregex-cli: src/sre_cli.o libsregex.so
 	$(CC) -o $@ -Wl,-rpath,$(pwd) $< -L. -lsregex
 
 libsregex.so: $(lib_o_files)
-	$(CC) -shared -Wl,-soname,$@ -o $@ $+
+	$(CC) -shared -o $@ $+
 
 libsregex.a: $(lib_o_files)
 	rm -f $@
