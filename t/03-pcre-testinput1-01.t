@@ -33,24 +33,28 @@ __DATA__
 === TEST 5: testinput1:12
 --- re: The quick brown fox
 --- s eval: "the quick brown fox"
+--- flags: i
 
 
 
 === TEST 6: testinput1:13
 --- re: The quick brown fox
 --- s eval: "The quick brown FOX"
+--- flags: i
 
 
 
 === TEST 7: testinput1:14
 --- re: The quick brown fox
 --- s eval: "What do you know about the quick brown fox?"
+--- flags: i
 
 
 
 === TEST 8: testinput1:15
 --- re: The quick brown fox
 --- s eval: "What do you know about THE QUICK BROWN FOX?"
+--- flags: i
 
 
 

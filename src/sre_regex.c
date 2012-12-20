@@ -178,10 +178,14 @@ sre_regex_error(char *fmt, ...)
 sre_regex_range_t *
 sre_regex_turn_char_class_caseless(sre_pool_t *pool, sre_regex_range_t *range)
 {
+    u_char                from, to;
     sre_regex_range_t    *r, *nr;
 
     for (r = range; r; r = r->next) {
-        if (r->to >= 'A' && r->from <= 'Z') {
+        from = r->from;
+        to   = r->to;
+
+        if (to >= 'A' && from <= 'Z') {
             /* overlap with A-Z */
 
             nr = sre_palloc(pool, sizeof(sre_regex_range_t));
@@ -189,14 +193,15 @@ sre_regex_turn_char_class_caseless(sre_pool_t *pool, sre_regex_range_t *range)
                 return NULL;
             }
 
-            nr->from = sre_max(r->from, 'A') + 32;
-            nr->to = sre_min(r->to, 'Z') + 32;
+            nr->from = sre_max(from, 'A') + 32;
+            nr->to = sre_min(to, 'Z') + 32;
             nr->next = r->next;
 
             r->next = nr;
             r = nr;
+        }
 
-        } else if (r->to >= 'a' && r->from <= 'z') {
+        if (to >= 'a' && from <= 'z') {
             /* overlap with a-z */
 
             nr = sre_palloc(pool, sizeof(sre_regex_range_t));
@@ -204,8 +209,8 @@ sre_regex_turn_char_class_caseless(sre_pool_t *pool, sre_regex_range_t *range)
                 return NULL;
             }
 
-            nr->from = sre_max(r->from, 'a') - 32;
-            nr->to = sre_min(r->to, 'z') - 32;
+            nr->from = sre_max(from, 'a') - 32;
+            nr->to = sre_min(to, 'z') - 32;
             nr->next = r->next;
 
             r->next = nr;

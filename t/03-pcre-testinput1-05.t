@@ -33,18 +33,21 @@ __DATA__
 === TEST 5: testinput1:278
 --- re: ^[\da-f](\.[\da-f])*$
 --- s eval: "a.b.c.d"
+--- flags: i
 
 
 
 === TEST 6: testinput1:279
 --- re: ^[\da-f](\.[\da-f])*$
 --- s eval: "A.B.C.D"
+--- flags: i
 
 
 
 === TEST 7: testinput1:280
 --- re: ^[\da-f](\.[\da-f])*$
 --- s eval: "a.b.c.1.2.3.C"
+--- flags: i
 
 
 

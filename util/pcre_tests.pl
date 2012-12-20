@@ -80,8 +80,15 @@ while (<$in>) {
     if (m{^/(.*)/(\S*)}) {
         $re = $1;
         $flags = $2;
-        next;
 
+        if ($flags =~ /i/) {
+            $flags = 'i';
+
+        } else {
+            undef $flags;
+        }
+
+        next;
     }
 
     if (m{^/}) {
@@ -103,7 +110,7 @@ while (<$in>) {
 
     #print join ", ", @elems, "\n";
 
-    my $key = "$re\t$s";
+    my $key = "$re\0$s\0" . ($flags || "");
     if (exists $memo{$key}) {
         $dup++;
         next;
@@ -292,6 +299,10 @@ for my $test (@tests) {
 --- re: $re
 --- s eval: "$s"
 _EOC_
+
+    if (defined $flags) {
+        print $out "--- flags: $flags\n";
+    }
 
     if ($err) {
         print $out "--- err\n[error] syntax error\n";

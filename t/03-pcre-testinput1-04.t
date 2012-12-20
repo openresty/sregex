@@ -93,78 +93,91 @@ __DATA__
 === TEST 15: testinput1:219
 --- re: ([\da-f:]+)$
 --- s eval: "0abc"
+--- flags: i
 
 
 
 === TEST 16: testinput1:220
 --- re: ([\da-f:]+)$
 --- s eval: "abc"
+--- flags: i
 
 
 
 === TEST 17: testinput1:221
 --- re: ([\da-f:]+)$
 --- s eval: "fed"
+--- flags: i
 
 
 
 === TEST 18: testinput1:222
 --- re: ([\da-f:]+)$
 --- s eval: "E"
+--- flags: i
 
 
 
 === TEST 19: testinput1:223
 --- re: ([\da-f:]+)$
 --- s eval: "::"
+--- flags: i
 
 
 
 === TEST 20: testinput1:224
 --- re: ([\da-f:]+)$
 --- s eval: "5f03:12C0::932e"
+--- flags: i
 
 
 
 === TEST 21: testinput1:225
 --- re: ([\da-f:]+)$
 --- s eval: "fed def"
+--- flags: i
 
 
 
 === TEST 22: testinput1:226
 --- re: ([\da-f:]+)$
 --- s eval: "Any old stuff"
+--- flags: i
 
 
 
 === TEST 23: testinput1:227
 --- re: ([\da-f:]+)$
 --- s eval: "*** Failers"
+--- flags: i
 
 
 
 === TEST 24: testinput1:228
 --- re: ([\da-f:]+)$
 --- s eval: "0zzz"
+--- flags: i
 
 
 
 === TEST 25: testinput1:229
 --- re: ([\da-f:]+)$
 --- s eval: "gzzz"
+--- flags: i
 
 
 
 === TEST 26: testinput1:230
 --- re: ([\da-f:]+)$
 --- s eval: "fed\x20"
+--- flags: i
 
 
 
 === TEST 27: testinput1:231
 --- re: ([\da-f:]+)$
 --- s eval: "Any old rubbish"
+--- flags: i
 
 
 
