@@ -17,21 +17,40 @@
 
 #include <sre_regex_parser.h>
 #include <sre_palloc.h>
+#include <sre_yyparser.h>
 #include <ctype.h>
 
 
-static int yylex(void);
-static void yyerror(char *msg);
-static sre_regex_t *sre_regex_desugar_counted_repetition(sre_regex_t *subj,
-    sre_regex_cquant_t *cquant, unsigned greedy);
+#define sre_read_char(sp)  *(*(sp))++
 
 
-static unsigned      sre_regex_group;
-static sre_pool_t   *sre_regex_pool;
-static sre_regex_t  *sre_regex_parsed;
-static int           sre_regex_flags;
+static int yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src);
+static void yyerror(sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
+    sre_regex_t **parsed, char *s);
+static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
+    sre_regex_t *subj, sre_regex_cquant_t *cquant, unsigned greedy);
 
 %}
+
+
+%output  "src/sre_yyparser.c"
+%defines "src/sre_yyparser.h"
+
+
+%define api.pure
+
+
+%lex-param {sre_pool_t *pool}
+%lex-param {u_char *src}
+
+
+%parse-param {sre_pool_t *pool}
+%parse-param {u_char **src}
+%parse-param {unsigned *ncaps}
+%parse-param {int flags}
+%parse-param {sre_regex_t **parsed}
+
+%expect             32
 
 %union {
     sre_regex_t         *re;
@@ -46,19 +65,17 @@ static int           sre_regex_flags;
 %token <cquant>     SRE_REGEX_TOKEN_CQUANT
 
 %token <re>         SRE_REGEX_TOKEN_CHAR_CLASS SRE_REGEX_TOKEN_ASSERTION
-
 %type  <re>         alt concat repeat atom regex
+
 %type  <group>      count
 
 %start              regex
-
-%expect             32
 
 %%
 
 regex: alt SRE_REGEX_TOKEN_EOF
       {
-        sre_regex_parsed = $1;
+        *parsed = $1;
         return SRE_OK;
       }
     ;
@@ -67,7 +84,7 @@ regex: alt SRE_REGEX_TOKEN_EOF
 alt: concat
    | alt '|' concat
      {
-        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ALT, $1, $3);
+        $$ = sre_regex_create(pool, SRE_REGEX_TYPE_ALT, $1, $3);
         if ($$ == NULL) {
             YYABORT;
         }
@@ -78,14 +95,14 @@ alt: concat
 concat: repeat
       | concat repeat
         {
-            $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, $1, $2);
+            $$ = sre_regex_create(pool, SRE_REGEX_TYPE_CAT, $1, $2);
             if ($$ == NULL) {
                 YYABORT;
             }
         }
     |
       {
-        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
+        $$ = sre_regex_create(pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
         if ($$ == NULL) {
             YYABORT;
         }
@@ -96,7 +113,7 @@ concat: repeat
 repeat: atom
       | atom '*'
         {
-            $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_STAR, $1,
+            $$ = sre_regex_create(pool, SRE_REGEX_TYPE_STAR, $1,
                                   NULL);
             if ($$ == NULL) {
                 YYABORT;
@@ -107,7 +124,7 @@ repeat: atom
 
       | atom '*' '?'
         {
-            $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_STAR, $1,
+            $$ = sre_regex_create(pool, SRE_REGEX_TYPE_STAR, $1,
                                   NULL);
             if ($$ == NULL) {
                 YYABORT;
@@ -116,7 +133,7 @@ repeat: atom
 
       | atom '+'
         {
-            $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_PLUS, $1,
+            $$ = sre_regex_create(pool, SRE_REGEX_TYPE_PLUS, $1,
                                   NULL);
             if ($$ == NULL) {
                 YYABORT;
@@ -127,7 +144,7 @@ repeat: atom
 
       | atom '+' '?'
         {
-            $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_PLUS, $1,
+            $$ = sre_regex_create(pool, SRE_REGEX_TYPE_PLUS, $1,
                                   NULL);
             if ($$ == NULL) {
                 YYABORT;
@@ -136,7 +153,7 @@ repeat: atom
 
       | atom '?'
         {
-            $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_QUEST, $1,
+            $$ = sre_regex_create(pool, SRE_REGEX_TYPE_QUEST, $1,
                                   NULL);
             if ($$ == NULL) {
                 YYABORT;
@@ -147,7 +164,7 @@ repeat: atom
 
       | atom '?' '?'
         {
-            $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_QUEST, $1,
+            $$ = sre_regex_create(pool, SRE_REGEX_TYPE_QUEST, $1,
                                   NULL);
             if ($$ == NULL) {
                 YYABORT;
@@ -156,7 +173,7 @@ repeat: atom
 
       | atom SRE_REGEX_TOKEN_CQUANT
         {
-            $$ = sre_regex_desugar_counted_repetition($1, &$2, 1 /* greedy */);
+            $$ = sre_regex_desugar_counted_repetition(pool, $1, &$2, 1 /* greedy */);
             if ($$ == NULL) {
                 YYABORT;
             }
@@ -164,20 +181,21 @@ repeat: atom
 
       | atom SRE_REGEX_TOKEN_CQUANT '?'
         {
-            $$ = sre_regex_desugar_counted_repetition($1, &$2, 0 /* greedy */);
+            $$ = sre_regex_desugar_counted_repetition(pool, $1, &$2, 0 /* greedy */);
             if ($$ == NULL) {
                 YYABORT;
             }
         }
       ;
 
-count: { $$ = ++sre_regex_group; }
+
+count: { $$ = ++(*ncaps); }
      ;
 
 
 atom: '(' count alt ')'
       {
-        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_PAREN, $3, NULL);
+        $$ = sre_regex_create(pool, SRE_REGEX_TYPE_PAREN, $3, NULL);
         if ($$ == NULL) {
             YYABORT;
         }
@@ -192,17 +210,17 @@ atom: '(' count alt ')'
 
     | SRE_REGEX_TOKEN_CHAR
       {
-        if ((sre_regex_flags & SRE_REGEX_CASELESS)
+        if ((flags & SRE_REGEX_CASELESS)
             && (($1 >= 'A' && $1 <= 'Z')
                 || ($1 >= 'a' && $1 <= 'z')))
         {
-            $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
+            $$ = sre_regex_create(pool, SRE_REGEX_TYPE_CLASS, NULL,
                                  NULL);
             if ($$ == NULL) {
                 YYABORT;
             }
 
-            $$->range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            $$->range = sre_palloc(pool, sizeof(sre_regex_range_t));
             if ($$->range == NULL) {
                 YYABORT;
             }
@@ -210,7 +228,7 @@ atom: '(' count alt ')'
             $$->range->from = $1;
             $$->range->to = $1;
 
-            $$->range->next = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            $$->range->next = sre_palloc(pool, sizeof(sre_regex_range_t));
             if ($$->range->next == NULL) {
                 YYABORT;
             }
@@ -230,7 +248,7 @@ atom: '(' count alt ')'
             $$->range->next->next = NULL;
 
         } else {
-            $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
+            $$ = sre_regex_create(pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
             if ($$ == NULL) {
                 YYABORT;
             }
@@ -241,7 +259,7 @@ atom: '(' count alt ')'
 
     | '.'
       {
-        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_DOT, NULL, NULL);
+        $$ = sre_regex_create(pool, SRE_REGEX_TYPE_DOT, NULL, NULL);
         if ($$ == NULL) {
             YYABORT;
         }
@@ -249,7 +267,7 @@ atom: '(' count alt ')'
 
     | '^'
       {
-        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
+        $$ = sre_regex_create(pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
         if ($$ == NULL) {
             YYABORT;
         }
@@ -259,7 +277,7 @@ atom: '(' count alt ')'
 
     | '$'
       {
-        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
+        $$ = sre_regex_create(pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
         if ($$ == NULL) {
             YYABORT;
         }
@@ -270,8 +288,8 @@ atom: '(' count alt ')'
     | SRE_REGEX_TOKEN_ASSERTION
     | SRE_REGEX_TOKEN_CHAR_CLASS
       {
-        if (sre_regex_flags & SRE_REGEX_CASELESS) {
-            $$->range = sre_regex_turn_char_class_caseless(sre_regex_pool, $1->range);
+        if (flags & SRE_REGEX_CASELESS) {
+            $$->range = sre_regex_turn_char_class_caseless(pool, $1->range);
             if ($$ == NULL) {
                 YYABORT;
             }
@@ -280,7 +298,7 @@ atom: '(' count alt ')'
 
     | ':'
       {
-        $$ = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
+        $$ = sre_regex_create(pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
         if ($$ == NULL) {
             YYABORT;
         }
@@ -291,11 +309,9 @@ atom: '(' count alt ')'
 
 %%
 
-static u_char *sre_regex_str;
-
 
 static int
-yylex(void)
+yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 {
     u_char               c;
     int                  from, to;
@@ -327,29 +343,29 @@ yylex(void)
 
     static u_char        esc_V_ranges[] = { 0x00, 0x09, 0x0e, 0x84, 0x86, 0xff };
 
-    if (sre_regex_str == NULL || *sre_regex_str == '\0') {
+    if (*src == NULL || **src == '\0') {
         return SRE_REGEX_TOKEN_EOF;
     }
 
-    c = *sre_regex_str++;
+    c = sre_read_char(src);
     if (strchr("|*+?():.^$", (int) c)) {
         return c;
     }
 
     if (c == '\\') {
-        c = *sre_regex_str++;
+        c = sre_read_char(src);
 
         if (c == '\0') {
             return SRE_REGEX_TOKEN_BAD;
         }
 
         if (!isprint(c)) {
-            yylval.ch = c;
+            lvalp->ch = c;
             return SRE_REGEX_TOKEN_CHAR;
         }
 
         if (strchr("'\" iM%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
-            yylval.ch = c;
+            lvalp->ch = c;
             return SRE_REGEX_TOKEN_CHAR;
         }
 
@@ -359,19 +375,19 @@ yylex(void)
             i = 1;
 
             for (;;) {
-                c = *sre_regex_str;
+                c = **src;
 
                 if (c < '0' || c > '7') {
-                    yylval.ch = (u_char) num;
+                    lvalp->ch = (u_char) num;
                     return SRE_REGEX_TOKEN_CHAR;
                 }
 
                 num = (c - '0') + (num << 3);
 
-                sre_regex_str++;
+                (*src)++;
 
                 if (++i == 3) {
-                    yylval.ch = (u_char) num;
+                    lvalp->ch = (u_char) num;
                     return SRE_REGEX_TOKEN_CHAR;
                 }
             }
@@ -379,8 +395,7 @@ yylex(void)
 
         switch (c) {
         case 'c':
-            c = *sre_regex_str++;
-
+            c = sre_read_char(src);
             if (c == '\0') {
                 return SRE_REGEX_TOKEN_BAD;
             }
@@ -389,19 +404,19 @@ yylex(void)
                 c -= 32;
             }
 
-            yylval.ch = (u_char) (c ^ 64);
+            lvalp->ch = (u_char) (c ^ 64);
 
-            dd("\\cK: %d", yylval.ch);
+            dd("\\cK: %d", lvalp->ch);
 
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'o':
-            c = *sre_regex_str++;
+            c = sre_read_char(src);
             if (c != '{') {
                 return SRE_REGEX_TOKEN_BAD;
             }
 
-            c = *sre_regex_str++;
+            c = sre_read_char(src);
 
             num = 0;
             i = 0;
@@ -413,39 +428,39 @@ yylex(void)
                     num = (c - '0') + (num << 3);
 
                 } else if (c == '}') {
-                    yylval.ch = (u_char) num;
+                    lvalp->ch = (u_char) num;
                     return SRE_REGEX_TOKEN_CHAR;
 
                 } else if (c == '\0') {
                     return SRE_REGEX_TOKEN_BAD;
 
                 } else {
-                    sre_regex_str--;
+                    (*src)--;
                     break;
                 }
 
                 if (++i == 3) {
-                    dd("cur: '%c' (%d)", *sre_regex_str, *sre_regex_str);
+                    dd("cur: '%c' (%d)", **src, **src);
 
-                    if (*sre_regex_str++ != '}') {
+                    if (sre_read_char(src) != '}') {
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
                     break;
                 }
 
-                c = *sre_regex_str++;
+                c = sre_read_char(src);
             }
 
-            dd("\\o{...}: %u, next: %c", num, *sre_regex_str);
+            dd("\\o{...}: %u, next: %c", num, **src);
 
-            yylval.ch = (u_char) num;
+            lvalp->ch = (u_char) num;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'x':
-            c = *sre_regex_str++;
+            c = sre_read_char(src);
             if (c == '{') {
-                c = *sre_regex_str++;
+                c = sre_read_char(src);
                 seen_curly_bracket = 1;
 
             } else {
@@ -472,19 +487,19 @@ yylex(void)
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
-                    yylval.ch = (u_char) num;
+                    lvalp->ch = (u_char) num;
                     return SRE_REGEX_TOKEN_CHAR;
 
                 } else {
-                    sre_regex_str--;
+                    (*src)--;
                     break;
                 }
 
                 if (++i == 2) {
                     if (seen_curly_bracket) {
-                        dd("cur: '%c' (%d)", *sre_regex_str, *sre_regex_str);
+                        dd("cur: '%c' (%d)", **src, **src);
 
-                        if (*sre_regex_str++ != '}') {
+                        if (sre_read_char(src) != '}') {
                             return SRE_REGEX_TOKEN_BAD;
                         }
                     }
@@ -492,16 +507,16 @@ yylex(void)
                     break;
                 }
 
-                c = *sre_regex_str++;
+                c = sre_read_char(src);
             }
 
-            dd("\\x{...}: %u, next: %c", num, *sre_regex_str);
+            dd("\\x{...}: %u, next: %c", num, **src);
 
-            yylval.ch = (u_char) num;
+            lvalp->ch = (u_char) num;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'B':
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_ASSERT, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
@@ -509,11 +524,11 @@ yylex(void)
 
             r->assertion_type = SRE_REGEX_ASSERTION_BIG_B;
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'b':
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_ASSERT, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
@@ -521,11 +536,11 @@ yylex(void)
 
             r->assertion_type = SRE_REGEX_ASSERTION_SMALL_B;
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'z':
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_ASSERT, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
@@ -533,12 +548,12 @@ yylex(void)
 
             r->assertion_type = SRE_REGEX_ASSERTION_SMALL_Z;
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'A':
 
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_ASSERT, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_ASSERT, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
@@ -546,19 +561,19 @@ yylex(void)
 
             r->assertion_type = SRE_REGEX_ASSERTION_BIG_A;
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'd':
             /* \d is defined as [0-9] */
 
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_CLASS, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
-            range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            range = sre_palloc(pool, sizeof(sre_regex_range_t));
             if (range == NULL) {
                 break;
             }
@@ -569,19 +584,19 @@ yylex(void)
 
             r->range = range;
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'D':
             /* \D is defined as [^0-9] */
 
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NCLASS, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_NCLASS, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
-            range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            range = sre_palloc(pool, sizeof(sre_regex_range_t));
             if (range == NULL) {
                 break;
             }
@@ -592,20 +607,20 @@ yylex(void)
 
             r->range = range;
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'w':
             /* \w is defined as [A-Za-z0-9_] */
 
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_CLASS, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
             for (i = 0; i < sre_nelems(esc_w_ranges); i += 2) {
-                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
                     return SRE_REGEX_TOKEN_BAD;
                 }
@@ -628,22 +643,22 @@ yylex(void)
                 }
             }
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'W':
             /* \W is defined as [^A-Za-z0-9_] */
 
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NCLASS, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_NCLASS, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
             for (i = 0; i < sre_nelems(esc_w_ranges); i += 2) {
-                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
-                    yylval.ch = 0;
+                    lvalp->ch = 0;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -665,20 +680,20 @@ yylex(void)
                 }
             }
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 's':
             /* \s is defined as [ \f\n\r\t] */
 
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_CLASS, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
             for (i = 0; i < sre_nelems(esc_s_ranges); i += 2) {
-                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
                     return SRE_REGEX_TOKEN_BAD;
                 }
@@ -701,20 +716,20 @@ yylex(void)
                 }
             }
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'S':
             /* \S is defined as [^ \f\n\r\t] */
 
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NCLASS, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_NCLASS, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
             for (i = 0; i < sre_nelems(esc_s_ranges); i += 2) {
-                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
                     return SRE_REGEX_TOKEN_BAD;
                 }
@@ -737,19 +752,19 @@ yylex(void)
                 }
             }
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'N':
             /* \N is defined as [^\n] */
 
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NCLASS, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_NCLASS, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
-            range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+            range = sre_palloc(pool, sizeof(sre_regex_range_t));
             if (range == NULL) {
                 break;
             }
@@ -760,30 +775,30 @@ yylex(void)
 
             r->range = range;
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'C':
             /* \C is defined as . */
 
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_DOT, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_DOT, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'h':
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_CLASS, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
             for (i = 0; i < sre_nelems(esc_h_ranges); i += 2) {
-                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
                     return SRE_REGEX_TOKEN_BAD;
                 }
@@ -806,18 +821,18 @@ yylex(void)
                 }
             }
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'H':
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NCLASS, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_NCLASS, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
             for (i = 0; i < sre_nelems(esc_h_ranges); i += 2) {
-                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
                     return SRE_REGEX_TOKEN_BAD;
                 }
@@ -840,18 +855,18 @@ yylex(void)
                 }
             }
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'v':
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CLASS, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_CLASS, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
             for (i = 0; i < sre_nelems(esc_v_ranges); i += 2) {
-                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
                     return SRE_REGEX_TOKEN_BAD;
                 }
@@ -874,18 +889,18 @@ yylex(void)
                 }
             }
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'V':
-            r = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NCLASS, NULL,
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_NCLASS, NULL,
                                  NULL);
             if (r == NULL) {
                 break;
             }
 
             for (i = 0; i < sre_nelems(esc_v_ranges); i += 2) {
-                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
                     return SRE_REGEX_TOKEN_BAD;
                 }
@@ -908,31 +923,31 @@ yylex(void)
                 }
             }
 
-            yylval.re = r;
+            lvalp->re = r;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 't':
-            yylval.ch = '\t';
+            lvalp->ch = '\t';
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'n':
-            yylval.ch = '\n';
+            lvalp->ch = '\n';
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'r':
-            yylval.ch = '\r';
+            lvalp->ch = '\r';
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'f':
-            yylval.ch = '\f';
+            lvalp->ch = '\f';
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'a':
-            yylval.ch = '\a';
+            lvalp->ch = '\a';
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'e':
-            yylval.ch = '\e';
+            lvalp->ch = '\e';
             return SRE_REGEX_TOKEN_CHAR;
 
         default:
@@ -946,15 +961,15 @@ yylex(void)
     case '[':
         /* get character class */
 
-        if (*sre_regex_str == '^') {
+        if (**src == '^') {
             type = SRE_REGEX_TYPE_NCLASS;
-            sre_regex_str++;
+            (*src)++;
 
         } else {
             type = SRE_REGEX_TYPE_CLASS;
         }
 
-        r = sre_regex_create(sre_regex_pool, type, NULL, NULL);
+        r = sre_regex_create(pool, type, NULL, NULL);
         if (r == NULL) {
             return SRE_REGEX_TOKEN_BAD;
         }
@@ -967,7 +982,7 @@ yylex(void)
         for ( ;; ) {
             n++;
 
-            c = *sre_regex_str++;
+            c = sre_read_char(src);
 
             dd("read char: %d", c);
 
@@ -983,7 +998,7 @@ yylex(void)
                 }
 
                 if (seen_dash) {
-                    range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                    range = sre_palloc(pool, sizeof(sre_regex_range_t));
                     if (range == NULL) {
                         return SRE_REGEX_TOKEN_BAD;
                     }
@@ -1000,11 +1015,11 @@ yylex(void)
                     }
                 }
 
-                yylval.re = r;
+                lvalp->re = r;
                 return SRE_REGEX_TOKEN_CHAR_CLASS;
 
             case '\\':
-                c = *sre_regex_str++;
+                c = sre_read_char(src);
 
                 if (c >= '0' && c <= '7') {
 
@@ -1014,7 +1029,7 @@ yylex(void)
                     dd("\\ddd: %d", num);
 
                     for (;;) {
-                        c = *sre_regex_str;
+                        c = **src;
 
                         if (c < '0' || c > '7') {
                             dd("c before: %d", c);
@@ -1027,7 +1042,7 @@ yylex(void)
 
                         num = (c - '0') + (num << 3);
 
-                        sre_regex_str++;
+                        (*src)++;
 
                         if (++i == 3) {
                             c = (u_char) num;
@@ -1038,7 +1053,7 @@ yylex(void)
 
                 switch (c) {
                 case 'c':
-                    c = *sre_regex_str++;
+                    c = sre_read_char(src);
 
                     if (c == '\0') {
                         return SRE_REGEX_TOKEN_BAD;
@@ -1050,17 +1065,17 @@ yylex(void)
 
                     c = (u_char) (c ^ 64);
 
-                    dd("\\cK: %d", yylval.ch);
+                    dd("\\cK: %d", lvalp->ch);
 
                     goto process_char;
 
                 case 'o':
-                    c = *sre_regex_str++;
+                    c = sre_read_char(src);
                     if (c != '{') {
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
-                    c = *sre_regex_str++;
+                    c = sre_read_char(src);
 
                     num = 0;
                     i = 0;
@@ -1080,27 +1095,27 @@ yylex(void)
                         }
 
                         if (++i == 3) {
-                            dd("cur: '%c' (%d)", *sre_regex_str, *sre_regex_str);
+                            dd("cur: '%c' (%d)", **src, **src);
 
-                            if (*sre_regex_str++ != '}') {
+                            if (sre_read_char(src) != '}') {
                                 return SRE_REGEX_TOKEN_BAD;
                             }
 
                             break;
                         }
 
-                        c = *sre_regex_str++;
+                        c = sre_read_char(src);
                     }
 
-                    dd("\\x{...}: %u, next: %c", num, *sre_regex_str);
+                    dd("\\x{...}: %u, next: %c", num, **src);
 
                     c = (u_char) num;
                     goto process_char;
 
                 case 'x':
-                    c = *sre_regex_str++;
+                    c = sre_read_char(src);
                     if (c == '{') {
-                        c = *sre_regex_str++;
+                        c = sre_read_char(src);
                         seen_curly_bracket = 1;
 
                     } else {
@@ -1134,15 +1149,15 @@ yylex(void)
                             return SRE_REGEX_TOKEN_BAD;
 
                         } else {
-                            sre_regex_str--;
+                            (*src)--;
                             break;
                         }
 
                         if (++i == 2) {
                             if (seen_curly_bracket) {
-                                dd("cur: '%c' (%d)", *sre_regex_str, *sre_regex_str);
+                                dd("cur: '%c' (%d)", **src, **src);
 
-                                if (*sre_regex_str++ != '}') {
+                                if (sre_read_char(src) != '}') {
                                     return SRE_REGEX_TOKEN_BAD;
                                 }
                             }
@@ -1150,10 +1165,10 @@ yylex(void)
                             break;
                         }
 
-                        c = *sre_regex_str++;
+                        c = sre_read_char(src);
                     }
 
-                    dd("\\x{...}: %u, next: %c", num, *sre_regex_str);
+                    dd("\\x{...}: %u, next: %c", num, **src);
 
                     c = (u_char) num;
                     goto process_char;
@@ -1202,7 +1217,7 @@ yylex(void)
                 }
 
                 if (seen_dash) {
-                    range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                    range = sre_palloc(pool, sizeof(sre_regex_range_t));
                     if (range == NULL) {
                         return SRE_REGEX_TOKEN_BAD;
                     }
@@ -1224,7 +1239,7 @@ yylex(void)
 
                 switch (c) {
                 case 'd':
-                    range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                    range = sre_palloc(pool, sizeof(sre_regex_range_t));
                     if (range == NULL) {
                         return SRE_REGEX_TOKEN_BAD;
                     }
@@ -1246,7 +1261,7 @@ yylex(void)
 
                 case 'D':
                     for (i = 0; i < sre_nelems(esc_D_ranges); i += 2) {
-                        range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                        range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
                             return SRE_REGEX_TOKEN_BAD;
                         }
@@ -1269,7 +1284,7 @@ yylex(void)
 
                 case 'w':
                     for (i = 0; i < sre_nelems(esc_w_ranges); i += 2) {
-                        range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                        range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
                             return SRE_REGEX_TOKEN_BAD;
                         }
@@ -1292,7 +1307,7 @@ yylex(void)
 
                 case 'W':
                     for (i = 0; i < sre_nelems(esc_W_ranges); i += 2) {
-                        range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                        range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
                             return SRE_REGEX_TOKEN_BAD;
                         }
@@ -1315,7 +1330,7 @@ yylex(void)
 
                 case 's':
                     for (i = 0; i < sre_nelems(esc_s_ranges); i += 2) {
-                        range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                        range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
                             return SRE_REGEX_TOKEN_BAD;
                         }
@@ -1338,7 +1353,7 @@ yylex(void)
 
                 case 'S':
                     for (i = 0; i < sre_nelems(esc_S_ranges); i += 2) {
-                        range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                        range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
                             return SRE_REGEX_TOKEN_BAD;
                         }
@@ -1361,7 +1376,7 @@ yylex(void)
 
                 case 'v':
                     for (i = 0; i < sre_nelems(esc_v_ranges); i += 2) {
-                        range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                        range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
                             return SRE_REGEX_TOKEN_BAD;
                         }
@@ -1384,7 +1399,7 @@ yylex(void)
 
                 case 'V':
                     for (i = 0; i < sre_nelems(esc_V_ranges); i += 2) {
-                        range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                        range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
                             return SRE_REGEX_TOKEN_BAD;
                         }
@@ -1407,7 +1422,7 @@ yylex(void)
 
                 case 'h':
                     for (i = 0; i < sre_nelems(esc_h_ranges); i += 2) {
-                        range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                        range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
                             return SRE_REGEX_TOKEN_BAD;
                         }
@@ -1430,7 +1445,7 @@ yylex(void)
 
                 case 'H':
                     for (i = 0; i < sre_nelems(esc_H_ranges); i += 2) {
-                        range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                        range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
                             return SRE_REGEX_TOKEN_BAD;
                         }
@@ -1466,7 +1481,7 @@ yylex(void)
 
             default:
 process_char:
-                dd("next: %d", *sre_regex_str);
+                dd("next: %d", **src);
 
                 if (seen_dash) {
                     last->to = c;
@@ -1484,7 +1499,7 @@ process_char:
                     no_dash = 0;
                 }
 
-                range = sre_palloc(sre_regex_pool, sizeof(sre_regex_range_t));
+                range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
                     return SRE_REGEX_TOKEN_BAD;
                 }
@@ -1510,9 +1525,9 @@ process_char:
     case '{':
         /* quantifier for counted repetition */
 
-        c = *sre_regex_str;
+        c = **src;
         if (c < '0' || c > '9') {
-            c = sre_regex_str[-1];
+            c = (*src)[-1];
             break;
         }
 
@@ -1520,51 +1535,51 @@ process_char:
         from = 0;
         do {
             from = c - '0' + from * 10;
-            c = sre_regex_str[++i];
+            c = (*src)[++i];
         } while (c >= '0' && c <= '9');
 
-        dd("from parsed: %d, next: %c", from, sre_regex_str[i]);
+        dd("from parsed: %d, next: %c", from, (*src)[i]);
 
         if (c == '}') {
             to = from;
-            sre_regex_str += i + 1;
+            (*src) += i + 1;
             goto cquant_parsed;
         }
 
         if (c != ',') {
             dd("',' expected but got %c", c);
-            c = sre_regex_str[-1];
+            c = (*src)[-1];
             break;
         }
 
-        c = sre_regex_str[++i];
+        c = (*src)[++i];
 
         if (c == '}') {
             to = -1;
-            sre_regex_str += i + 1;
+            (*src) += i + 1;
             goto cquant_parsed;
         }
 
         if (c < '0' || c > '9') {
-            c = sre_regex_str[-1];
+            c = (*src)[-1];
             break;
         }
 
         to = 0;
         do {
             to = c - '0' + to * 10;
-            c = sre_regex_str[++i];
+            c = (*src)[++i];
         } while (c >= '0' && c <= '9');
 
         if (c != '}') {
-            c = sre_regex_str[-1];
+            c = (*src)[-1];
             break;
         }
 
-        sre_regex_str += i + 1;
+        (*src) += i + 1;
 
 cquant_parsed:
-        dd("from = %d, to = %d, next: %d", from, to, sre_regex_str[0]);
+        dd("from = %d, to = %d, next: %d", from, to, (*src)[0]);
 
         if (from >= 500 || to >= 500) {
             dd("from or to too large: %d %d", from, to);
@@ -1590,8 +1605,8 @@ cquant_parsed:
             }
         }
 
-        yylval.cquant.from = from;
-        yylval.cquant.to = to;
+        lvalp->cquant.from = from;
+        lvalp->cquant.to = to;
         return SRE_REGEX_TOKEN_CQUANT;
 
     default:
@@ -1600,16 +1615,16 @@ cquant_parsed:
 
     dd("token char: %c(%d)", c, c);
 
-    yylval.ch = c;
+    lvalp->ch = c;
     return SRE_REGEX_TOKEN_CHAR;
 }
 
 
 static void
-yyerror(char *s)
+yyerror(sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
+    sre_regex_t **parsed, char *s)
 {
     sre_regex_error("%s", s);
-    exit(1);
 }
 
 
@@ -1617,26 +1632,17 @@ sre_regex_t *
 sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags)
 {
     sre_regex_t     *re, *r;
+    sre_regex_t     *parsed = NULL;
 
-    sre_regex_str     = src;
-    sre_regex_pool    = pool;
-    sre_regex_group   = 0;
-    sre_regex_flags   = flags;
+    *ncaps = 0;
 
-    if (yyparse() != SRE_OK) {
+    if (yyparse(pool, &src, ncaps, flags, &parsed) != SRE_OK) {
         return NULL;
     }
-
-    if (sre_regex_parsed == NULL) {
-        yyerror("syntax error");
-        return NULL;
-    }
-
-    *ncaps = sre_regex_group;
 
     /* assemble the regex ".*?(regex)" */
 
-    re = sre_regex_create(pool, SRE_REGEX_TYPE_PAREN, sre_regex_parsed, NULL);
+    re = sre_regex_create(pool, SRE_REGEX_TYPE_PAREN, parsed, NULL);
             /* $0 capture */
 
     if (re == NULL) {
@@ -1658,7 +1664,7 @@ sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags)
 
 
 static sre_regex_t *
-sre_regex_desugar_counted_repetition(sre_regex_t *subj,
+sre_regex_desugar_counted_repetition(sre_pool_t *pool, sre_regex_t *subj,
     sre_regex_cquant_t *cquant, unsigned greedy)
 {
     int                  i;
@@ -1671,7 +1677,7 @@ sre_regex_desugar_counted_repetition(sre_regex_t *subj,
     /* generate subj{from} first */
 
     if (cquant->from == 0) {
-        concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
+        concat = sre_regex_create(pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
         if (concat == NULL) {
             return NULL;
         }
@@ -1682,7 +1688,7 @@ sre_regex_desugar_counted_repetition(sre_regex_t *subj,
         concat = subj;
 
         for (i = 1; i < cquant->from; i++) {
-            concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, concat, subj);
+            concat = sre_regex_create(pool, SRE_REGEX_TYPE_CAT, concat, subj);
             if (concat == NULL) {
                 return NULL;
             }
@@ -1696,7 +1702,7 @@ sre_regex_desugar_counted_repetition(sre_regex_t *subj,
     if (cquant->to == -1) {
         /* append subj* to concat */
 
-        star = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_STAR, subj,
+        star = sre_regex_create(pool, SRE_REGEX_TYPE_STAR, subj,
                                 NULL);
         if (star == NULL) {
             return NULL;
@@ -1704,7 +1710,7 @@ sre_regex_desugar_counted_repetition(sre_regex_t *subj,
 
         star->greedy = greedy;
 
-        concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, concat, star);
+        concat = sre_regex_create(pool, SRE_REGEX_TYPE_CAT, concat, star);
         if (concat == NULL) {
             return NULL;
         }
@@ -1714,7 +1720,7 @@ sre_regex_desugar_counted_repetition(sre_regex_t *subj,
 
     /* append (?:subj?){to - from} */
 
-    quest = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_QUEST, subj,
+    quest = sre_regex_create(pool, SRE_REGEX_TYPE_QUEST, subj,
                              NULL);
     if (quest == NULL) {
         return NULL;
@@ -1723,7 +1729,7 @@ sre_regex_desugar_counted_repetition(sre_regex_t *subj,
     quest->greedy = greedy;
 
     for ( ; i < cquant->to; i++) {
-        concat = sre_regex_create(sre_regex_pool, SRE_REGEX_TYPE_CAT, concat, quest);
+        concat = sre_regex_create(pool, SRE_REGEX_TYPE_CAT, concat, quest);
         if (concat == NULL) {
             return NULL;
         }

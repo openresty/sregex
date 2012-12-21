@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 ack '(?<=\#define)\s*DDEBUG\s*[1-9]' src && exit 1
-ack '.{81}' `ls src/sre_*.[ch]|grep -v 'sre_regex_parser.c'`
+ack '.{81}' `ls src/sre_*.[ch]|grep -v yyparser`
 ack '(?<!:)//' src/sre_*.[ch]
 ack '^master_on' t && exit 1
 ack '\b(?:ONLY|LAST)\b' t
 ack -l '\r\n' t
-ack '\(\);' src/sre_*.h
-ack '^static .*?\(\);' src/sre_*.[ch]
+ack '\(\);' `ls src/sre_*.h|grep -v yyparser`
+ack '^static .*?\(\);' `ls src/sre_*.[ch]|grep -v yyparser`
 perl -e 'use strict; use warnings;
     my $seen = 0;
     my $saved;

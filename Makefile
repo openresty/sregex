@@ -11,7 +11,7 @@ pwd = $(shell pwd)
 lib_c_files = \
         src/sre_palloc.c \
         src/sre_regex.c \
-        src/sre_regex_parser.c \
+        src/sre_yyparser.c \
         src/sre_regex_compiler.c \
         src/sre_vm_bytecode.c \
         src/sre_vm_thompson.c \
@@ -40,8 +40,8 @@ libsregex.a: $(lib_o_files)
 %.o: %.c $(h_files)
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-src/%.c: src/%.y
-	bison -o $@ -v $<
+src/sre_yyparser.c: src/sre_regex_parser.y
+	bison -v $<
 
 clean:
 	rm -f src/*.o core $(TARGET) src/sre_regex_parser.c \
