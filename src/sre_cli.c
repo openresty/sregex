@@ -13,10 +13,7 @@
 #include <ddebug.h>
 
 
-#include <sre_regex_parser.h>
-#include <sre_regex_compiler.h>
-#include <sre_vm_thompson.h>
-#include <sre_vm_pike.h>
+#include <sregex.h>
 #include <assert.h>
 
 
