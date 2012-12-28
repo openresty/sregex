@@ -106,15 +106,32 @@ Escaping a regex meta character yields the literal character itself, like `\{` a
 
 Only the octet mode is supported; no multi-byte character encoding love (yet).
 
-Build
-=====
+Installation
+============
 
     make
+    make install
 
 Gnu make and gcc are required.
 
-It will build `libsregex.so`, `libsregex.a`, and the command-line utility `sregex-cli`
-in the current working directory.
+It will build `libsregex.so`, `libsregex.a`, and the command-line utility `sregex-cli` and install them into the prefix /usr/local/ by default.
+
+If you want to install into a custom location, then just specify the PREFIX variable like this:
+
+    make
+    make install PREFIX=/opt/sregex
+
+If you are building a binary package (like an RPM package), then
+you will find the DESTDIR variable handy, as in
+
+    make
+    make install PREFIX=/opt/sregex DESTDIR=/path/to/my/build/root
+
+You can also uninstall sregex like this:
+
+    make uninstall PREFIX=/opt/sregex
+
+You should use exactly the same variable settings in `make uninstall` as you did in `make install`.
 
 Usage
 =====
