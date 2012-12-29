@@ -5,7 +5,7 @@
  */
 
 
-#include <sre_palloc.h>
+#include <sregex/sre_palloc.h>
 
 
 #if !(SRE_USE_VALGRIND)

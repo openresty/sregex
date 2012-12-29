@@ -11,8 +11,8 @@
 #define _SRE_REGEX_COMPILER_H_INCLUDED_
 
 
-#include <sre_regex.h>
-#include <sre_vm_bytecode.h>
+#include <sregex/sre_regex.h>
+#include <sregex/sre_vm_bytecode.h>
 
 
 sre_program_t *sre_regex_compile(sre_pool_t *pool, sre_regex_t *re);

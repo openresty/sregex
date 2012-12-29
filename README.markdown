@@ -127,12 +127,6 @@ you will find the DESTDIR variable handy, as in
     make
     make install PREFIX=/opt/sregex DESTDIR=/path/to/my/build/root
 
-You can also uninstall sregex like this:
-
-    make uninstall PREFIX=/opt/sregex
-
-You should use exactly the same variable settings in `make uninstall` as you did in `make install`.
-
 Usage
 =====
 

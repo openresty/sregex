@@ -11,7 +11,7 @@
 #define _SRE_BYTECODE_H_INCLUDED_
 
 
-#include <sre_regex.h>
+#include <sregex/sre_regex.h>
 
 
 typedef enum {

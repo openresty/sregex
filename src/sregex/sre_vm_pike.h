@@ -11,8 +11,8 @@
 #define _SRE_VM_PIKE_H_INCLUDED_
 
 
-#include <sre_core.h>
-#include <sre_vm_bytecode.h>
+#include <sregex/sre_core.h>
+#include <sregex/sre_vm_bytecode.h>
 
 
 struct sre_vm_pike_ctx_s;

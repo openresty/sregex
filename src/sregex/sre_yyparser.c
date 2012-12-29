@@ -63,18 +63,18 @@
 
 /* Copy the first part of user declarations.  */
 /* Line 371 of yacc.c  */
-#line 10 "src/sre_regex_parser.y"
+#line 10 "src/sregex/sre_yyparser.y"
 
 
 #ifndef DDEBUG
 #define DDEBUG 0
 #endif
-#include <ddebug.h>
+#include <sregex/ddebug.h>
 
 
-#include <sre_regex_parser.h>
-#include <sre_palloc.h>
-#include <sre_yyparser.h>
+#include <sregex/sre_regex_parser.h>
+#include <sregex/sre_palloc.h>
+#include <sregex/sre_yyparser.h>
 #include <ctype.h>
 
 
@@ -89,7 +89,7 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
 
 
 /* Line 371 of yacc.c  */
-#line 93 "src/sre_yyparser.c"
+#line 93 "src/sregex/sre_yyparser.c"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -109,8 +109,8 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
 
 /* In a future release of Bison, this section will be replaced
    by #include "sre_yyparser.h".  */
-#ifndef YY_YY_SRC_SRE_YYPARSER_H_INCLUDED
-# define YY_YY_SRC_SRE_YYPARSER_H_INCLUDED
+#ifndef YY_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED
+# define YY_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -139,7 +139,7 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 387 of yacc.c  */
-#line 55 "src/sre_regex_parser.y"
+#line 55 "src/sregex/sre_yyparser.y"
 
     sre_regex_t         *re;
     u_char               ch;
@@ -148,7 +148,7 @@ typedef union YYSTYPE
 
 
 /* Line 387 of yacc.c  */
-#line 152 "src/sre_yyparser.c"
+#line 152 "src/sregex/sre_yyparser.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -170,12 +170,12 @@ int yyparse ();
 #endif
 #endif /* ! YYPARSE_PARAM */
 
-#endif /* !YY_YY_SRC_SRE_YYPARSER_H_INCLUDED  */
+#endif /* !YY_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 179 "src/sre_yyparser.c"
+#line 179 "src/sregex/sre_yyparser.c"
 
 #ifdef short
 # undef short
@@ -1432,7 +1432,7 @@ yyreduce:
     {
         case 2:
 /* Line 1792 of yacc.c  */
-#line 77 "src/sre_regex_parser.y"
+#line 77 "src/sregex/sre_yyparser.y"
     {
         *parsed = (yyvsp[(1) - (2)].re);
         return SRE_OK;
@@ -1441,7 +1441,7 @@ yyreduce:
 
   case 4:
 /* Line 1792 of yacc.c  */
-#line 86 "src/sre_regex_parser.y"
+#line 86 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_ALT, (yyvsp[(1) - (3)].re), (yyvsp[(3) - (3)].re));
         if ((yyval.re) == NULL) {
@@ -1452,7 +1452,7 @@ yyreduce:
 
   case 6:
 /* Line 1792 of yacc.c  */
-#line 97 "src/sre_regex_parser.y"
+#line 97 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_CAT, (yyvsp[(1) - (2)].re), (yyvsp[(2) - (2)].re));
             if ((yyval.re) == NULL) {
@@ -1463,7 +1463,7 @@ yyreduce:
 
   case 7:
 /* Line 1792 of yacc.c  */
-#line 104 "src/sre_regex_parser.y"
+#line 104 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1474,7 +1474,7 @@ yyreduce:
 
   case 9:
 /* Line 1792 of yacc.c  */
-#line 115 "src/sre_regex_parser.y"
+#line 115 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_STAR, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1488,7 +1488,7 @@ yyreduce:
 
   case 10:
 /* Line 1792 of yacc.c  */
-#line 126 "src/sre_regex_parser.y"
+#line 126 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_STAR, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1500,7 +1500,7 @@ yyreduce:
 
   case 11:
 /* Line 1792 of yacc.c  */
-#line 135 "src/sre_regex_parser.y"
+#line 135 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_PLUS, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1514,7 +1514,7 @@ yyreduce:
 
   case 12:
 /* Line 1792 of yacc.c  */
-#line 146 "src/sre_regex_parser.y"
+#line 146 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_PLUS, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1526,7 +1526,7 @@ yyreduce:
 
   case 13:
 /* Line 1792 of yacc.c  */
-#line 155 "src/sre_regex_parser.y"
+#line 155 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_QUEST, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1540,7 +1540,7 @@ yyreduce:
 
   case 14:
 /* Line 1792 of yacc.c  */
-#line 166 "src/sre_regex_parser.y"
+#line 166 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_QUEST, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1552,7 +1552,7 @@ yyreduce:
 
   case 15:
 /* Line 1792 of yacc.c  */
-#line 175 "src/sre_regex_parser.y"
+#line 175 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_desugar_counted_repetition(pool, (yyvsp[(1) - (2)].re), &(yyvsp[(2) - (2)].cquant), 1 /* greedy */);
             if ((yyval.re) == NULL) {
@@ -1563,7 +1563,7 @@ yyreduce:
 
   case 16:
 /* Line 1792 of yacc.c  */
-#line 183 "src/sre_regex_parser.y"
+#line 183 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_desugar_counted_repetition(pool, (yyvsp[(1) - (3)].re), &(yyvsp[(2) - (3)].cquant), 0 /* greedy */);
             if ((yyval.re) == NULL) {
@@ -1574,13 +1574,13 @@ yyreduce:
 
   case 17:
 /* Line 1792 of yacc.c  */
-#line 192 "src/sre_regex_parser.y"
+#line 192 "src/sregex/sre_yyparser.y"
     { (yyval.group) = ++(*ncaps); }
     break;
 
   case 18:
 /* Line 1792 of yacc.c  */
-#line 197 "src/sre_regex_parser.y"
+#line 197 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_PAREN, (yyvsp[(3) - (4)].re), NULL);
         if ((yyval.re) == NULL) {
@@ -1593,7 +1593,7 @@ yyreduce:
 
   case 19:
 /* Line 1792 of yacc.c  */
-#line 207 "src/sre_regex_parser.y"
+#line 207 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = (yyvsp[(4) - (5)].re);
       }
@@ -1601,7 +1601,7 @@ yyreduce:
 
   case 20:
 /* Line 1792 of yacc.c  */
-#line 212 "src/sre_regex_parser.y"
+#line 212 "src/sregex/sre_yyparser.y"
     {
         if ((flags & SRE_REGEX_CASELESS)
             && (((yyvsp[(1) - (1)].ch) >= 'A' && (yyvsp[(1) - (1)].ch) <= 'Z')
@@ -1653,7 +1653,7 @@ yyreduce:
 
   case 21:
 /* Line 1792 of yacc.c  */
-#line 261 "src/sre_regex_parser.y"
+#line 261 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_DOT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1664,7 +1664,7 @@ yyreduce:
 
   case 22:
 /* Line 1792 of yacc.c  */
-#line 269 "src/sre_regex_parser.y"
+#line 269 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1677,7 +1677,7 @@ yyreduce:
 
   case 23:
 /* Line 1792 of yacc.c  */
-#line 279 "src/sre_regex_parser.y"
+#line 279 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1690,7 +1690,7 @@ yyreduce:
 
   case 25:
 /* Line 1792 of yacc.c  */
-#line 290 "src/sre_regex_parser.y"
+#line 290 "src/sregex/sre_yyparser.y"
     {
         if (flags & SRE_REGEX_CASELESS) {
             (yyval.re)->range = sre_regex_turn_char_class_caseless(pool, (yyvsp[(1) - (1)].re)->range);
@@ -1703,7 +1703,7 @@ yyreduce:
 
   case 26:
 /* Line 1792 of yacc.c  */
-#line 300 "src/sre_regex_parser.y"
+#line 300 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1716,7 +1716,7 @@ yyreduce:
 
 
 /* Line 1792 of yacc.c  */
-#line 1720 "src/sre_yyparser.c"
+#line 1720 "src/sregex/sre_yyparser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1948,7 +1948,7 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 310 "src/sre_regex_parser.y"
+#line 310 "src/sregex/sre_yyparser.y"
 
 
 

@@ -11,8 +11,8 @@
 #define _SRE_REGEX_H_INCLUDED_
 
 
-#include <sre_core.h>
-#include <sre_palloc.h>
+#include <sregex/sre_core.h>
+#include <sregex/sre_palloc.h>
 
 
 typedef struct sre_regex_s  sre_regex_t;

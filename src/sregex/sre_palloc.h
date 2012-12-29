@@ -9,7 +9,7 @@
 #define _SRE_PALLOC_H_INCLUDED_
 
 
-#include <sre_core.h>
+#include <sregex/sre_core.h>
 
 
 #define sre_pagesize     4096

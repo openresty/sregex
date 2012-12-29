@@ -10,10 +10,10 @@
 #ifndef DDEBUG
 #define DDEBUG 0
 #endif
-#include <ddebug.h>
+#include <sregex/ddebug.h>
 
 
-#include <sre_vm_thompson.h>
+#include <sregex/sre_vm_thompson.h>
 
 
 typedef struct {

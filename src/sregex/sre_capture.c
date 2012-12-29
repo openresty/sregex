@@ -10,10 +10,10 @@
 #ifndef DDEBUG
 #define DDEBUG 0
 #endif
-#include <ddebug.h>
+#include <sregex/ddebug.h>
 
 
-#include <sre_capture.h>
+#include <sregex/sre_capture.h>
 
 
 sre_capture_t *

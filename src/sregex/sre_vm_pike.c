@@ -10,11 +10,11 @@
 #ifndef DDEBUG
 #define DDEBUG 0
 #endif
-#include <ddebug.h>
+#include <sregex/ddebug.h>
 
 
-#include <sre_vm_pike.h>
-#include <sre_capture.h>
+#include <sregex/sre_vm_pike.h>
+#include <sregex/sre_capture.h>
 
 
 #define sre_vm_pike_free_thread(ctx, t)                                     \

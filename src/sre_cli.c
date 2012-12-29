@@ -10,10 +10,10 @@
 #ifndef DDEBUG
 #define DDEBUG 0
 #endif
-#include <ddebug.h>
+#include <sregex/ddebug.h>
 
 
-#include <sregex.h>
+#include <sregex/sregex.h>
 #include <assert.h>
 
 

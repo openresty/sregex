@@ -20,21 +20,23 @@ endif
 
 pwd = $(shell pwd)
 
-lib_c_files = \
-        src/sre_palloc.c \
-        src/sre_regex.c \
-        src/sre_yyparser.c \
-        src/sre_regex_compiler.c \
-        src/sre_vm_bytecode.c \
-        src/sre_vm_thompson.c \
-        src/sre_vm_pike.c \
-        src/sre_capture.c
+lib_c_files= \
+   src/sregex/sre_palloc.c \
+   src/sregex/sre_regex.c \
+   src/sregex/sre_yyparser.c \
+   src/sregex/sre_regex_compiler.c \
+   src/sregex/sre_vm_bytecode.c \
+   src/sregex/sre_vm_thompson.c \
+   src/sregex/sre_vm_pike.c \
+   src/sregex/sre_capture.c
 
-lib_o_files = $(patsubst %.c,%.o,$(lib_c_files))
-h_files=$(wildcard src/*.h)
-plist_vfiles=$(patsubst src/%.c,%.plist,$(lib_c_files))
+lib_o_files= $(patsubst %.c,%.o,$(lib_c_files))
+h_files= $(wildcard src/sregex/*.h)
+plist_vfiles= $(patsubst src/sregex/%.c,%.plist,$(lib_c_files))
 
-.PHONY: all clean test val install
+INSTALL_H_FILES= $(filter-out src/sregex/sre_yyparser.h src/sregex/sre_capture.h,$(h_files))
+
+.PHONY: all clean test val install uninstall
 .PRECIOUS: src/sre_regex_parser.c
 
 all: libsregex.so libsregex.a sregex-cli
@@ -52,7 +54,7 @@ libsregex.a: $(lib_o_files)
 %.o: %.c $(h_files)
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-src/sre_yyparser.c: src/sre_regex_parser.y
+%.c: %.y
 	bison -v $<
 
 clean:
@@ -71,23 +73,23 @@ valtest: val
 
 clang: $(plist_vfiles)
 
-%.plist: src/%.c
+%.plist: src/sregex/%.c
 	@echo $<
 	-@clang -O --analyze -Wextra -Wall -Werror -Isrc $<
 
 install: all
-	@echo "==== install sregex to $(DESTDIR)$(PREFIX) ===="
+	@echo "==== install sregex to $(DESTDIR)$(PREFIX)/ ===="
 	$(MKDIR) $(INSTALL_DIRS)
-	$(INSTALL_F) $(h_files) $(INSTALL_INC)
-	$(INSTALL_F) libsregex.so libsregex.a $(INSTALL_LIB)
-	$(INSTALL_X) sregex-cli $(INSTALL_BIN)
+	$(INSTALL_F) $(INSTALL_H_FILES) $(INSTALL_INC)/
+	$(INSTALL_F) libsregex.so libsregex.a $(INSTALL_LIB)/
+	$(INSTALL_X) sregex-cli $(INSTALL_BIN)/
 
 uninstall:
-	@echo "==== Uninstall sregex from $(PREFIX) ===="
+	@echo "==== Uninstall sregex from $(PREFIX)/ ===="
 	$(UNINSTALL) $(INSTALL_BIN)/sregex-cli
 	$(UNINSTALL) $(INSTALL_LIB)/libsregex.so
 	$(UNINSTALL) $(INSTALL_LIB)/libsregex.a
-	for file in $(INSTALL_INC); do \
+	for file in $(patsubst src/sregex/%,%,$(INSTALL_H_FILES)); do \
 	    $(UNINSTALL) $(INSTALL_INC)/$$file; \
 	done
 	$(RMDIR) $(INSTALL_INC)

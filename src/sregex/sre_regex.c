@@ -7,7 +7,7 @@
  */
 
 
-#include <sre_regex.h>
+#include <sregex/sre_regex.h>
 
 
 sre_regex_t *

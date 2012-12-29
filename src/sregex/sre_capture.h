@@ -11,8 +11,8 @@
 #define _SRE_CAPTURE_H_INCLUDED_
 
 
-#include <sre_core.h>
-#include <sre_palloc.h>
+#include <sregex/sre_core.h>
+#include <sregex/sre_palloc.h>
 
 
 #define sre_capture_decr_ref(ctx, cap)                                       \

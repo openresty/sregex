@@ -12,12 +12,12 @@
 #ifndef DDEBUG
 #define DDEBUG 0
 #endif
-#include <ddebug.h>
+#include <sregex/ddebug.h>
 
 
-#include <sre_regex_parser.h>
-#include <sre_palloc.h>
-#include <sre_yyparser.h>
+#include <sregex/sre_regex_parser.h>
+#include <sregex/sre_palloc.h>
+#include <sregex/sre_yyparser.h>
 #include <ctype.h>
 
 
@@ -33,8 +33,8 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
 %}
 
 
-%output  "src/sre_yyparser.c"
-%defines "src/sre_yyparser.h"
+%output  "src/sregex/sre_yyparser.c"
+%defines "src/sregex/sre_yyparser.h"
 
 
 %define api.pure
