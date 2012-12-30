@@ -87,8 +87,6 @@ sre_vm_pike_init(sre_pool_t *pool, sre_program_t *prog, int *ovector,
     ctx->pool = pool;
     ctx->program = prog;
 
-    ctx->tag = prog->tag + 1;
-
     len = prog->len;
 
     clist = sre_vm_pike_thread_list_create(pool, len);
@@ -159,10 +157,14 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
             return SRE_ERROR;
         }
 
+        ctx->tag = prog->tag + 1;
         if (sre_vm_pike_add_thread(ctx, clist, prog->start, cap, 0) != SRE_OK) {
             prog->tag = ctx->tag;
             return SRE_ERROR;
         }
+
+    } else {
+        ctx->tag = prog->tag;
     }
 
     last = input + size;
