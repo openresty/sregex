@@ -18,8 +18,8 @@
 
 
 static void usage(void);
-static void process_string(u_char *s, size_t len, sre_pool_t *pool,
-    sre_program_t *prog, int *ovector, unsigned ovecsize, unsigned ncaps);
+static void process_string(u_char *s, size_t len, sre_program_t *prog,
+    int *ovector, unsigned ovecsize, unsigned ncaps);
 
 
 int
@@ -27,7 +27,8 @@ main(int argc, char **argv)
 {
     int                  i, n;
     int                  flags = 0;
-    sre_pool_t          *pool;
+    sre_pool_t          *ppool; /* parser pool */
+    sre_pool_t          *cpool; /* compiler pool */
     sre_regex_t         *re;
     sre_program_t       *prog;
     unsigned             ncaps;
@@ -58,12 +59,12 @@ main(int argc, char **argv)
         }
     }
 
-    pool = sre_create_pool(4096);
-    if (pool == NULL) {
+    ppool = sre_create_pool(1024);
+    if (ppool == NULL) {
         return 2;
     }
 
-    re = sre_regex_parse(pool, (u_char *) argv[i], &ncaps, flags);
+    re = sre_regex_parse(ppool, (u_char *) argv[i], &ncaps, flags);
     if (re == NULL) {
         return 2;
     }
@@ -75,15 +76,24 @@ main(int argc, char **argv)
 
     printf("captures: %d\n", ncaps);
 
-    prog = sre_regex_compile(pool, re);
+    cpool = sre_create_pool(1024);
+    if (cpool == NULL) {
+        return 2;
+    }
+
+    prog = sre_regex_compile(cpool, re);
     if (prog == NULL) {
         return 2;
     }
 
+    sre_destroy_pool(ppool);
+    ppool = NULL;
+    re = NULL;
+
     sre_program_dump(prog);
 
     ovecsize = 2 * (ncaps + 1) * sizeof(int);
-    ovector = sre_palloc(pool, ovecsize);
+    ovector = sre_palloc(cpool, ovecsize);
     if (ovector == NULL) {
         return 2;
     }
@@ -110,7 +120,7 @@ main(int argc, char **argv)
                 return 2;
             }
 
-            process_string(s, len, pool, prog, ovector, ovecsize, ncaps);
+            process_string(s, len, prog, ovector, ovecsize, ncaps);
 
             free(s);
         }
@@ -128,32 +138,40 @@ main(int argc, char **argv)
 
             memcpy(s, p, len);
 
-            process_string(s, len, pool, prog, ovector, ovecsize, ncaps);
+            process_string(s, len, prog, ovector, ovecsize, ncaps);
 
             free(s);
         }
     }
 
-    sre_destroy_pool(pool);
+    sre_destroy_pool(cpool);
+    prog = NULL;
+    cpool = NULL;
 
     return 0;
 }
 
 
 static void
-process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
-    int *ovector, unsigned int ovecsize, unsigned ncaps)
+process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
+    unsigned ovecsize, unsigned ncaps)
 {
     int                          i, j, rc;
     u_char                      *p;
-    sre_vm_thompson_ctx_t       *tctx;
-    sre_vm_pike_ctx_t           *pctx;
     unsigned                     gen_empty_buf;
+    sre_pool_t                  *pool;
+    sre_vm_pike_ctx_t           *pctx;
+    sre_vm_thompson_ctx_t       *tctx;
 
     printf("## %.*s (len %d)\n", (int) len, s, (int) len);
 
     p = malloc(1);
     if (p == NULL) {
+        exit(2);
+    }
+
+    pool = sre_create_pool(1024);
+    if (pool == NULL) {
         exit(2);
     }
 
@@ -345,6 +363,7 @@ process_string(u_char *s, size_t len, sre_pool_t *pool, sre_program_t *prog,
 
     sre_vm_pike_finalize(pctx);
 
+    sre_destroy_pool(pool);
     free(p);
 }
 
