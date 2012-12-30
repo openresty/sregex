@@ -49,7 +49,7 @@ static sre_vm_thompson_thread_list_t *sre_vm_thompson_thread_list_create(
 
 
 sre_vm_thompson_ctx_t *
-sre_vm_thompson_init(sre_pool_t *pool, sre_program_t *prog)
+sre_vm_thompson_create_ctx(sre_pool_t *pool, sre_program_t *prog)
 {
     unsigned                         len;
     sre_vm_thompson_ctx_t           *ctx;
@@ -83,12 +83,6 @@ sre_vm_thompson_init(sre_pool_t *pool, sre_program_t *prog)
     ctx->first_buf = 1;
 
     return ctx;
-}
-
-
-void
-sre_vm_thompson_finalize(sre_vm_thompson_ctx_t *ctx) {
-    /* TODO */
 }
 
 

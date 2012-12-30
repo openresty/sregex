@@ -177,7 +177,7 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
 
     printf("thompson ");
 
-    tctx = sre_vm_thompson_init(pool, prog);
+    tctx = sre_vm_thompson_create_ctx(pool, prog);
     assert(tctx);
 
     rc = sre_vm_thompson_exec(tctx, s, len, 1);
@@ -203,11 +203,9 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
         assert(rc);
     }
 
-    sre_vm_thompson_finalize(tctx);
-
     printf("splitted thompson ");
 
-    tctx = sre_vm_thompson_init(pool, prog);
+    tctx = sre_vm_thompson_create_ctx(pool, prog);
     assert(tctx);
 
     gen_empty_buf = 1;
@@ -254,11 +252,9 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
         break;
     }
 
-    sre_vm_thompson_finalize(tctx);
-
     printf("pike ");
 
-    pctx = sre_vm_pike_init(pool, prog, ovector, ovecsize);
+    pctx = sre_vm_pike_create_ctx(pool, prog, ovector, ovecsize);
     assert(pctx);
 
     rc = sre_vm_pike_exec(pctx, s, len, 1 /* eof */);
@@ -291,11 +287,9 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
         break;
     }
 
-    sre_vm_pike_finalize(pctx);
-
     printf("splitted pike ");
 
-    pctx = sre_vm_pike_init(pool, prog, ovector, ovecsize);
+    pctx = sre_vm_pike_create_ctx(pool, prog, ovector, ovecsize);
     assert(pctx);
 
     gen_empty_buf = 1;
@@ -360,8 +354,6 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
 
         break;
     }
-
-    sre_vm_pike_finalize(pctx);
 
     sre_destroy_pool(pool);
     free(p);
