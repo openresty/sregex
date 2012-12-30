@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 ack '(?<=\#define)\s*DDEBUG\s*[1-9]' src && exit 1
-ack '.{81}' `ls src/sre_*.[ch]|grep -v yyparser`
-ack '(?<!:)//' src/sre_*.[ch]
+ack '.{81}' `ls src/sregex/sre_*.[ch]|grep -v yyparser`
+ack '(?<!:)//' src/sregex/sre_*.[ch]
 ack '^master_on' t && exit 1
 ack '\b(?:ONLY|LAST)\b' t
 ack -l '\r\n' t
-ack '\(\);' `ls src/sre_*.h|grep -v yyparser`
-ack '^static .*?\(\);' `ls src/sre_*.[ch]|grep -v yyparser`
+ack '\(\);' `ls src/sregex/sre_*.h|grep -v yyparser`
+ack '^static .*?\(\);' `ls src/sregex/sre_*.[ch]|grep -v yyparser`
 perl -e 'use strict; use warnings;
     my $seen = 0;
     my $saved;
@@ -53,10 +53,10 @@ perl -e 'use strict; use warnings;
             $seen = 0;
         }
         close $in;
-    }' `ls src/sre_*.[cy]`
+    }' `ls src/sregex/sre_*.[cy] src/*.c`
 
-ack '_log_error\(NGX_[^L]' src/sre_*.[ch]
-ack '\#define\s+SRE_USE_VALGRIND\s+[1-9]' src/sre_core.h
+ack '_log_error\(NGX_[^L]' src/sregex/sre_*.[ch]
+ack '\#define\s+SRE_USE_VALGRIND\s+[1-9]' src/sregex/sre_core.h
 
 echo done.
 
