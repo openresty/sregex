@@ -112,6 +112,8 @@ sre_reset_pool(sre_pool_t *pool)
 {
 #if !(SRE_USE_VALGRIND)
     sre_pool_t        *p;
+#else
+    sre_pool_large_t  *next = NULL;
 #endif
     sre_pool_large_t  *l;
 
@@ -120,6 +122,13 @@ sre_reset_pool(sre_pool_t *pool)
             free(l->alloc);
         }
     }
+
+#if (SRE_USE_VALGRIND)
+    for (l = pool->large; l; l = next) {
+        next = l->next;
+        free(l);
+    }
+#endif
 
     pool->large = NULL;
 

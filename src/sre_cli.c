@@ -203,6 +203,8 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
         assert(rc);
     }
 
+    sre_reset_pool(pool);
+
     printf("splitted thompson ");
 
     tctx = sre_vm_thompson_create_ctx(pool, prog);
@@ -252,6 +254,8 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
         break;
     }
 
+    sre_reset_pool(pool);
+
     printf("pike ");
 
     pctx = sre_vm_pike_create_ctx(pool, prog, ovector, ovecsize);
@@ -286,6 +290,8 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
         assert(rc);
         break;
     }
+
+    sre_reset_pool(pool);
 
     printf("splitted pike ");
 
