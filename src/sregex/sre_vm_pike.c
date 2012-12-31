@@ -422,7 +422,7 @@ step_done:
 
     dd("matched: %p, clist: %p", matched, clist->head);
 
-    if (matched && (sp != last || eof)) {
+    if (matched && (clist->head == NULL || eof)) {
         memcpy(ctx->ovector, matched->vector, ctx->ovecsize);
         /* sre_capture_decr_ref(matched, freecap); */
         prog->tag = ctx->tag;
