@@ -258,7 +258,7 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
 
     printf("pike ");
 
-    pctx = sre_vm_pike_create_ctx(pool, prog, ovector, ovecsize);
+    pctx = sre_vm_pike_create_ctx(pool, prog, ovector, ovecsize, 0);
     assert(pctx);
 
     rc = sre_vm_pike_exec(pctx, s, len, 1 /* eof */);
@@ -295,7 +295,7 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
 
     printf("splitted pike ");
 
-    pctx = sre_vm_pike_create_ctx(pool, prog, ovector, ovecsize);
+    pctx = sre_vm_pike_create_ctx(pool, prog, ovector, ovecsize, 0);
     assert(pctx);
 
     gen_empty_buf = 1;

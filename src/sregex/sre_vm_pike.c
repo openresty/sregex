@@ -73,7 +73,7 @@ static void sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx);
 
 sre_vm_pike_ctx_t *
 sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog, int *ovector,
-    unsigned ovecsize)
+    unsigned ovecsize, int offset)
 {
     unsigned                         len;
     sre_vm_pike_ctx_t               *ctx;
@@ -86,6 +86,7 @@ sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog, int *ovector,
 
     ctx->pool = pool;
     ctx->program = prog;
+    ctx->processed_bytes = offset;
 
     len = prog->len;
 
@@ -107,7 +108,6 @@ sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog, int *ovector,
     ctx->pool = pool;
     ctx->free_capture = NULL;
     ctx->free_threads = NULL;
-    ctx->processed_bytes = 0;
     ctx->matched = NULL;
 
     ctx->ovecsize = ovecsize;
