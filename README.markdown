@@ -114,15 +114,16 @@ Installation
 
 Gnu make and gcc are required.
 
-It will build `libsregex.so`, `libsregex.a`, and the command-line utility `sregex-cli` and install them into the prefix /usr/local/ by default.
+It will build `libsregex.so`, `libsregex.a`, and the command-line utility `sregex-cli` and install
+them into the prefix `/usr/local/` by default.
 
-If you want to install into a custom location, then just specify the PREFIX variable like this:
+If you want to install into a custom location, then just specify the `PREFIX` variable like this:
 
     make
     make install PREFIX=/opt/sregex
 
 If you are building a binary package (like an RPM package), then
-you will find the DESTDIR variable handy, as in
+you will find the `DESTDIR` variable handy, as in
 
     make
     make install PREFIX=/opt/sregex DESTDIR=/path/to/my/build/root
