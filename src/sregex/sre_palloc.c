@@ -5,6 +5,12 @@
  */
 
 
+#ifndef DDEBUG
+#define DDEBUG 0
+#endif
+#include <sregex/ddebug.h>
+
+
 #include <sregex/sre_palloc.h>
 
 

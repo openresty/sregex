@@ -3,6 +3,7 @@
 #   include <stdio.h>
 
 #   define dd(...) \
+    fprintf(stderr, "sregex ** "); \
     fprintf(stderr, __VA_ARGS__); \
     fprintf(stderr, "\n")
 

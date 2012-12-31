@@ -164,8 +164,8 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
     last = input + size;
 
     for (sp = input; sp < last || (eof && sp == last); sp++) {
-        dd("=== pos %d (char %d).\n", (int)(sp - input),
-           sp < input ? (*sp & 0xFF) : 0);
+        dd("=== pos %d (char '%c' (%d)).\n", (int)(sp - input),
+           sp < last ? *sp : '?', sp < last ? *sp : 0);
 
         if (clist->head == NULL) {
             dd("clist empty. abort.");
@@ -263,8 +263,8 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
             case SRE_OPCODE_CHAR:
 
-                dd("matching char %d against %d", sp != last ? *sp : 0,
-                   pc->v.ch);
+                dd("matching char '%c' (%d) against %d",
+                   sp != last ? *sp : '?', sp != last ? *sp : 0, pc->v.ch);
 
                 if (sp == last || *sp != pc->v.ch) {
                     sre_capture_decr_ref(ctx, cap);
@@ -420,8 +420,9 @@ step_done:
 
     ctx->matched = matched;
 
+    dd("matched: %p, clist: %p", matched, clist->head);
+
     if (matched && (sp != last || eof)) {
-        dd("matched: %p", matched);
         memcpy(ctx->ovector, matched->vector, ctx->ovecsize);
         /* sre_capture_decr_ref(matched, freecap); */
         prog->tag = ctx->tag;
@@ -531,7 +532,8 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
         return SRE_OK;
     }
 
-    dd("adding thread: pc %d", (int) (pc - ctx->program->start));
+    dd("adding thread: pc %d, bytecode %d", (int) (pc - ctx->program->start),
+       pc->opcode);
 
     pc->tag = ctx->tag;
 
@@ -616,8 +618,6 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
     default:
 
 add:
-        dd("added thread");
-
         if (ctx->free_threads) {
             /* fprintf(stderr, "reusing free thread\n"); */
 
@@ -647,6 +647,10 @@ add:
         }
 
         l->next = &t->next;
+
+        dd("added thread: pc %d, bytecode %d", (int) (pc - ctx->program->start),
+           pc->opcode);
+
         break;
     }
 
