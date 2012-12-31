@@ -590,6 +590,12 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
                 break;
             }
 
+            if (ctx->processed_bytes && pos == 0) {
+                /* FIXME: we should check the previous char
+                 * which may never be seen */
+                break;
+            }
+
             return sre_vm_pike_add_thread(ctx, l, pc + 1, capture, pos);
 
         case SRE_REGEX_ASSERTION_SMALL_B:
