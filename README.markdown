@@ -144,6 +144,10 @@ It also supports the `-i` option which does case-insensitive matching:
 
     ./sregex-cli -i 'A|AB' 'blab'
 
+A real-world application of this library is the ngx_replace_filter module:
+
+https://github.com/agentzh/replace-filter-nginx-module
+
 Test Suite
 ==========
 
@@ -180,6 +184,9 @@ or similarly
     make valtest jobs=8
 
 So the test suite will run in 8 parallel jobs (assuming you have 8 CPU cores).
+
+The streaming matching API is much more thoroughly excerised by the test suite of
+the [ngx_replace_filter](https://github.com/agentzh/replace-filter-nginx-module) module.
 
 TODO
 ====
@@ -223,6 +230,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 See Also
 ========
+* the ngx_replace_filter module: https://github.com/agentzh/replace-filter-nginx-module
 * "Implementing Regular Expressions" http://swtch.com/~rsc/regexp/
 * the re1 project: http://code.google.com/p/re1/
 * the re2 project: http://code.google.com/p/re2/
