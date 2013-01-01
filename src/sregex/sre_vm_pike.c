@@ -59,7 +59,10 @@ struct sre_vm_pike_ctx_s {
     sre_vm_pike_thread_list_t       *current_threads;
     sre_vm_pike_thread_list_t       *next_threads;
 
-    unsigned                 first_buf; /* :1 */
+    unsigned                 first_buf:1;
+    unsigned                 eof:1;
+    unsigned                 empty_capture:1;
+    unsigned                 seen_newline:1;
 } ;
 
 
@@ -73,7 +76,7 @@ static void sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx);
 
 sre_vm_pike_ctx_t *
 sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog, int *ovector,
-    unsigned ovecsize, int offset)
+    unsigned ovecsize)
 {
     unsigned                         len;
     sre_vm_pike_ctx_t               *ctx;
@@ -86,7 +89,7 @@ sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog, int *ovector,
 
     ctx->pool = pool;
     ctx->program = prog;
-    ctx->processed_bytes = offset;
+    ctx->processed_bytes = 0;
 
     len = prog->len;
 
@@ -114,6 +117,9 @@ sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog, int *ovector,
     ctx->ovector = ovector;
 
     ctx->first_buf = 1;
+    ctx->eof = 0;
+    ctx->empty_capture = 0;
+    ctx->seen_newline = 0;
 
     return ctx;
 }
@@ -124,8 +130,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
     unsigned eof)
 {
     u_char                    *sp, *last;
-    unsigned                   i;
-    unsigned                   in;
+    unsigned                   i, in;
     sre_pool_t                *pool;
     sre_program_t             *prog;
     sre_capture_t             *cap, *matched;
@@ -135,6 +140,11 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
     sre_vm_pike_thread_list_t *clist, *nlist, *tmp;
     sre_vm_pike_thread_list_t  list;
 
+    if (ctx->eof) {
+        dd("eof found");
+        return SRE_ERROR;
+    }
+
     pool = ctx->pool;
     prog = ctx->program;
     clist = ctx->current_threads;
@@ -142,6 +152,25 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
     matched = ctx->matched;
 
     ctx->buffer = input;
+
+    if (ctx->empty_capture) {
+        dd("found empty capture");
+        ctx->empty_capture = 0;
+
+        if (size == 0) {
+            if (eof) {
+                ctx->eof = 1;
+                return SRE_DECLINED;
+            }
+
+            return SRE_AGAIN;
+        }
+
+        sp = input + 1;
+
+    } else {
+        sp = input;
+    }
 
     if (ctx->first_buf) {
         ctx->first_buf = 0;
@@ -152,7 +181,10 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
         }
 
         ctx->tag = prog->tag + 1;
-        if (sre_vm_pike_add_thread(ctx, clist, prog->start, cap, 0) != SRE_OK) {
+        if (sre_vm_pike_add_thread(ctx, clist, prog->start, cap,
+                                   (int)(sp - input))
+            != SRE_OK)
+        {
             prog->tag = ctx->tag;
             return SRE_ERROR;
         }
@@ -163,7 +195,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
     last = input + size;
 
-    for (sp = input; sp < last || (eof && sp == last); sp++) {
+    for (; sp < last || (eof && sp == last); sp++) {
         dd("=== pos %d (char '%c' (%d)).\n", (int)(sp - input),
            sp < last ? *sp : '?', sp < last ? *sp : 0);
 
@@ -313,6 +345,9 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
                         break;
                     }
 
+                    dd("dollar $ assertion hold: pos=%d",
+                       (int)(sp - input + ctx->processed_bytes));
+
                     goto assertion_hold;
 
                 case SRE_REGEX_ASSERTION_BIG_B:
@@ -360,6 +395,8 @@ assertion_hold:
                 }
 
                 ctx->tag++;
+
+                dd("sp + 1 == last: %d, eof: %u", sp + 1 == last, eof);
                 break;
 
             case SRE_OPCODE_MATCH:
@@ -418,31 +455,53 @@ step_done:
         }
     } /* for */
 
-    ctx->matched = matched;
+    dd("matched: %p, clist: %p, pos: %d", matched, clist->head,
+       (int) (ctx->processed_bytes + (sp - input)));
 
-    dd("matched: %p, clist: %p", matched, clist->head);
+    prog->tag = ctx->tag;
+    ctx->current_threads = clist;
+    ctx->next_threads = nlist;
 
     if (matched && (clist->head == NULL || eof)) {
         memcpy(ctx->ovector, matched->vector, ctx->ovecsize);
         /* sre_capture_decr_ref(matched, freecap); */
-        prog->tag = ctx->tag;
-        ctx->processed_bytes += sp - input;
+
+        if (clist->head) {
+            *clist->next = ctx->free_threads;
+            ctx->free_threads = clist->head;
+            clist->head = NULL;
+            ctx->eof = 1;
+        }
+
+        ctx->processed_bytes = ctx->ovector[1];
+        ctx->empty_capture = (ctx->ovector[0] == ctx->ovector[1]);
+        if (sp > input) {
+            ctx->seen_newline = (sp[-1] == '\n');
+        }
+
+        dd("set empty capture: %u", ctx->empty_capture);
+        ctx->matched = NULL;
+        ctx->first_buf = 1;
+
         return SRE_OK;
     }
 
-    prog->tag = ctx->tag;
-
-    ctx->processed_bytes += sp - input;
-    ctx->current_threads = clist;
-    ctx->next_threads = nlist;
-
     if (eof) {
+        ctx->eof = 1;
         return SRE_DECLINED;
     }
 
+    ctx->processed_bytes += sp - input;
+
     dd("processed bytes: %u", ctx->processed_bytes);
 
+    ctx->matched = matched;
+
     sre_vm_pike_prepare_temp_captures(ctx);
+
+    if (sp > input) {
+        ctx->seen_newline = (sp[-1] == '\n');
+    }
 
     return SRE_AGAIN;
 }
@@ -586,14 +645,15 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
             return sre_vm_pike_add_thread(ctx, l, pc + 1, capture, pos);
 
         case SRE_REGEX_ASSERTION_CARET:
-            if (pos != 0 && ctx->buffer[pos - 1] != '\n') {
-                break;
-            }
+            if (pos == 0) {
+                if (ctx->processed_bytes && !ctx->seen_newline) {
+                    break;
+                }
 
-            if (ctx->processed_bytes && pos == 0) {
-                /* FIXME: we should check the previous char
-                 * which may never be seen */
-                break;
+            } else {
+                if (ctx->buffer[pos - 1] != '\n') {
+                    break;
+                }
             }
 
             return sre_vm_pike_add_thread(ctx, l, pc + 1, capture, pos);
