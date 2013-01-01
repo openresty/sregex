@@ -27,6 +27,8 @@
 #define  SRE_OK          0
 #define  SRE_ERROR      -1
 #define  SRE_AGAIN      -2
+#define  SRE_BUSY       -3
+#define  SRE_DONE       -4
 #define  SRE_DECLINED   -5
 
 
