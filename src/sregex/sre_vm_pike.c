@@ -671,7 +671,7 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
     case SRE_OPCODE_ASSERT:
         switch (pc->v.assertion_type) {
         case SRE_REGEX_ASSERTION_BIG_A:
-            if (pos != 0) {
+            if (pos || ctx->processed_bytes) {
                 break;
             }
 
