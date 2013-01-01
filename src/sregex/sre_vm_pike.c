@@ -490,11 +490,18 @@ step_done:
             ctx->eof = 1;
         }
 
+        if (size) {
+            sp = input + ctx->ovector[1] - ctx->processed_bytes;
+            if (sp > input) {
+                dd("diff: %d", ctx->ovector[1] - ctx->processed_bytes);
+                dd("sp=%p, input=%p", sp, input);
+                ctx->seen_newline = (sp[-1] == '\n');
+                dd("set seen newline: %u", ctx->seen_newline);
+            }
+        }
+
         ctx->processed_bytes = ctx->ovector[1];
         ctx->empty_capture = (ctx->ovector[0] == ctx->ovector[1]);
-        if (sp > input) {
-            ctx->seen_newline = (sp[-1] == '\n');
-        }
 
         dd("set empty capture: %u", ctx->empty_capture);
         ctx->matched = NULL;
