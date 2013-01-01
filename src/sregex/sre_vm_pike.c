@@ -63,6 +63,7 @@ struct sre_vm_pike_ctx_s {
     unsigned                 eof:1;
     unsigned                 empty_capture:1;
     unsigned                 seen_newline:1;
+    unsigned                 seen_word:1;
 } ;
 
 
@@ -120,6 +121,7 @@ sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog, int *ovector,
     ctx->eof = 0;
     ctx->empty_capture = 0;
     ctx->seen_newline = 0;
+    ctx->seen_word = 0;
 
     return ctx;
 }
@@ -129,7 +131,7 @@ int
 sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
     unsigned eof)
 {
-    int                        rc;
+    int                        rc, seen_word;
     u_char                    *sp, *last;
     unsigned                   i, in;
     sre_pool_t                *pool;
@@ -368,7 +370,8 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
                 case SRE_REGEX_ASSERTION_BIG_B:
 
-                    if (t->seen_word ^ (sp != last && sre_isword(*sp))) {
+                    seen_word = (t->seen_word || (sp == input && ctx->seen_word));
+                    if (seen_word ^ (sp != last && sre_isword(*sp))) {
                         break;
                     }
 
@@ -378,7 +381,8 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
                 case SRE_REGEX_ASSERTION_SMALL_B:
 
-                    if ((t->seen_word ^ (sp != last && sre_isword(*sp))) == 0) {
+                    seen_word = (t->seen_word || (sp == input && ctx->seen_word));
+                    if ((seen_word ^ (sp != last && sre_isword(*sp))) == 0) {
                         break;
                     }
 
@@ -496,6 +500,7 @@ step_done:
                 dd("diff: %d", ctx->ovector[1] - ctx->processed_bytes);
                 dd("sp=%p, input=%p", sp, input);
                 ctx->seen_newline = (sp[-1] == '\n');
+                ctx->seen_word = sre_isword(sp[-1]);
                 dd("set seen newline: %u", ctx->seen_newline);
             }
         }
@@ -525,6 +530,7 @@ step_done:
 
     if (sp > input) {
         ctx->seen_newline = (sp[-1] == '\n');
+        ctx->seen_word = sre_isword(sp[-1]);
     }
 
     return SRE_AGAIN;
