@@ -59,6 +59,9 @@ struct sre_vm_pike_ctx_s {
     sre_vm_pike_thread_list_t       *current_threads;
     sre_vm_pike_thread_list_t       *next_threads;
 
+    int                      last_matched_pos; /* the pos for the last
+                                                  (partial) match */
+
     unsigned                 first_buf:1;
     unsigned                 eof:1;
     unsigned                 empty_capture:1;
@@ -132,7 +135,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
     unsigned eof)
 {
     int                        rc, seen_word;
-    u_char                    *sp, *last;
+    u_char                    *sp, *last, *p;
     unsigned                   i, in;
     sre_pool_t                *pool;
     sre_program_t             *prog;
@@ -155,6 +158,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
     matched = ctx->matched;
 
     ctx->buffer = input;
+    ctx->last_matched_pos = -1;
 
     if (ctx->empty_capture) {
         dd("found empty capture");
@@ -370,7 +374,8 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
                 case SRE_REGEX_ASSERTION_BIG_B:
 
-                    seen_word = (t->seen_word || (sp == input && ctx->seen_word));
+                    seen_word = (t->seen_word
+                                 || (sp == input && ctx->seen_word));
                     if (seen_word ^ (sp != last && sre_isword(*sp))) {
                         break;
                     }
@@ -381,12 +386,18 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
                 case SRE_REGEX_ASSERTION_SMALL_B:
 
-                    seen_word = (t->seen_word || (sp == input && ctx->seen_word));
+                    seen_word = (t->seen_word
+                                 || (sp == input && ctx->seen_word));
                     if ((seen_word ^ (sp != last && sre_isword(*sp))) == 0) {
                         break;
                     }
 
-                    dd("\\b assertion passed: %u %c", t->seen_word, *sp);
+#if (DDEBUG)
+                    if (sp) {
+                        dd("\\b assertion passed: t:%u, ctx:%u, %c",
+                           t->seen_word, ctx->seen_word, *sp);
+                    }
+#endif
 
                     goto assertion_hold;
 
@@ -421,6 +432,8 @@ assertion_hold:
 
             case SRE_OPCODE_MATCH:
 
+                ctx->last_matched_pos = cap->vector[1];
+
 matched:
                 if (matched) {
 
@@ -431,6 +444,8 @@ matched:
 
                     sre_capture_decr_ref(ctx, matched);
                 }
+
+                dd("set matched");
 
                 matched = cap;
 
@@ -479,6 +494,22 @@ step_done:
     dd("matched: %p, clist: %p, pos: %d", matched, clist->head,
        (int) (ctx->processed_bytes + (sp - input)));
 
+    if (ctx->last_matched_pos >= 0) {
+        p = input + ctx->last_matched_pos - ctx->processed_bytes;
+        if (p > input) {
+            dd("diff: %d", ctx->last_matched_pos - ctx->processed_bytes);
+            dd("p=%p, input=%p", p, ctx->buffer);
+
+            ctx->seen_newline = (p[-1] == '\n');
+            ctx->seen_word = sre_isword(p[-1]);
+
+            dd("set seen newline: %u", ctx->seen_newline);
+            dd("set seen word: %u", ctx->seen_word);
+        }
+
+        ctx->last_matched_pos = -1;
+    }
+
     prog->tag = ctx->tag;
     ctx->current_threads = clist;
     ctx->next_threads = nlist;
@@ -492,17 +523,6 @@ step_done:
             ctx->free_threads = clist->head;
             clist->head = NULL;
             ctx->eof = 1;
-        }
-
-        if (size) {
-            sp = input + ctx->ovector[1] - ctx->processed_bytes;
-            if (sp > input) {
-                dd("diff: %d", ctx->ovector[1] - ctx->processed_bytes);
-                dd("sp=%p, input=%p", sp, input);
-                ctx->seen_newline = (sp[-1] == '\n');
-                ctx->seen_word = sre_isword(sp[-1]);
-                dd("set seen newline: %u", ctx->seen_newline);
-            }
         }
 
         ctx->processed_bytes = ctx->ovector[1];
@@ -528,10 +548,12 @@ step_done:
 
     sre_vm_pike_prepare_temp_captures(ctx);
 
+#if 0
     if (sp > input) {
         ctx->seen_newline = (sp[-1] == '\n');
         ctx->seen_word = sre_isword(sp[-1]);
     }
+#endif
 
     return SRE_AGAIN;
 }
@@ -691,6 +713,8 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
                 }
             }
 
+            dd("newline assertion hold");
+
             return sre_vm_pike_add_thread(ctx, l, pc + 1, capture, pos, pcap);
 
         case SRE_REGEX_ASSERTION_SMALL_B:
@@ -717,6 +741,9 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
         break;
 
     case SRE_OPCODE_MATCH:
+
+        ctx->last_matched_pos = capture->vector[1];
+
         if (pcap && l->head == NULL) {
             *pcap = capture;
             return SRE_DONE;
