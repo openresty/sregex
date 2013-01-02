@@ -70,8 +70,8 @@ struct sre_vm_pike_ctx_s {
 } ;
 
 
-static sre_vm_pike_thread_list_t *sre_vm_pike_thread_list_create(
-    sre_pool_t *pool, int size);
+static sre_vm_pike_thread_list_t *
+    sre_vm_pike_thread_list_create(sre_pool_t *pool);
 static int sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx,
     sre_vm_pike_thread_list_t *l, sre_instruction_t *pc, sre_capture_t *capture,
     int pos, sre_capture_t **pcap);
@@ -82,7 +82,6 @@ sre_vm_pike_ctx_t *
 sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog, int *ovector,
     unsigned ovecsize)
 {
-    unsigned                         len;
     sre_vm_pike_ctx_t               *ctx;
     sre_vm_pike_thread_list_t       *clist, *nlist;
 
@@ -95,16 +94,14 @@ sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog, int *ovector,
     ctx->program = prog;
     ctx->processed_bytes = 0;
 
-    len = prog->len;
-
-    clist = sre_vm_pike_thread_list_create(pool, len);
+    clist = sre_vm_pike_thread_list_create(pool);
     if (clist == NULL) {
         return NULL;
     }
 
     ctx->current_threads = clist;
 
-    nlist = sre_vm_pike_thread_list_create(pool, len);
+    nlist = sre_vm_pike_thread_list_create(pool);
     if (nlist == NULL) {
         return NULL;
     }
@@ -602,7 +599,7 @@ sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx)
 
 
 static sre_vm_pike_thread_list_t *
-sre_vm_pike_thread_list_create(sre_pool_t *pool, int size)
+sre_vm_pike_thread_list_create(sre_pool_t *pool)
 {
     sre_vm_pike_thread_list_t       *l;
 
