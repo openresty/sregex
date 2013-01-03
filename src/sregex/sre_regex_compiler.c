@@ -14,7 +14,6 @@
 
 
 #include <sregex/sre_regex_compiler.h>
-#include <assert.h>
 
 
 static unsigned sre_program_len(sre_regex_t *r);
@@ -54,7 +53,9 @@ sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
     pc->opcode = SRE_OPCODE_MATCH;
     pc++;
 
-    assert(pc - prog->start == n);
+    if (pc - prog->start != n) {
+        return NULL;
+    }
 
     prog->len = pc - prog->start;
     prog->tag = 0;
