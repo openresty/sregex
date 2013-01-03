@@ -74,6 +74,27 @@
 
 #include <sregex/sre_regex_parser.h>
 #include <sregex/sre_palloc.h>
+
+
+#define YYLTYPE YYLTYPE
+typedef struct YYLTYPE {
+    u_char  *pos;
+    u_char  *last;
+} YYLTYPE;
+
+
+#define YYLLOC_DEFAULT(Cur, Rhs, N)                                          \
+    do {                                                                     \
+        if (N) {                                                             \
+            (Cur).pos = YYRHSLOC(Rhs, 1).pos;                                \
+            (Cur).last = YYRHSLOC(Rhs, N).last;                              \
+        } else {                                                             \
+            (Cur).pos = YYRHSLOC(Rhs, 0).last;                               \
+            (Cur).last = (Cur).pos;                                          \
+        }                                                                    \
+    } while (0)
+
+
 #include <sregex/sre_yyparser.h>
 #include <ctype.h>
 
@@ -81,15 +102,15 @@
 #define sre_read_char(sp)  *(*(sp))++
 
 
-static int yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src);
-static void yyerror(sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
-    sre_regex_t **parsed, char *s);
+static int yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src);
+static void yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
+    sre_regex_t **parsed, u_char **err_pos, char *s);
 static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
     sre_regex_t *subj, sre_regex_cquant_t *cquant, unsigned greedy);
 
 
 /* Line 371 of yacc.c  */
-#line 93 "src/sregex/sre_yyparser.c"
+#line 114 "src/sregex/sre_yyparser.c"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -139,7 +160,7 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 387 of yacc.c  */
-#line 55 "src/sregex/sre_yyparser.y"
+#line 79 "src/sregex/sre_yyparser.y"
 
     sre_regex_t         *re;
     u_char               ch;
@@ -148,11 +169,24 @@ typedef union YYSTYPE
 
 
 /* Line 387 of yacc.c  */
-#line 152 "src/sregex/sre_yyparser.c"
+#line 173 "src/sregex/sre_yyparser.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
+#endif
+
+#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+typedef struct YYLTYPE
+{
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} YYLTYPE;
+# define yyltype YYLTYPE /* obsolescent; will be withdrawn */
+# define YYLTYPE_IS_DECLARED 1
+# define YYLTYPE_IS_TRIVIAL 1
 #endif
 
 
@@ -164,7 +198,7 @@ int yyparse ();
 #endif
 #else /* ! YYPARSE_PARAM */
 #if defined __STDC__ || defined __cplusplus
-int yyparse (sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed);
+int yyparse (sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos);
 #else
 int yyparse ();
 #endif
@@ -175,7 +209,7 @@ int yyparse ();
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 179 "src/sregex/sre_yyparser.c"
+#line 213 "src/sregex/sre_yyparser.c"
 
 #ifdef short
 # undef short
@@ -334,13 +368,15 @@ void free (void *); /* INFRINGES ON USER NAME SPACE */
 
 #if (! defined yyoverflow \
      && (! defined __cplusplus \
-	 || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
+	 || (defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL \
+	     && defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
 {
   yytype_int16 yyss_alloc;
   YYSTYPE yyvs_alloc;
+  YYLTYPE yyls_alloc;
 };
 
 /* The size of the maximum gap between one aligned stack and the next.  */
@@ -349,8 +385,8 @@ union yyalloc
 /* The size of an array large to enough to hold all stacks, each with
    N elements.  */
 # define YYSTACK_BYTES(N) \
-     ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE)) \
-      + YYSTACK_GAP_MAXIMUM)
+     ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE) + sizeof (YYLTYPE)) \
+      + 2 * YYSTACK_GAP_MAXIMUM)
 
 # define YYCOPY_NEEDED 1
 
@@ -471,9 +507,9 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    76,    76,    84,    85,    95,    96,   104,   113,   114,
-     125,   134,   145,   154,   165,   174,   182,   192,   196,   206,
-     211,   260,   268,   278,   288,   289,   299
+       0,   100,   100,   108,   109,   119,   120,   128,   137,   138,
+     149,   158,   169,   178,   189,   198,   206,   216,   220,   230,
+     235,   284,   292,   302,   312,   313,   323
 };
 #endif
 
@@ -625,7 +661,7 @@ do                                                              \
     }                                                           \
   else                                                          \
     {                                                           \
-      yyerror (pool, src, ncaps, flags, parsed, YY_("syntax error: cannot back up")); \
+      yyerror (&yylloc, pool, src, ncaps, flags, parsed, err_pos, YY_("syntax error: cannot back up")); \
       YYERROR;							\
     }								\
 while (YYID (0))
@@ -635,17 +671,90 @@ while (YYID (0))
 #define YYERRCODE	256
 
 
-/* This macro is provided for backward compatibility. */
+/* YYLLOC_DEFAULT -- Set CURRENT to span from RHS[1] to RHS[N].
+   If N is 0, then set CURRENT to the empty location which ends
+   the previous symbol: RHS[0] (always defined).  */
+
+#ifndef YYLLOC_DEFAULT
+# define YYLLOC_DEFAULT(Current, Rhs, N)                                \
+    do                                                                  \
+      if (YYID (N))                                                     \
+        {                                                               \
+          (Current).first_line   = YYRHSLOC (Rhs, 1).first_line;        \
+          (Current).first_column = YYRHSLOC (Rhs, 1).first_column;      \
+          (Current).last_line    = YYRHSLOC (Rhs, N).last_line;         \
+          (Current).last_column  = YYRHSLOC (Rhs, N).last_column;       \
+        }                                                               \
+      else                                                              \
+        {                                                               \
+          (Current).first_line   = (Current).last_line   =              \
+            YYRHSLOC (Rhs, 0).last_line;                                \
+          (Current).first_column = (Current).last_column =              \
+            YYRHSLOC (Rhs, 0).last_column;                              \
+        }                                                               \
+    while (YYID (0))
+#endif
+
+#define YYRHSLOC(Rhs, K) ((Rhs)[K])
+
+
+/* YY_LOCATION_PRINT -- Print the location on the stream.
+   This macro was not mandated originally: define only if we know
+   we won't break user code: when these are the locations we know.  */
+
 #ifndef YY_LOCATION_PRINT
-# define YY_LOCATION_PRINT(File, Loc) ((void) 0)
+# if defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL
+
+/* Print *YYLOCP on YYO.  Private, do not rely on its existence. */
+
+__attribute__((__unused__))
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+static unsigned
+yy_location_print_ (FILE *yyo, YYLTYPE const * const yylocp)
+#else
+static unsigned
+yy_location_print_ (yyo, yylocp)
+    FILE *yyo;
+    YYLTYPE const * const yylocp;
+#endif
+{
+  unsigned res = 0;
+  int end_col = 0 != yylocp->last_column ? yylocp->last_column - 1 : 0;
+  if (0 <= yylocp->first_line)
+    {
+      res += fprintf (yyo, "%d", yylocp->first_line);
+      if (0 <= yylocp->first_column)
+        res += fprintf (yyo, ".%d", yylocp->first_column);
+    }
+  if (0 <= yylocp->last_line)
+    {
+      if (yylocp->first_line < yylocp->last_line)
+        {
+          res += fprintf (yyo, "-%d", yylocp->last_line);
+          if (0 <= end_col)
+            res += fprintf (yyo, ".%d", end_col);
+        }
+      else if (0 <= end_col && yylocp->first_column < end_col)
+        res += fprintf (yyo, "-%d", end_col);
+    }
+  return res;
+ }
+
+#  define YY_LOCATION_PRINT(File, Loc)          \
+  yy_location_print_ (File, &(Loc))
+
+# else
+#  define YY_LOCATION_PRINT(File, Loc) ((void) 0)
+# endif
 #endif
 
 
 /* YYLEX -- calling `yylex' with the right arguments.  */
 #ifdef YYLEX_PARAM
-# define YYLEX yylex (&yylval, YYLEX_PARAM)
+# define YYLEX yylex (&yylval, &yylloc, YYLEX_PARAM)
 #else
-# define YYLEX yylex (&yylval, pool, src)
+# define YYLEX yylex (&yylval, &yylloc, pool, src)
 #endif
 
 /* Enable debugging if requested.  */
@@ -668,7 +777,7 @@ do {									  \
     {									  \
       YYFPRINTF (stderr, "%s ", Title);					  \
       yy_symbol_print (stderr,						  \
-		  Type, Value, pool, src, ncaps, flags, parsed); \
+		  Type, Value, Location, pool, src, ncaps, flags, parsed, err_pos); \
       YYFPRINTF (stderr, "\n");						  \
     }									  \
 } while (YYID (0))
@@ -682,29 +791,33 @@ do {									  \
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed)
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
 #else
 static void
-yy_symbol_value_print (yyoutput, yytype, yyvaluep, pool, src, ncaps, flags, parsed)
+yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, pool, src, ncaps, flags, parsed, err_pos)
     FILE *yyoutput;
     int yytype;
     YYSTYPE const * const yyvaluep;
+    YYLTYPE const * const yylocationp;
     sre_pool_t *pool;
     u_char **src;
     unsigned *ncaps;
     int flags;
     sre_regex_t **parsed;
+    u_char **err_pos;
 #endif
 {
   FILE *yyo = yyoutput;
   YYUSE (yyo);
   if (!yyvaluep)
     return;
+  YYUSE (yylocationp);
   YYUSE (pool);
   YYUSE (src);
   YYUSE (ncaps);
   YYUSE (flags);
   YYUSE (parsed);
+  YYUSE (err_pos);
 # ifdef YYPRINT
   if (yytype < YYNTOKENS)
     YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
@@ -726,18 +839,20 @@ yy_symbol_value_print (yyoutput, yytype, yyvaluep, pool, src, ncaps, flags, pars
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed)
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
 #else
 static void
-yy_symbol_print (yyoutput, yytype, yyvaluep, pool, src, ncaps, flags, parsed)
+yy_symbol_print (yyoutput, yytype, yyvaluep, yylocationp, pool, src, ncaps, flags, parsed, err_pos)
     FILE *yyoutput;
     int yytype;
     YYSTYPE const * const yyvaluep;
+    YYLTYPE const * const yylocationp;
     sre_pool_t *pool;
     u_char **src;
     unsigned *ncaps;
     int flags;
     sre_regex_t **parsed;
+    u_char **err_pos;
 #endif
 {
   if (yytype < YYNTOKENS)
@@ -745,7 +860,9 @@ yy_symbol_print (yyoutput, yytype, yyvaluep, pool, src, ncaps, flags, parsed)
   else
     YYFPRINTF (yyoutput, "nterm %s (", yytname[yytype]);
 
-  yy_symbol_value_print (yyoutput, yytype, yyvaluep, pool, src, ncaps, flags, parsed);
+  YY_LOCATION_PRINT (yyoutput, *yylocationp);
+  YYFPRINTF (yyoutput, ": ");
+  yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, pool, src, ncaps, flags, parsed, err_pos);
   YYFPRINTF (yyoutput, ")");
 }
 
@@ -788,17 +905,19 @@ do {								\
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_reduce_print (YYSTYPE *yyvsp, int yyrule, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed)
+yy_reduce_print (YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
 #else
 static void
-yy_reduce_print (yyvsp, yyrule, pool, src, ncaps, flags, parsed)
+yy_reduce_print (yyvsp, yylsp, yyrule, pool, src, ncaps, flags, parsed, err_pos)
     YYSTYPE *yyvsp;
+    YYLTYPE *yylsp;
     int yyrule;
     sre_pool_t *pool;
     u_char **src;
     unsigned *ncaps;
     int flags;
     sre_regex_t **parsed;
+    u_char **err_pos;
 #endif
 {
   int yynrhs = yyr2[yyrule];
@@ -812,7 +931,7 @@ yy_reduce_print (yyvsp, yyrule, pool, src, ncaps, flags, parsed)
       YYFPRINTF (stderr, "   $%d = ", yyi + 1);
       yy_symbol_print (stderr, yyrhs[yyprhs[yyrule] + yyi],
 		       &(yyvsp[(yyi + 1) - (yynrhs)])
-		       		       , pool, src, ncaps, flags, parsed);
+		       , &(yylsp[(yyi + 1) - (yynrhs)])		       , pool, src, ncaps, flags, parsed, err_pos);
       YYFPRINTF (stderr, "\n");
     }
 }
@@ -820,7 +939,7 @@ yy_reduce_print (yyvsp, yyrule, pool, src, ncaps, flags, parsed)
 # define YY_REDUCE_PRINT(Rule)		\
 do {					\
   if (yydebug)				\
-    yy_reduce_print (yyvsp, Rule, pool, src, ncaps, flags, parsed); \
+    yy_reduce_print (yyvsp, yylsp, Rule, pool, src, ncaps, flags, parsed, err_pos); \
 } while (YYID (0))
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
@@ -1100,26 +1219,30 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed)
+yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocationp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
 #else
 static void
-yydestruct (yymsg, yytype, yyvaluep, pool, src, ncaps, flags, parsed)
+yydestruct (yymsg, yytype, yyvaluep, yylocationp, pool, src, ncaps, flags, parsed, err_pos)
     const char *yymsg;
     int yytype;
     YYSTYPE *yyvaluep;
+    YYLTYPE *yylocationp;
     sre_pool_t *pool;
     u_char **src;
     unsigned *ncaps;
     int flags;
     sre_regex_t **parsed;
+    u_char **err_pos;
 #endif
 {
   YYUSE (yyvaluep);
+  YYUSE (yylocationp);
   YYUSE (pool);
   YYUSE (src);
   YYUSE (ncaps);
   YYUSE (flags);
   YYUSE (parsed);
+  YYUSE (err_pos);
 
   if (!yymsg)
     yymsg = "Deleting";
@@ -1154,15 +1277,16 @@ yyparse (YYPARSE_PARAM)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 int
-yyparse (sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed)
+yyparse (sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
 #else
 int
-yyparse (pool, src, ncaps, flags, parsed)
+yyparse (pool, src, ncaps, flags, parsed, err_pos)
     sre_pool_t *pool;
     u_char **src;
     unsigned *ncaps;
     int flags;
     sre_regex_t **parsed;
+    u_char **err_pos;
 #endif
 #endif
 {
@@ -1184,6 +1308,11 @@ int yychar;
 static YYSTYPE yyval_default;
 # define YY_INITIAL_VALUE(Value) = Value
 #endif
+static YYLTYPE yyloc_default
+# if defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL
+  = { 1, 1, 1, 1 }
+# endif
+;
 #ifndef YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
 # define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
 # define YY_IGNORE_MAYBE_UNINITIALIZED_END
@@ -1195,6 +1324,10 @@ static YYSTYPE yyval_default;
 /* The semantic value of the lookahead symbol.  */
 YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
 
+/* Location data for the lookahead symbol.  */
+YYLTYPE yylloc = yyloc_default;
+
+
     /* Number of syntax errors so far.  */
     int yynerrs;
 
@@ -1205,6 +1338,7 @@ YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
     /* The stacks and their tools:
        `yyss': related to states.
        `yyvs': related to semantic values.
+       `yyls': related to locations.
 
        Refer to the stacks through separate pointers, to allow yyoverflow
        to reallocate them elsewhere.  */
@@ -1219,6 +1353,14 @@ YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
     YYSTYPE *yyvs;
     YYSTYPE *yyvsp;
 
+    /* The location stack.  */
+    YYLTYPE yylsa[YYINITDEPTH];
+    YYLTYPE *yyls;
+    YYLTYPE *yylsp;
+
+    /* The locations where the error started and ended.  */
+    YYLTYPE yyerror_range[3];
+
     YYSIZE_T yystacksize;
 
   int yyn;
@@ -1228,6 +1370,7 @@ YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
   /* The variables used to return semantic value and location from the
      action routines.  */
   YYSTYPE yyval;
+  YYLTYPE yyloc;
 
 #if YYERROR_VERBOSE
   /* Buffer for error messages, and its allocated size.  */
@@ -1236,7 +1379,7 @@ YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
   YYSIZE_T yymsg_alloc = sizeof yymsgbuf;
 #endif
 
-#define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N))
+#define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N), yylsp -= (N))
 
   /* The number of symbols on the RHS of the reduced rule.
      Keep to zero when no symbol should be popped.  */
@@ -1244,6 +1387,7 @@ YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
 
   yyssp = yyss = yyssa;
   yyvsp = yyvs = yyvsa;
+  yylsp = yyls = yylsa;
   yystacksize = YYINITDEPTH;
 
   YYDPRINTF ((stderr, "Starting parse\n"));
@@ -1252,6 +1396,7 @@ YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
   yyerrstatus = 0;
   yynerrs = 0;
   yychar = YYEMPTY; /* Cause a token to be read.  */
+  yylsp[0] = yylloc;
   goto yysetstate;
 
 /*------------------------------------------------------------.
@@ -1277,6 +1422,7 @@ YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
 	   memory.  */
 	YYSTYPE *yyvs1 = yyvs;
 	yytype_int16 *yyss1 = yyss;
+	YYLTYPE *yyls1 = yyls;
 
 	/* Each stack pointer address is followed by the size of the
 	   data in use in that stack, in bytes.  This used to be a
@@ -1285,8 +1431,10 @@ YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
 	yyoverflow (YY_("memory exhausted"),
 		    &yyss1, yysize * sizeof (*yyssp),
 		    &yyvs1, yysize * sizeof (*yyvsp),
+		    &yyls1, yysize * sizeof (*yylsp),
 		    &yystacksize);
 
+	yyls = yyls1;
 	yyss = yyss1;
 	yyvs = yyvs1;
       }
@@ -1309,6 +1457,7 @@ YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
 	  goto yyexhaustedlab;
 	YYSTACK_RELOCATE (yyss_alloc, yyss);
 	YYSTACK_RELOCATE (yyvs_alloc, yyvs);
+	YYSTACK_RELOCATE (yyls_alloc, yyls);
 #  undef YYSTACK_RELOCATE
 	if (yyss1 != yyssa)
 	  YYSTACK_FREE (yyss1);
@@ -1318,6 +1467,7 @@ YYSTYPE yylval YY_INITIAL_VALUE(yyval_default);
 
       yyssp = yyss + yysize - 1;
       yyvsp = yyvs + yysize - 1;
+      yylsp = yyls + yysize - 1;
 
       YYDPRINTF ((stderr, "Stack size increased to %lu\n",
 		  (unsigned long int) yystacksize));
@@ -1395,7 +1545,7 @@ yybackup:
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
   *++yyvsp = yylval;
   YY_IGNORE_MAYBE_UNINITIALIZED_END
-
+  *++yylsp = yylloc;
   goto yynewstate;
 
 
@@ -1426,13 +1576,14 @@ yyreduce:
      GCC warning that YYVAL may be used uninitialized.  */
   yyval = yyvsp[1-yylen];
 
-
+  /* Default location.  */
+  YYLLOC_DEFAULT (yyloc, (yylsp - yylen), yylen);
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
         case 2:
 /* Line 1792 of yacc.c  */
-#line 77 "src/sregex/sre_yyparser.y"
+#line 101 "src/sregex/sre_yyparser.y"
     {
         *parsed = (yyvsp[(1) - (2)].re);
         return SRE_OK;
@@ -1441,7 +1592,7 @@ yyreduce:
 
   case 4:
 /* Line 1792 of yacc.c  */
-#line 86 "src/sregex/sre_yyparser.y"
+#line 110 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_ALT, (yyvsp[(1) - (3)].re), (yyvsp[(3) - (3)].re));
         if ((yyval.re) == NULL) {
@@ -1452,7 +1603,7 @@ yyreduce:
 
   case 6:
 /* Line 1792 of yacc.c  */
-#line 97 "src/sregex/sre_yyparser.y"
+#line 121 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_CAT, (yyvsp[(1) - (2)].re), (yyvsp[(2) - (2)].re));
             if ((yyval.re) == NULL) {
@@ -1463,7 +1614,7 @@ yyreduce:
 
   case 7:
 /* Line 1792 of yacc.c  */
-#line 104 "src/sregex/sre_yyparser.y"
+#line 128 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_NIL, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1474,7 +1625,7 @@ yyreduce:
 
   case 9:
 /* Line 1792 of yacc.c  */
-#line 115 "src/sregex/sre_yyparser.y"
+#line 139 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_STAR, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1488,7 +1639,7 @@ yyreduce:
 
   case 10:
 /* Line 1792 of yacc.c  */
-#line 126 "src/sregex/sre_yyparser.y"
+#line 150 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_STAR, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1500,7 +1651,7 @@ yyreduce:
 
   case 11:
 /* Line 1792 of yacc.c  */
-#line 135 "src/sregex/sre_yyparser.y"
+#line 159 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_PLUS, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1514,7 +1665,7 @@ yyreduce:
 
   case 12:
 /* Line 1792 of yacc.c  */
-#line 146 "src/sregex/sre_yyparser.y"
+#line 170 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_PLUS, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1526,7 +1677,7 @@ yyreduce:
 
   case 13:
 /* Line 1792 of yacc.c  */
-#line 155 "src/sregex/sre_yyparser.y"
+#line 179 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_QUEST, (yyvsp[(1) - (2)].re),
                                   NULL);
@@ -1540,7 +1691,7 @@ yyreduce:
 
   case 14:
 /* Line 1792 of yacc.c  */
-#line 166 "src/sregex/sre_yyparser.y"
+#line 190 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_QUEST, (yyvsp[(1) - (3)].re),
                                   NULL);
@@ -1552,7 +1703,7 @@ yyreduce:
 
   case 15:
 /* Line 1792 of yacc.c  */
-#line 175 "src/sregex/sre_yyparser.y"
+#line 199 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_desugar_counted_repetition(pool, (yyvsp[(1) - (2)].re), &(yyvsp[(2) - (2)].cquant), 1 /* greedy */);
             if ((yyval.re) == NULL) {
@@ -1563,7 +1714,7 @@ yyreduce:
 
   case 16:
 /* Line 1792 of yacc.c  */
-#line 183 "src/sregex/sre_yyparser.y"
+#line 207 "src/sregex/sre_yyparser.y"
     {
             (yyval.re) = sre_regex_desugar_counted_repetition(pool, (yyvsp[(1) - (3)].re), &(yyvsp[(2) - (3)].cquant), 0 /* greedy */);
             if ((yyval.re) == NULL) {
@@ -1574,13 +1725,13 @@ yyreduce:
 
   case 17:
 /* Line 1792 of yacc.c  */
-#line 192 "src/sregex/sre_yyparser.y"
+#line 216 "src/sregex/sre_yyparser.y"
     { (yyval.group) = ++(*ncaps); }
     break;
 
   case 18:
 /* Line 1792 of yacc.c  */
-#line 197 "src/sregex/sre_yyparser.y"
+#line 221 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_PAREN, (yyvsp[(3) - (4)].re), NULL);
         if ((yyval.re) == NULL) {
@@ -1593,7 +1744,7 @@ yyreduce:
 
   case 19:
 /* Line 1792 of yacc.c  */
-#line 207 "src/sregex/sre_yyparser.y"
+#line 231 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = (yyvsp[(4) - (5)].re);
       }
@@ -1601,7 +1752,7 @@ yyreduce:
 
   case 20:
 /* Line 1792 of yacc.c  */
-#line 212 "src/sregex/sre_yyparser.y"
+#line 236 "src/sregex/sre_yyparser.y"
     {
         if ((flags & SRE_REGEX_CASELESS)
             && (((yyvsp[(1) - (1)].ch) >= 'A' && (yyvsp[(1) - (1)].ch) <= 'Z')
@@ -1653,7 +1804,7 @@ yyreduce:
 
   case 21:
 /* Line 1792 of yacc.c  */
-#line 261 "src/sregex/sre_yyparser.y"
+#line 285 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_DOT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1664,7 +1815,7 @@ yyreduce:
 
   case 22:
 /* Line 1792 of yacc.c  */
-#line 269 "src/sregex/sre_yyparser.y"
+#line 293 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1677,7 +1828,7 @@ yyreduce:
 
   case 23:
 /* Line 1792 of yacc.c  */
-#line 279 "src/sregex/sre_yyparser.y"
+#line 303 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_ASSERT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1690,7 +1841,7 @@ yyreduce:
 
   case 25:
 /* Line 1792 of yacc.c  */
-#line 290 "src/sregex/sre_yyparser.y"
+#line 314 "src/sregex/sre_yyparser.y"
     {
         if (flags & SRE_REGEX_CASELESS) {
             (yyval.re)->range = sre_regex_turn_char_class_caseless(pool, (yyvsp[(1) - (1)].re)->range);
@@ -1703,7 +1854,7 @@ yyreduce:
 
   case 26:
 /* Line 1792 of yacc.c  */
-#line 300 "src/sregex/sre_yyparser.y"
+#line 324 "src/sregex/sre_yyparser.y"
     {
         (yyval.re) = sre_regex_create(pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
         if ((yyval.re) == NULL) {
@@ -1716,7 +1867,7 @@ yyreduce:
 
 
 /* Line 1792 of yacc.c  */
-#line 1720 "src/sregex/sre_yyparser.c"
+#line 1871 "src/sregex/sre_yyparser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1737,6 +1888,7 @@ yyreduce:
   YY_STACK_PRINT (yyss, yyssp);
 
   *++yyvsp = yyval;
+  *++yylsp = yyloc;
 
   /* Now `shift' the result of the reduction.  Determine what state
      that goes to, based on the state we popped back to and the rule
@@ -1766,7 +1918,7 @@ yyerrlab:
     {
       ++yynerrs;
 #if ! YYERROR_VERBOSE
-      yyerror (pool, src, ncaps, flags, parsed, YY_("syntax error"));
+      yyerror (&yylloc, pool, src, ncaps, flags, parsed, err_pos, YY_("syntax error"));
 #else
 # define YYSYNTAX_ERROR yysyntax_error (&yymsg_alloc, &yymsg, \
                                         yyssp, yytoken)
@@ -1793,7 +1945,7 @@ yyerrlab:
                 yymsgp = yymsg;
               }
           }
-        yyerror (pool, src, ncaps, flags, parsed, yymsgp);
+        yyerror (&yylloc, pool, src, ncaps, flags, parsed, err_pos, yymsgp);
         if (yysyntax_error_status == 2)
           goto yyexhaustedlab;
       }
@@ -1801,7 +1953,7 @@ yyerrlab:
 #endif
     }
 
-
+  yyerror_range[1] = yylloc;
 
   if (yyerrstatus == 3)
     {
@@ -1817,7 +1969,7 @@ yyerrlab:
       else
 	{
 	  yydestruct ("Error: discarding",
-		      yytoken, &yylval, pool, src, ncaps, flags, parsed);
+		      yytoken, &yylval, &yylloc, pool, src, ncaps, flags, parsed, err_pos);
 	  yychar = YYEMPTY;
 	}
     }
@@ -1838,6 +1990,7 @@ yyerrorlab:
   if (/*CONSTCOND*/ 0)
      goto yyerrorlab;
 
+  yyerror_range[1] = yylsp[1-yylen];
   /* Do not reclaim the symbols of the rule which action triggered
      this YYERROR.  */
   YYPOPSTACK (yylen);
@@ -1871,9 +2024,9 @@ yyerrlab1:
       if (yyssp == yyss)
 	YYABORT;
 
-
+      yyerror_range[1] = *yylsp;
       yydestruct ("Error: popping",
-		  yystos[yystate], yyvsp, pool, src, ncaps, flags, parsed);
+		  yystos[yystate], yyvsp, yylsp, pool, src, ncaps, flags, parsed, err_pos);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -1883,6 +2036,11 @@ yyerrlab1:
   *++yyvsp = yylval;
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 
+  yyerror_range[2] = yylloc;
+  /* Using YYLLOC is tempting, but would change the location of
+     the lookahead.  YYLOC is available though.  */
+  YYLLOC_DEFAULT (yyloc, yyerror_range, 2);
+  *++yylsp = yyloc;
 
   /* Shift the error token.  */
   YY_SYMBOL_PRINT ("Shifting", yystos[yyn], yyvsp, yylsp);
@@ -1910,7 +2068,7 @@ yyabortlab:
 | yyexhaustedlab -- memory exhaustion comes here.  |
 `-------------------------------------------------*/
 yyexhaustedlab:
-  yyerror (pool, src, ncaps, flags, parsed, YY_("memory exhausted"));
+  yyerror (&yylloc, pool, src, ncaps, flags, parsed, err_pos, YY_("memory exhausted"));
   yyresult = 2;
   /* Fall through.  */
 #endif
@@ -1922,7 +2080,7 @@ yyreturn:
          user semantic actions for why this is necessary.  */
       yytoken = YYTRANSLATE (yychar);
       yydestruct ("Cleanup: discarding lookahead",
-                  yytoken, &yylval, pool, src, ncaps, flags, parsed);
+                  yytoken, &yylval, &yylloc, pool, src, ncaps, flags, parsed, err_pos);
     }
   /* Do not reclaim the symbols of the rule which action triggered
      this YYABORT or YYACCEPT.  */
@@ -1931,7 +2089,7 @@ yyreturn:
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-		  yystos[*yyssp], yyvsp, pool, src, ncaps, flags, parsed);
+		  yystos[*yyssp], yyvsp, yylsp, pool, src, ncaps, flags, parsed, err_pos);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow
@@ -1948,12 +2106,12 @@ yyreturn:
 
 
 /* Line 2055 of yacc.c  */
-#line 310 "src/sregex/sre_yyparser.y"
+#line 334 "src/sregex/sre_yyparser.y"
 
 
 
 static int
-yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
+yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
 {
     u_char               c;
     int                  from, to;
@@ -1985,12 +2143,16 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
     static u_char        esc_V_ranges[] = { 0x00, 0x09, 0x0e, 0x84, 0x86, 0xff };
 
+    locp->pos = *src;
+
     if (*src == NULL || **src == '\0') {
+        locp->last = *src;
         return SRE_REGEX_TOKEN_EOF;
     }
 
     c = sre_read_char(src);
     if (strchr("|*+?():.^$", (int) c)) {
+        locp->last = *src;
         return c;
     }
 
@@ -1998,16 +2160,19 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
         c = sre_read_char(src);
 
         if (c == '\0') {
+            locp->last = *src;
             return SRE_REGEX_TOKEN_BAD;
         }
 
         if (!isprint(c)) {
             lvalp->ch = c;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
         }
 
         if (strchr("'\" iM%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
             lvalp->ch = c;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
         }
 
@@ -2021,6 +2186,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
                 if (c < '0' || c > '7') {
                     lvalp->ch = (u_char) num;
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
                 }
 
@@ -2030,6 +2196,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
                 if (++i == 3) {
                     lvalp->ch = (u_char) num;
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
                 }
             }
@@ -2039,6 +2206,8 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
         case 'c':
             c = sre_read_char(src);
             if (c == '\0') {
+                locp->last = *src;
+                locp->last = *src;
                 return SRE_REGEX_TOKEN_BAD;
             }
 
@@ -2050,11 +2219,13 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
             dd("\\cK: %d", lvalp->ch);
 
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'o':
             c = sre_read_char(src);
             if (c != '{') {
+                locp->last = *src;
                 return SRE_REGEX_TOKEN_BAD;
             }
 
@@ -2071,9 +2242,11 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
                 } else if (c == '}') {
                     lvalp->ch = (u_char) num;
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
 
                 } else if (c == '\0') {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
 
                 } else {
@@ -2085,6 +2258,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     dd("cur: '%c' (%d)", **src, **src);
 
                     if (sre_read_char(src) != '}') {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -2097,6 +2271,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             dd("\\o{...}: %u, next: %c", num, **src);
 
             lvalp->ch = (u_char) num;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'x':
@@ -2126,10 +2301,12 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
                 } else if (seen_curly_bracket) {
                     if (c != '}') {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
                     lvalp->ch = (u_char) num;
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
 
                 } else {
@@ -2142,6 +2319,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                         dd("cur: '%c' (%d)", **src, **src);
 
                         if (sre_read_char(src) != '}') {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
                     }
@@ -2155,6 +2333,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             dd("\\x{...}: %u, next: %c", num, **src);
 
             lvalp->ch = (u_char) num;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'B':
@@ -2167,6 +2346,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->assertion_type = SRE_REGEX_ASSERTION_BIG_B;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'b':
@@ -2179,6 +2359,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->assertion_type = SRE_REGEX_ASSERTION_SMALL_B;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'z':
@@ -2191,6 +2372,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->assertion_type = SRE_REGEX_ASSERTION_SMALL_Z;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'A':
@@ -2204,6 +2386,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->assertion_type = SRE_REGEX_ASSERTION_BIG_A;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'd':
@@ -2227,6 +2410,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->range = range;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'D':
@@ -2250,6 +2434,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->range = range;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'w':
@@ -2264,6 +2449,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_w_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -2286,6 +2472,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'W':
@@ -2301,6 +2488,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
                     lvalp->ch = 0;
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -2323,6 +2511,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 's':
@@ -2337,6 +2526,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_s_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -2359,6 +2549,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'S':
@@ -2373,6 +2564,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_s_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -2395,6 +2587,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'N':
@@ -2418,6 +2611,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->range = range;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'C':
@@ -2430,6 +2624,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'h':
@@ -2442,6 +2637,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_h_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -2464,6 +2660,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'H':
@@ -2476,6 +2673,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_h_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -2498,6 +2696,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'v':
@@ -2510,6 +2709,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_v_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -2532,6 +2732,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'V':
@@ -2544,6 +2745,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_v_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -2566,36 +2768,44 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 't':
             lvalp->ch = '\t';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'n':
             lvalp->ch = '\n';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'r':
             lvalp->ch = '\r';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'f':
             lvalp->ch = '\f';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'a':
             lvalp->ch = '\a';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'e':
             lvalp->ch = '\e';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         default:
             break;
         }
 
+        locp->last = *src;
         return SRE_REGEX_TOKEN_BAD;
     }
 
@@ -2613,6 +2823,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
         r = sre_regex_create(pool, type, NULL, NULL);
         if (r == NULL) {
+            locp->last = *src;
             return SRE_REGEX_TOKEN_BAD;
         }
 
@@ -2630,6 +2841,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
             switch (c) {
             case '\0':
+                locp->last = *src;
                 return SRE_REGEX_TOKEN_BAD;
 
             case ']':
@@ -2642,6 +2854,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 if (seen_dash) {
                     range = sre_palloc(pool, sizeof(sre_regex_range_t));
                     if (range == NULL) {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -2658,6 +2871,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 }
 
                 lvalp->re = r;
+                locp->last = *src;
                 return SRE_REGEX_TOKEN_CHAR_CLASS;
 
             case '\\':
@@ -2698,6 +2912,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     c = sre_read_char(src);
 
                     if (c == '\0') {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -2714,6 +2929,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 case 'o':
                     c = sre_read_char(src);
                     if (c != '{') {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -2733,6 +2949,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                             goto process_char;
 
                         } else {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -2740,6 +2957,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                             dd("cur: '%c' (%d)", **src, **src);
 
                             if (sre_read_char(src) != '}') {
+                                locp->last = *src;
                                 return SRE_REGEX_TOKEN_BAD;
                             }
 
@@ -2781,6 +2999,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
                         } else if (seen_curly_bracket) {
                             if (c != '}') {
+                                locp->last = *src;
                                 return SRE_REGEX_TOKEN_BAD;
                             }
 
@@ -2788,6 +3007,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                             goto process_char;
 
                         } else if (c == '\0') {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
 
                         } else {
@@ -2800,6 +3020,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                                 dd("cur: '%c' (%d)", **src, **src);
 
                                 if (sre_read_char(src) != '}') {
+                                    locp->last = *src;
                                     return SRE_REGEX_TOKEN_BAD;
                                 }
                             }
@@ -2844,6 +3065,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     goto process_char;
 
                 case '\0':
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
 
                 default:
@@ -2861,6 +3083,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 if (seen_dash) {
                     range = sre_palloc(pool, sizeof(sre_regex_range_t));
                     if (range == NULL) {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -2883,6 +3106,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 case 'd':
                     range = sre_palloc(pool, sizeof(sre_regex_range_t));
                     if (range == NULL) {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -2905,6 +3129,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_D_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -2928,6 +3153,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_w_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -2951,6 +3177,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_W_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -2974,6 +3201,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_s_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -2997,6 +3225,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_S_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -3020,6 +3249,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_v_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -3043,6 +3273,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_V_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -3066,6 +3297,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_h_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -3089,6 +3321,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_H_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -3109,6 +3342,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     break;
 
                 default:
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -3129,6 +3363,7 @@ process_char:
                     last->to = c;
 
                     if (last->to < last->from) {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -3143,6 +3378,7 @@ process_char:
 
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -3225,30 +3461,36 @@ cquant_parsed:
 
         if (from >= 500 || to >= 500) {
             dd("from or to too large: %d %d", from, to);
+            locp->last = *src;
             return SRE_REGEX_TOKEN_BAD;
         }
 
         if (to >= 0 && from > to) {
+            locp->last = *src;
             return SRE_REGEX_TOKEN_BAD;
         }
 
         if (from == 0) {
             if (to == 1) {
+                locp->last = *src;
                 return '?';
             }
 
             if (to == -1) {
+                locp->last = *src;
                 return '*';
             }
 
         } else if (from == 1) {
             if (to == -1) {
+                locp->last = *src;
                 return '+';
             }
         }
 
         lvalp->cquant.from = from;
         lvalp->cquant.to = to;
+        locp->last = *src;
         return SRE_REGEX_TOKEN_CQUANT;
 
     default:
@@ -3258,27 +3500,40 @@ cquant_parsed:
     dd("token char: %c(%d)", c, c);
 
     lvalp->ch = c;
+    locp->last = *src;
     return SRE_REGEX_TOKEN_CHAR;
 }
 
 
 static void
-yyerror(sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
-    sre_regex_t **parsed, char *s)
+yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
+    sre_regex_t **parsed, u_char **err_pos, char *msg)
 {
-    sre_regex_error("%s", s);
+    *err_pos = locp->pos;
 }
 
 
 sre_regex_t *
-sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags)
+sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags,
+    int *err_offset)
 {
+    u_char          *start, *err_pos = NULL;
     sre_regex_t     *re, *r;
     sre_regex_t     *parsed = NULL;
 
+    start = src;
     *ncaps = 0;
+    *err_offset = -1;
 
-    if (yyparse(pool, &src, ncaps, flags, &parsed) != SRE_OK) {
+    if (yyparse(pool, &src, ncaps, flags, &parsed, &err_pos) != SRE_OK) {
+        if (err_pos) {
+            *err_offset = (int) (err_pos - start);
+        }
+
+        return NULL;
+    }
+
+    if (parsed == NULL) {
         return NULL;
     }
 

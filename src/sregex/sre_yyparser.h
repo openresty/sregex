@@ -60,7 +60,7 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 2058 of yacc.c  */
-#line 55 "src/sregex/sre_yyparser.y"
+#line 79 "src/sregex/sre_yyparser.y"
 
     sre_regex_t         *re;
     u_char               ch;
@@ -76,6 +76,19 @@ typedef union YYSTYPE
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
+#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+typedef struct YYLTYPE
+{
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} YYLTYPE;
+# define yyltype YYLTYPE /* obsolescent; will be withdrawn */
+# define YYLTYPE_IS_DECLARED 1
+# define YYLTYPE_IS_TRIVIAL 1
+#endif
+
 
 #ifdef YYPARSE_PARAM
 #if defined __STDC__ || defined __cplusplus
@@ -85,7 +98,7 @@ int yyparse ();
 #endif
 #else /* ! YYPARSE_PARAM */
 #if defined __STDC__ || defined __cplusplus
-int yyparse (sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed);
+int yyparse (sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos);
 #else
 int yyparse ();
 #endif

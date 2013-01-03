@@ -160,21 +160,6 @@ sre_regex_dump(sre_regex_t *r)
 }
 
 
-void
-sre_regex_error(char *fmt, ...)
-{
-    va_list     arg;
-
-    va_start(arg, fmt);
-
-    fprintf(stderr, "[error] ");
-    vfprintf(stderr, fmt, arg);
-    fprintf(stderr, "\n");
-
-    va_end(arg);
-}
-
-
 sre_regex_range_t *
 sre_regex_turn_char_class_caseless(sre_pool_t *pool, sre_regex_range_t *range)
 {

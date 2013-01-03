@@ -139,8 +139,7 @@ __DATA__
 === TEST 22: re_tests:1426
 --- re: [abc\N\{U+BEEF}]
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -159,8 +158,7 @@ __DATA__
 === TEST 25: re_tests:1437
 --- re: abc\N{def
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 --- SKIP
 
 
@@ -168,8 +166,7 @@ __DATA__
 === TEST 26: re_tests:1447
 --- re: abc\N{def
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 --- SKIP
 
 

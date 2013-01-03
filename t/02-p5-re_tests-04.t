@@ -165,24 +165,21 @@ __DATA__
 === TEST 27: re_tests:285
 --- re: \g{1}
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 28: re_tests:287
 --- re: \g0
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 29: re_tests:289
 --- re: \g{0}
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 

@@ -27,6 +27,7 @@ main(int argc, char **argv)
 {
     int                  i, n;
     int                  flags = 0;
+    int                  err_offset = -1;
     sre_pool_t          *ppool; /* parser pool */
     sre_pool_t          *cpool; /* compiler pool */
     sre_regex_t         *re;
@@ -64,8 +65,13 @@ main(int argc, char **argv)
         return 2;
     }
 
-    re = sre_regex_parse(ppool, (u_char *) argv[i], &ncaps, flags);
+    re = sre_regex_parse(ppool, (u_char *) argv[i], &ncaps, flags, &err_offset);
     if (re == NULL) {
+        if (err_offset >= 0) {
+            fprintf(stderr, "[error] syntax error at pos %d\n", err_offset);
+        }
+
+        fprintf(stderr, "unknown error\n");
         return 2;
     }
 

@@ -10,7 +10,7 @@ __DATA__
 --- re: a?+
 --- s: a
 --- err
-[error] syntax error
+[error] syntax error at pos 2
 
 
 
@@ -18,7 +18,7 @@ __DATA__
 --- re: a{3}+
 --- s: a
 --- err
-[error] syntax error
+[error] syntax error at pos 4
 
 
 
@@ -26,7 +26,7 @@ __DATA__
 --- re: \(ab)
 --- s: hello(ab)
 --- err
-[error] syntax error
+[error] syntax error at pos 4
 
 
 

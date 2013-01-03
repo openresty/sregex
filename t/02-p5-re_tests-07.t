@@ -140,8 +140,7 @@ __DATA__
 === TEST 21: re_tests:455
 --- re: (?
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -232,8 +231,7 @@ __DATA__
 === TEST 36: re_tests:483
 --- re: (?<%)b
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -306,8 +304,7 @@ __DATA__
 === TEST 48: re_tests:537
 --- re: a(?{)b
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 

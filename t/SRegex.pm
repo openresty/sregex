@@ -73,7 +73,13 @@ sub run_test ($) {
     if (defined $block->err) {
         $err =~ /\[error\] .*\n/;
         $err = $&;
-        is $err, $block->err, "$name - err expected";
+        is $err, $block->err, "$name - err expected (regex: \"$re\")";
+
+    } elsif (defined $block->err_like) {
+        $err =~ /\[error\] .*\n/;
+        $err = $&;
+        my $re = $block->err_like;
+        like $err, qr/$re/, "$name - err_like expected (regex: \"$re\")";
 
     } elsif ($?) {
         if (defined $block->fatal) {

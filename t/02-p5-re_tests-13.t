@@ -9,24 +9,21 @@ __DATA__
 === TEST 1: re_tests:1084
 --- re: (?P<=n>foo|bar|baz)
 --- s eval: "snofooewa"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 2: re_tests:1085
 --- re: (?P<!n>foo|bar|baz)
 --- s eval: "snofooewa"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 3: re_tests:1086
 --- re: (?PX<n>foo|bar|baz)
 --- s eval: "snofooewa"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -141,144 +138,126 @@ __DATA__
 === TEST 22: re_tests:1270
 --- re: (?''foo) bar
 --- s eval: "..foo bar.."
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 23: re_tests:1271
 --- re: (?<>foo) bar
 --- s eval: "..foo bar.."
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 24: re_tests:1272
 --- re: foo \k'n'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 25: re_tests:1273
 --- re: foo \k<n>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 26: re_tests:1274
 --- re: foo \k'a1'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 27: re_tests:1275
 --- re: foo \k<a1>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 28: re_tests:1276
 --- re: foo \k'_'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 29: re_tests:1277
 --- re: foo \k<_>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 30: re_tests:1278
 --- re: foo \k'_0_'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 31: re_tests:1279
 --- re: foo \k<_0_>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 32: re_tests:1280
 --- re: foo \k'0'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 33: re_tests:1281
 --- re: foo \k<0>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 34: re_tests:1282
 --- re: foo \k'12'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 35: re_tests:1283
 --- re: foo \k<12>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 36: re_tests:1284
 --- re: foo \k'1a'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 37: re_tests:1285
 --- re: foo \k<1a>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 38: re_tests:1286
 --- re: foo \k''
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 39: re_tests:1287
 --- re: foo \k<>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 

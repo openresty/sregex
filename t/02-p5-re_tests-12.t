@@ -125,16 +125,14 @@ __DATA__
 === TEST 20: re_tests:998
 --- re: x(?#
 --- s eval: "x"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 21: re_tests:999
 --- re: x(?#
 --- s eval: "x"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 

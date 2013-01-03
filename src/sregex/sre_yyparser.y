@@ -17,6 +17,27 @@
 
 #include <sregex/sre_regex_parser.h>
 #include <sregex/sre_palloc.h>
+
+
+#define YYLTYPE YYLTYPE
+typedef struct YYLTYPE {
+    u_char  *pos;
+    u_char  *last;
+} YYLTYPE;
+
+
+#define YYLLOC_DEFAULT(Cur, Rhs, N)                                          \
+    do {                                                                     \
+        if (N) {                                                             \
+            (Cur).pos = YYRHSLOC(Rhs, 1).pos;                                \
+            (Cur).last = YYRHSLOC(Rhs, N).last;                              \
+        } else {                                                             \
+            (Cur).pos = YYRHSLOC(Rhs, 0).last;                               \
+            (Cur).last = (Cur).pos;                                          \
+        }                                                                    \
+    } while (0)
+
+
 #include <sregex/sre_yyparser.h>
 #include <ctype.h>
 
@@ -24,9 +45,9 @@
 #define sre_read_char(sp)  *(*(sp))++
 
 
-static int yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src);
-static void yyerror(sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
-    sre_regex_t **parsed, char *s);
+static int yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src);
+static void yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
+    sre_regex_t **parsed, u_char **err_pos, char *s);
 static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
     sre_regex_t *subj, sre_regex_cquant_t *cquant, unsigned greedy);
 
@@ -49,6 +70,9 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
 %parse-param {unsigned *ncaps}
 %parse-param {int flags}
 %parse-param {sre_regex_t **parsed}
+%parse-param {u_char **err_pos}
+
+%locations
 
 %expect             32
 
@@ -311,7 +335,7 @@ atom: '(' count alt ')'
 
 
 static int
-yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
+yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
 {
     u_char               c;
     int                  from, to;
@@ -343,12 +367,16 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
     static u_char        esc_V_ranges[] = { 0x00, 0x09, 0x0e, 0x84, 0x86, 0xff };
 
+    locp->pos = *src;
+
     if (*src == NULL || **src == '\0') {
+        locp->last = *src;
         return SRE_REGEX_TOKEN_EOF;
     }
 
     c = sre_read_char(src);
     if (strchr("|*+?():.^$", (int) c)) {
+        locp->last = *src;
         return c;
     }
 
@@ -356,16 +384,19 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
         c = sre_read_char(src);
 
         if (c == '\0') {
+            locp->last = *src;
             return SRE_REGEX_TOKEN_BAD;
         }
 
         if (!isprint(c)) {
             lvalp->ch = c;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
         }
 
         if (strchr("'\" iM%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
             lvalp->ch = c;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
         }
 
@@ -379,6 +410,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
                 if (c < '0' || c > '7') {
                     lvalp->ch = (u_char) num;
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
                 }
 
@@ -388,6 +420,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
                 if (++i == 3) {
                     lvalp->ch = (u_char) num;
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
                 }
             }
@@ -397,6 +430,8 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
         case 'c':
             c = sre_read_char(src);
             if (c == '\0') {
+                locp->last = *src;
+                locp->last = *src;
                 return SRE_REGEX_TOKEN_BAD;
             }
 
@@ -408,11 +443,13 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
             dd("\\cK: %d", lvalp->ch);
 
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'o':
             c = sre_read_char(src);
             if (c != '{') {
+                locp->last = *src;
                 return SRE_REGEX_TOKEN_BAD;
             }
 
@@ -429,9 +466,11 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
                 } else if (c == '}') {
                     lvalp->ch = (u_char) num;
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
 
                 } else if (c == '\0') {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
 
                 } else {
@@ -443,6 +482,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     dd("cur: '%c' (%d)", **src, **src);
 
                     if (sre_read_char(src) != '}') {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -455,6 +495,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             dd("\\o{...}: %u, next: %c", num, **src);
 
             lvalp->ch = (u_char) num;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'x':
@@ -484,10 +525,12 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
                 } else if (seen_curly_bracket) {
                     if (c != '}') {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
                     lvalp->ch = (u_char) num;
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
 
                 } else {
@@ -500,6 +543,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                         dd("cur: '%c' (%d)", **src, **src);
 
                         if (sre_read_char(src) != '}') {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
                     }
@@ -513,6 +557,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             dd("\\x{...}: %u, next: %c", num, **src);
 
             lvalp->ch = (u_char) num;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'B':
@@ -525,6 +570,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->assertion_type = SRE_REGEX_ASSERTION_BIG_B;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'b':
@@ -537,6 +583,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->assertion_type = SRE_REGEX_ASSERTION_SMALL_B;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'z':
@@ -549,6 +596,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->assertion_type = SRE_REGEX_ASSERTION_SMALL_Z;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'A':
@@ -562,6 +610,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->assertion_type = SRE_REGEX_ASSERTION_BIG_A;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_ASSERTION;
 
         case 'd':
@@ -585,6 +634,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->range = range;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'D':
@@ -608,6 +658,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->range = range;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'w':
@@ -622,6 +673,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_w_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -644,6 +696,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'W':
@@ -659,6 +712,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
                     lvalp->ch = 0;
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -681,6 +735,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 's':
@@ -695,6 +750,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_s_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -717,6 +773,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'S':
@@ -731,6 +788,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_s_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -753,6 +811,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'N':
@@ -776,6 +835,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             r->range = range;
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'C':
@@ -788,6 +848,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'h':
@@ -800,6 +861,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_h_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -822,6 +884,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'H':
@@ -834,6 +897,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_h_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -856,6 +920,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'v':
@@ -868,6 +933,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_v_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -890,6 +956,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 'V':
@@ -902,6 +969,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             for (i = 0; i < sre_nelems(esc_v_ranges); i += 2) {
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -924,36 +992,44 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
             }
 
             lvalp->re = r;
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR_CLASS;
 
         case 't':
             lvalp->ch = '\t';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'n':
             lvalp->ch = '\n';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'r':
             lvalp->ch = '\r';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'f':
             lvalp->ch = '\f';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'a':
             lvalp->ch = '\a';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         case 'e':
             lvalp->ch = '\e';
+            locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
         default:
             break;
         }
 
+        locp->last = *src;
         return SRE_REGEX_TOKEN_BAD;
     }
 
@@ -971,6 +1047,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
         r = sre_regex_create(pool, type, NULL, NULL);
         if (r == NULL) {
+            locp->last = *src;
             return SRE_REGEX_TOKEN_BAD;
         }
 
@@ -988,6 +1065,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
             switch (c) {
             case '\0':
+                locp->last = *src;
                 return SRE_REGEX_TOKEN_BAD;
 
             case ']':
@@ -1000,6 +1078,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 if (seen_dash) {
                     range = sre_palloc(pool, sizeof(sre_regex_range_t));
                     if (range == NULL) {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -1016,6 +1095,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 }
 
                 lvalp->re = r;
+                locp->last = *src;
                 return SRE_REGEX_TOKEN_CHAR_CLASS;
 
             case '\\':
@@ -1056,6 +1136,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     c = sre_read_char(src);
 
                     if (c == '\0') {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -1072,6 +1153,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 case 'o':
                     c = sre_read_char(src);
                     if (c != '{') {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -1091,6 +1173,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                             goto process_char;
 
                         } else {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -1098,6 +1181,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                             dd("cur: '%c' (%d)", **src, **src);
 
                             if (sre_read_char(src) != '}') {
+                                locp->last = *src;
                                 return SRE_REGEX_TOKEN_BAD;
                             }
 
@@ -1139,6 +1223,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
 
                         } else if (seen_curly_bracket) {
                             if (c != '}') {
+                                locp->last = *src;
                                 return SRE_REGEX_TOKEN_BAD;
                             }
 
@@ -1146,6 +1231,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                             goto process_char;
 
                         } else if (c == '\0') {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
 
                         } else {
@@ -1158,6 +1244,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                                 dd("cur: '%c' (%d)", **src, **src);
 
                                 if (sre_read_char(src) != '}') {
+                                    locp->last = *src;
                                     return SRE_REGEX_TOKEN_BAD;
                                 }
                             }
@@ -1202,6 +1289,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     goto process_char;
 
                 case '\0':
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
 
                 default:
@@ -1219,6 +1307,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 if (seen_dash) {
                     range = sre_palloc(pool, sizeof(sre_regex_range_t));
                     if (range == NULL) {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -1241,6 +1330,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                 case 'd':
                     range = sre_palloc(pool, sizeof(sre_regex_range_t));
                     if (range == NULL) {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -1263,6 +1353,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_D_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -1286,6 +1377,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_w_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -1309,6 +1401,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_W_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -1332,6 +1425,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_s_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -1355,6 +1449,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_S_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -1378,6 +1473,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_v_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -1401,6 +1497,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_V_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -1424,6 +1521,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_h_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -1447,6 +1545,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     for (i = 0; i < sre_nelems(esc_H_ranges); i += 2) {
                         range = sre_palloc(pool, sizeof(sre_regex_range_t));
                         if (range == NULL) {
+                            locp->last = *src;
                             return SRE_REGEX_TOKEN_BAD;
                         }
 
@@ -1467,6 +1566,7 @@ yylex(YYSTYPE *lvalp, sre_pool_t *pool, u_char **src)
                     break;
 
                 default:
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -1487,6 +1587,7 @@ process_char:
                     last->to = c;
 
                     if (last->to < last->from) {
+                        locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
@@ -1501,6 +1602,7 @@ process_char:
 
                 range = sre_palloc(pool, sizeof(sre_regex_range_t));
                 if (range == NULL) {
+                    locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
                 }
 
@@ -1583,30 +1685,36 @@ cquant_parsed:
 
         if (from >= 500 || to >= 500) {
             dd("from or to too large: %d %d", from, to);
+            locp->last = *src;
             return SRE_REGEX_TOKEN_BAD;
         }
 
         if (to >= 0 && from > to) {
+            locp->last = *src;
             return SRE_REGEX_TOKEN_BAD;
         }
 
         if (from == 0) {
             if (to == 1) {
+                locp->last = *src;
                 return '?';
             }
 
             if (to == -1) {
+                locp->last = *src;
                 return '*';
             }
 
         } else if (from == 1) {
             if (to == -1) {
+                locp->last = *src;
                 return '+';
             }
         }
 
         lvalp->cquant.from = from;
         lvalp->cquant.to = to;
+        locp->last = *src;
         return SRE_REGEX_TOKEN_CQUANT;
 
     default:
@@ -1616,27 +1724,40 @@ cquant_parsed:
     dd("token char: %c(%d)", c, c);
 
     lvalp->ch = c;
+    locp->last = *src;
     return SRE_REGEX_TOKEN_CHAR;
 }
 
 
 static void
-yyerror(sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
-    sre_regex_t **parsed, char *s)
+yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
+    sre_regex_t **parsed, u_char **err_pos, char *msg)
 {
-    sre_regex_error("%s", s);
+    *err_pos = locp->pos;
 }
 
 
 sre_regex_t *
-sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags)
+sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags,
+    int *err_offset)
 {
+    u_char          *start, *err_pos = NULL;
     sre_regex_t     *re, *r;
     sre_regex_t     *parsed = NULL;
 
+    start = src;
     *ncaps = 0;
+    *err_offset = -1;
 
-    if (yyparse(pool, &src, ncaps, flags, &parsed) != SRE_OK) {
+    if (yyparse(pool, &src, ncaps, flags, &parsed, &err_pos) != SRE_OK) {
+        if (err_pos) {
+            *err_offset = (int) (err_pos - start);
+        }
+
+        return NULL;
+    }
+
+    if (parsed == NULL) {
         return NULL;
     }
 

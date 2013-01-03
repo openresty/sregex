@@ -263,7 +263,7 @@ _EOC_
     }
 
     if ($err) {
-        print $out "--- err\n[error] syntax error\n";
+        print $out "--- err_like: ^\\[error\\] syntax error at pos \\d+\$\n";
     }
 
     if ($re eq '^(a(b)?)+$' && $s eq 'aba') {

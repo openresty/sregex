@@ -363,24 +363,21 @@ __DATA__
 === TEST 60: re_tests:110
 --- re: a[b-a]
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 61: re_tests:111
 --- re: a[]b
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 62: re_tests:112
 --- re: a[
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -669,24 +666,21 @@ __DATA__
 === TEST 110: re_tests:167
 --- re: *a
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 111: re_tests:168
 --- re: (|*)b
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 112: re_tests:169
 --- re: (*)b
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -699,8 +693,7 @@ __DATA__
 === TEST 114: re_tests:171
 --- re: a\
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -731,16 +724,14 @@ __DATA__
 === TEST 119: re_tests:176
 --- re: abc)
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 120: re_tests:177
 --- re: (abc
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -771,8 +762,7 @@ __DATA__
 === TEST 125: re_tests:188
 --- re: a**
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -821,8 +811,7 @@ __DATA__
 === TEST 133: re_tests:200
 --- re: )(
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1087,24 +1076,21 @@ __DATA__
 === TEST 177: re_tests:285
 --- re: \g{1}
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 178: re_tests:287
 --- re: \g0
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 179: re_tests:289
 --- re: \g{0}
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1433,8 +1419,7 @@ __DATA__
 --- re: a[b-a]
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1442,8 +1427,7 @@ __DATA__
 --- re: a[]b
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1451,8 +1435,7 @@ __DATA__
 --- re: a[
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1537,8 +1520,7 @@ __DATA__
 --- re: *a
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1546,8 +1528,7 @@ __DATA__
 --- re: (|*)b
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1555,8 +1536,7 @@ __DATA__
 --- re: (*)b
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1571,8 +1551,7 @@ __DATA__
 --- re: a\
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1608,8 +1587,7 @@ __DATA__
 --- re: abc)
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1617,8 +1595,7 @@ __DATA__
 --- re: (abc
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1654,8 +1631,7 @@ __DATA__
 --- re: a**
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -1733,8 +1709,7 @@ __DATA__
 --- re: )(
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -2110,8 +2085,7 @@ __DATA__
 === TEST 321: re_tests:455
 --- re: (?
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -2202,8 +2176,7 @@ __DATA__
 === TEST 336: re_tests:483
 --- re: (?<%)b
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -2276,8 +2249,7 @@ __DATA__
 === TEST 348: re_tests:537
 --- re: a(?{)b
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -2368,8 +2340,7 @@ __DATA__
 === TEST 363: re_tests:615
 --- re: [a[:xyz:
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -2382,16 +2353,14 @@ __DATA__
 === TEST 365: re_tests:651
 --- re: a{37,17}
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 366: re_tests:652
 --- re: a{37,0}
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -3622,16 +3591,14 @@ __DATA__
 === TEST 570: re_tests:998
 --- re: x(?#
 --- s eval: "x"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 571: re_tests:999
 --- re: x(?#
 --- s eval: "x"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -3812,24 +3779,21 @@ __DATA__
 === TEST 601: re_tests:1084
 --- re: (?P<=n>foo|bar|baz)
 --- s eval: "snofooewa"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 602: re_tests:1085
 --- re: (?P<!n>foo|bar|baz)
 --- s eval: "snofooewa"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 603: re_tests:1086
 --- re: (?PX<n>foo|bar|baz)
 --- s eval: "snofooewa"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -3944,144 +3908,126 @@ __DATA__
 === TEST 622: re_tests:1270
 --- re: (?''foo) bar
 --- s eval: "..foo bar.."
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 623: re_tests:1271
 --- re: (?<>foo) bar
 --- s eval: "..foo bar.."
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 624: re_tests:1272
 --- re: foo \k'n'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 625: re_tests:1273
 --- re: foo \k<n>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 626: re_tests:1274
 --- re: foo \k'a1'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 627: re_tests:1275
 --- re: foo \k<a1>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 628: re_tests:1276
 --- re: foo \k'_'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 629: re_tests:1277
 --- re: foo \k<_>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 630: re_tests:1278
 --- re: foo \k'_0_'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 631: re_tests:1279
 --- re: foo \k<_0_>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 632: re_tests:1280
 --- re: foo \k'0'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 633: re_tests:1281
 --- re: foo \k<0>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 634: re_tests:1282
 --- re: foo \k'12'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 635: re_tests:1283
 --- re: foo \k<12>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 636: re_tests:1284
 --- re: foo \k'1a'
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 637: re_tests:1285
 --- re: foo \k<1a>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 638: re_tests:1286
 --- re: foo \k''
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 639: re_tests:1287
 --- re: foo \k<>
 --- s eval: "foo foo"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -4284,8 +4230,7 @@ __DATA__
 === TEST 672: re_tests:1426
 --- re: [abc\N\{U+BEEF}]
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -4304,8 +4249,7 @@ __DATA__
 === TEST 675: re_tests:1437
 --- re: abc\N{def
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 --- SKIP
 
 
@@ -4313,8 +4257,7 @@ __DATA__
 === TEST 676: re_tests:1447
 --- re: abc\N{def
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 --- SKIP
 
 

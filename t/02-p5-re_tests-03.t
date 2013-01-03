@@ -63,24 +63,21 @@ __DATA__
 === TEST 10: re_tests:167
 --- re: *a
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 11: re_tests:168
 --- re: (|*)b
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 12: re_tests:169
 --- re: (*)b
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -93,8 +90,7 @@ __DATA__
 === TEST 14: re_tests:171
 --- re: a\
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -125,16 +121,14 @@ __DATA__
 === TEST 19: re_tests:176
 --- re: abc)
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 20: re_tests:177
 --- re: (abc
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -165,8 +159,7 @@ __DATA__
 === TEST 25: re_tests:188
 --- re: a**
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -215,8 +208,7 @@ __DATA__
 === TEST 33: re_tests:200
 --- re: )(
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 

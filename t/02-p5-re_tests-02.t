@@ -63,24 +63,21 @@ __DATA__
 === TEST 10: re_tests:110
 --- re: a[b-a]
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 11: re_tests:111
 --- re: a[]b
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 12: re_tests:112
 --- re: a[
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 

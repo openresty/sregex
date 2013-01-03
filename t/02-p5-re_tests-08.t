@@ -81,8 +81,7 @@ __DATA__
 === TEST 13: re_tests:615
 --- re: [a[:xyz:
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -95,16 +94,14 @@ __DATA__
 === TEST 15: re_tests:651
 --- re: a{37,17}
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
 === TEST 16: re_tests:652
 --- re: a{37,0}
 --- s eval: "-"
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 

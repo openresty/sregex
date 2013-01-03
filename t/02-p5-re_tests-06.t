@@ -38,8 +38,7 @@ __DATA__
 --- re: a**
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -117,8 +116,7 @@ __DATA__
 --- re: )(
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 

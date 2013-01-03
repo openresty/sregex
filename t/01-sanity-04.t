@@ -46,7 +46,7 @@ __DATA__
 --- re: \x{0a
 --- s eval: "a\nb"
 --- err
-[error] syntax error
+[error] syntax error at pos 0
 
 
 
@@ -144,7 +144,7 @@ __DATA__
 --- re: [\o{1
 --- s eval: "a\1b"
 --- err
-[error] syntax error
+[error] syntax error at pos 0
 
 
 
@@ -152,7 +152,7 @@ __DATA__
 --- re: \o12
 --- s eval: "a\nb"
 --- err
-[error] syntax error
+[error] syntax error at pos 0
 
 
 
@@ -160,7 +160,7 @@ __DATA__
 --- re: \o{12
 --- s eval: "a\nb"
 --- err
-[error] syntax error
+[error] syntax error at pos 0
 
 
 
@@ -252,7 +252,7 @@ __DATA__
 --- re: \c
 --- s eval: "a\0028"
 --- err
-[error] syntax error
+[error] syntax error at pos 0
 
 
 
@@ -272,7 +272,7 @@ __DATA__
 --- re: [\c]
 --- s eval: "a\0028"
 --- err
-[error] syntax error
+[error] syntax error at pos 0
 
 
 
@@ -292,7 +292,7 @@ __DATA__
 --- re: a{1,0}
 --- s: a
 --- err
-[error] syntax error
+[error] syntax error at pos 1
 
 
 
@@ -300,7 +300,7 @@ __DATA__
 --- re: \
 --- s: a
 --- err
-[error] syntax error
+[error] syntax error at pos 0
 
 
 
@@ -308,7 +308,7 @@ __DATA__
 --- re: [D-C]
 --- s: a
 --- err
-[error] syntax error
+[error] syntax error at pos 0
 
 
 
@@ -316,7 +316,7 @@ __DATA__
 --- re: a++
 --- s: a
 --- err
-[error] syntax error
+[error] syntax error at pos 2
 
 
 
@@ -324,7 +324,7 @@ __DATA__
 --- re: a*+
 --- s: a
 --- err
-[error] syntax error
+[error] syntax error at pos 2
 
 
 

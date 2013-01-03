@@ -185,8 +185,7 @@ __DATA__
 --- re: a[b-a]
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -194,8 +193,7 @@ __DATA__
 --- re: a[]b
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -203,8 +201,7 @@ __DATA__
 --- re: a[
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -289,8 +286,7 @@ __DATA__
 --- re: *a
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -298,8 +294,7 @@ __DATA__
 --- re: (|*)b
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -307,8 +302,7 @@ __DATA__
 --- re: (*)b
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -323,8 +317,7 @@ __DATA__
 --- re: a\
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -360,8 +353,7 @@ __DATA__
 --- re: abc)
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
@@ -369,8 +361,7 @@ __DATA__
 --- re: (abc
 --- s eval: "-"
 --- flags: i
---- err
-[error] syntax error
+--- err_like: ^\[error\] syntax error at pos \d+$
 
 
 
