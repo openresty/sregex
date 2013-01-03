@@ -13,8 +13,8 @@
 #include <sregex/ddebug.h>
 
 
-#include <sregex/sre_vm_pike.h>
 #include <sregex/sre_capture.h>
+#include <sregex/sre_vm_bytecode.h>
 
 
 #define sre_vm_pike_free_thread(ctx, t)                                     \
@@ -46,7 +46,7 @@ typedef struct {
 struct sre_vm_pike_ctx_s {
     unsigned                 tag;
     sre_int_t                processed_bytes;
-    u_char                  *buffer;
+    sre_char                *buffer;
     sre_pool_t              *pool;
     sre_program_t           *program;
     sre_capture_t           *matched;
@@ -128,10 +128,10 @@ sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog,
 
 
 sre_int_t
-sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
+sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
     unsigned eof)
 {
-    u_char                    *sp, *last, *p;
+    sre_char                  *sp, *last, *p;
     sre_int_t                  rc;
     sre_uint_t                 i;
     unsigned                   seen_word, in;
@@ -721,7 +721,7 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
         case SRE_REGEX_ASSERTION_SMALL_B:
         case SRE_REGEX_ASSERTION_BIG_B:
             {
-                u_char c;
+                sre_char c;
 
                 if (pos == 0) {
                     seen_word = 0;

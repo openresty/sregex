@@ -60,7 +60,7 @@ extern int yydebug;
 typedef union YYSTYPE
 {
 /* Line 2058 of yacc.c  */
-#line 79 "src/sregex/sre_yyparser.y"
+#line 80 "src/sregex/sre_yyparser.y"
 
     sre_regex_t         *re;
     u_char               ch;

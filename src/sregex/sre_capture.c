@@ -14,12 +14,13 @@
 
 
 #include <sregex/sre_capture.h>
+#include <stdio.h>
 
 
 sre_capture_t *
 sre_capture_create(sre_pool_t *pool, size_t ovecsize, unsigned clear)
 {
-    u_char              *p;
+    sre_char            *p;
     sre_capture_t       *cap;
 
     p = sre_pnalloc(pool, sizeof(sre_capture_t) + ovecsize);

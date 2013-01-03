@@ -28,8 +28,8 @@ typedef enum {
 
 
 typedef struct {
-    u_char      from;
-    u_char      to;
+    sre_char      from;
+    sre_char      to;
 } sre_vm_range_t;
 
 
@@ -50,7 +50,7 @@ struct sre_instruction_s {
     unsigned                 tag;
 
     union {
-        u_char                  ch;
+        sre_char                ch;
         sre_vm_ranges_t        *ranges;
         sre_uint_t              group; /* capture group */
         unsigned                greedy;  /* :1 */
@@ -59,14 +59,11 @@ struct sre_instruction_s {
 };
 
 
-typedef struct {
+struct sre_program_s {
     sre_instruction_t   *start;
     sre_uint_t           len;
     unsigned             tag;
-} sre_program_t;
-
-
-void sre_program_dump(sre_program_t *prog);
+};
 
 
 #endif /* _SRE_BYTECODE_H_INCLUDED_ */

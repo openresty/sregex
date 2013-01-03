@@ -34,7 +34,7 @@ lib_o_files= $(patsubst %.c,%.o,$(lib_c_files))
 h_files= $(wildcard src/sregex/*.h)
 plist_vfiles= $(patsubst src/sregex/%.c,%.plist,$(lib_c_files))
 
-INSTALL_H_FILES= $(filter-out src/sregex/sre_yyparser.h src/sregex/sre_capture.h,$(h_files))
+INSTALL_H_FILES= src/sregex/sregex.h src/sregex/ddebug.h
 
 .PHONY: all clean test val install uninstall
 .PRECIOUS: src/sre_regex_parser.c

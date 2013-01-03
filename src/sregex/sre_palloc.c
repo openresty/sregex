@@ -37,8 +37,8 @@ sre_create_pool(size_t size)
     }
 
 #if !(SRE_USE_VALGRIND)
-    p->d.last = (u_char *) p + sizeof(sre_pool_t);
-    p->d.end = (u_char *) p + size;
+    p->d.last = (uint8_t *) p + sizeof(sre_pool_t);
+    p->d.end = (uint8_t *) p + size;
     p->d.next = NULL;
     p->d.failed = 0;
 
@@ -140,7 +140,7 @@ sre_reset_pool(sre_pool_t *pool)
 
 #if !(SRE_USE_VALGRIND)
     for (p = pool; p; p = p->d.next) {
-        p->d.last = (u_char *) p + sizeof(sre_pool_t);
+        p->d.last = (uint8_t *) p + sizeof(sre_pool_t);
     }
 #endif
 }
@@ -150,7 +150,7 @@ void *
 sre_palloc(sre_pool_t *pool, size_t size)
 {
 #if !(SRE_USE_VALGRIND)
-    u_char      *m;
+    uint8_t     *m;
     sre_pool_t  *p;
 
     if (size <= pool->max) {
@@ -182,7 +182,7 @@ void *
 sre_pnalloc(sre_pool_t *pool, size_t size)
 {
 #if !(SRE_USE_VALGRIND)
-    u_char      *m;
+    uint8_t     *m;
     sre_pool_t  *p;
 
     if (size <= pool->max) {
@@ -214,11 +214,11 @@ sre_pnalloc(sre_pool_t *pool, size_t size)
 static void *
 sre_palloc_block(sre_pool_t *pool, size_t size)
 {
-    u_char      *m;
+    uint8_t     *m;
     size_t       psize;
     sre_pool_t  *p, *new, *current;
 
-    psize = (size_t) (pool->d.end - (u_char *) pool);
+    psize = (size_t) (pool->d.end - (uint8_t *) pool);
 
     m = sre_memalign(SRE_POOL_ALIGNMENT, psize);
     if (m == NULL) {

@@ -15,8 +15,9 @@
 #include <sregex/ddebug.h>
 
 
-#include <sregex/sre_regex_parser.h>
 #include <sregex/sre_palloc.h>
+#include <sregex/sre_capture.h>
+#include <sregex/sre_regex.h>
 
 
 #define YYLTYPE YYLTYPE

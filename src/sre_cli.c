@@ -15,10 +15,12 @@
 
 #include <sregex/sregex.h>
 #include <assert.h>
+#include <string.h>
+#include <stdio.h>
 
 
 static void usage(void);
-static void process_string(u_char *s, size_t len, sre_program_t *prog,
+static void process_string(sre_char *s, size_t len, sre_program_t *prog,
     sre_int_t *ovector, size_t ovecsize, sre_uint_t ncaps);
 
 
@@ -35,7 +37,7 @@ main(int argc, char **argv)
     sre_uint_t           ncaps;
     sre_int_t           *ovector;
     size_t               ovecsize;
-    u_char              *s, *p;
+    sre_char            *s, *p;
     size_t               len;
     unsigned             from_stdin = 0;
 
@@ -65,7 +67,7 @@ main(int argc, char **argv)
         return 2;
     }
 
-    re = sre_regex_parse(ppool, (u_char *) argv[i], &ncaps, flags, &err_offset);
+    re = sre_regex_parse(ppool, (sre_char *) argv[i], &ncaps, flags, &err_offset);
     if (re == NULL) {
         if (err_offset >= 0) {
             fprintf(stderr, "[error] syntax error at pos %lld\n",
@@ -136,7 +138,7 @@ main(int argc, char **argv)
 
         for (; i < argc; i++) {
             len = strlen(argv[i]);
-            p = (u_char *) argv[i];
+            p = (sre_char *) argv[i];
 
             s = malloc(len);
             if (s == NULL) {
@@ -160,12 +162,12 @@ main(int argc, char **argv)
 
 
 static void
-process_string(u_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
+process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
     size_t ovecsize, sre_uint_t ncaps)
 {
     sre_uint_t                   i, j;
     sre_int_t                    rc;
-    u_char                      *p;
+    sre_char                    *p;
     unsigned                     gen_empty_buf;
     sre_pool_t                  *pool;
     sre_vm_pike_ctx_t           *pctx;

@@ -13,7 +13,8 @@
 #include <sregex/ddebug.h>
 
 
-#include <sregex/sre_vm_thompson.h>
+#include <sregex/sre_capture.h>
+#include <sregex/sre_vm_bytecode.h>
 
 
 typedef struct {
@@ -32,7 +33,7 @@ struct sre_vm_thompson_ctx_s {
     sre_pool_t          *pool;
     sre_program_t       *program;
     unsigned             tag;
-    u_char              *buffer;
+    sre_char            *buffer;
 
     sre_vm_thompson_thread_list_t       *current_threads;
     sre_vm_thompson_thread_list_t       *next_threads;
@@ -42,7 +43,7 @@ struct sre_vm_thompson_ctx_s {
 
 
 static void sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
-    sre_vm_thompson_thread_list_t *l, sre_instruction_t *pc, u_char *sp);
+    sre_vm_thompson_thread_list_t *l, sre_instruction_t *pc, sre_char *sp);
 static sre_vm_thompson_thread_list_t *sre_vm_thompson_thread_list_create(
     sre_pool_t *pool, sre_uint_t size);
 
@@ -87,10 +88,10 @@ sre_vm_thompson_create_ctx(sre_pool_t *pool, sre_program_t *prog)
 
 
 sre_int_t
-sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, u_char *input, size_t size,
+sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, sre_char *input, size_t size,
     unsigned eof)
 {
-    u_char                          *sp, *last;
+    sre_char                        *sp, *last;
     sre_uint_t                       i, j;
     unsigned                         in;
     sre_program_t                   *prog;
@@ -289,7 +290,7 @@ assertion_hold:
 
 static void
 sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
-    sre_vm_thompson_thread_list_t *l, sre_instruction_t *pc, u_char *sp)
+    sre_vm_thompson_thread_list_t *l, sre_instruction_t *pc, sre_char *sp)
 {
     sre_vm_thompson_thread_t        *t;
     unsigned                         seen_word = 0;
@@ -362,7 +363,7 @@ sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
 static sre_vm_thompson_thread_list_t *
 sre_vm_thompson_thread_list_create(sre_pool_t *pool, sre_uint_t size)
 {
-    u_char                              *p;
+    sre_char                            *p;
     sre_vm_thompson_thread_list_t       *l;
 
     p = sre_pnalloc(pool, sizeof(sre_vm_thompson_thread_list_t)

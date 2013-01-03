@@ -8,6 +8,7 @@
 
 
 #include <sregex/sre_regex.h>
+#include <stdio.h>
 
 
 sre_regex_t *
@@ -163,7 +164,7 @@ sre_regex_dump(sre_regex_t *r)
 sre_regex_range_t *
 sre_regex_turn_char_class_caseless(sre_pool_t *pool, sre_regex_range_t *range)
 {
-    u_char                from, to;
+    sre_char              from, to;
     sre_regex_range_t    *r, *nr;
 
     for (r = range; r; r = r->next) {

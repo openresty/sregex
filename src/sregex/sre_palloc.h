@@ -9,6 +9,7 @@
 #define _SRE_PALLOC_H_INCLUDED_
 
 
+#include <sregex/sregex.h>
 #include <sregex/sre_core.h>
 
 
@@ -32,8 +33,8 @@
 #endif
 
 #define ngx_align(d, a)     (((d) + (a - 1)) & ~(a - 1))
-#define sre_align_ptr(p, a)                                                   \
-    (u_char *) (((uintptr_t) (p) + ((uintptr_t) a - 1)) & ~((uintptr_t) a - 1))
+#define sre_align_ptr(p, a)                                                  \
+    (uint8_t *) (((uintptr_t) (p) + ((uintptr_t) a - 1)) & ~((uintptr_t) a - 1))
 
 
 typedef void (*sre_pool_cleanup_pt)(void *data);
@@ -55,13 +56,10 @@ struct sre_pool_large_s {
 };
 
 
-typedef struct sre_pool_s  sre_pool_t;
-
-
 #if !(SRE_USE_VALGRIND)
 typedef struct {
-    u_char               *last;
-    u_char               *end;
+    sre_char             *last;
+    sre_char             *end;
     sre_pool_t           *next;
     unsigned              failed;
 } sre_pool_data_t;

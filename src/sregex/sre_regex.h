@@ -15,14 +15,6 @@
 #include <sregex/sre_palloc.h>
 
 
-typedef struct sre_regex_s  sre_regex_t;
-
-
-enum {
-    SRE_REGEX_CASELESS = 1
-} sre_regex_flag_t;
-
-
 typedef enum {
     SRE_REGEX_TYPE_NIL      = 0,
     SRE_REGEX_TYPE_ALT      = 1,
@@ -52,8 +44,8 @@ typedef enum {
 typedef struct sre_regex_range_s  sre_regex_range_t;
 
 struct sre_regex_range_s {
-    u_char               from;
-    u_char               to;
+    sre_char             from;
+    sre_char             to;
     sre_regex_range_t   *next;
 };
 
@@ -70,7 +62,7 @@ struct sre_regex_s {
     sre_regex_type_t     type;
     sre_regex_t         *left;
     sre_regex_t         *right;
-    u_char               ch;
+    sre_char             ch;
     sre_regex_range_t   *range;
     unsigned             group;
     unsigned             greedy; /* :1 */
@@ -81,7 +73,6 @@ struct sre_regex_s {
 
 sre_regex_t *sre_regex_create(sre_pool_t *pool, sre_regex_type_t type,
     sre_regex_t *left, sre_regex_t *right);
-void sre_regex_dump(sre_regex_t *re);
 sre_regex_range_t * sre_regex_turn_char_class_caseless(sre_pool_t *pool,
         sre_regex_range_t *range);
 

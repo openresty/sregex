@@ -7,7 +7,8 @@
  */
 
 
-#include "sregex/sre_vm_bytecode.h"
+#include <sregex/sre_vm_bytecode.h>
+#include <stdio.h>
 
 
 void

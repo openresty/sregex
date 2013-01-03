@@ -9,27 +9,13 @@
 #define _SRE_CORE_H_INCLUDED_
 
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <sregex/sregex.h>
 #include <string.h>
 
 
 #ifndef SRE_USE_VALGRIND
 #define SRE_USE_VALGRIND  0
 #endif
-
-#ifndef u_char
-#define u_char  uint8_t
-#endif
-
-#define  SRE_OK          0
-#define  SRE_ERROR      -1
-#define  SRE_AGAIN      -2
-#define  SRE_BUSY       -3
-#define  SRE_DONE       -4
-#define  SRE_DECLINED   -5
 
 
 #define SRE_UNSET_PTR   (void *) -1

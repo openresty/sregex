@@ -13,7 +13,7 @@
 #include <sregex/ddebug.h>
 
 
-#include <sregex/sre_regex_compiler.h>
+#include <sregex/sre_vm_bytecode.h>
 
 
 static sre_uint_t sre_program_len(sre_regex_t *r);
@@ -27,7 +27,7 @@ sre_program_t *
 sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
 {
     sre_uint_t           n;
-    u_char              *p;
+    sre_char            *p;
     sre_program_t       *prog;
     sre_instruction_t   *pc;
 
@@ -282,7 +282,7 @@ static sre_int_t
 sre_regex_compiler_add_char_class(sre_pool_t *pool, sre_instruction_t *pc,
     sre_regex_range_t *range)
 {
-    u_char               *p;
+    sre_char             *p;
     sre_uint_t            i, n;
     sre_regex_range_t    *r;
 
