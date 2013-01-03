@@ -17,7 +17,7 @@
 
 
 sre_capture_t *
-sre_capture_create(sre_pool_t *pool, unsigned ovecsize, unsigned clear)
+sre_capture_create(sre_pool_t *pool, size_t ovecsize, unsigned clear)
 {
     u_char              *p;
     sre_capture_t       *cap;
@@ -34,7 +34,7 @@ sre_capture_create(sre_pool_t *pool, unsigned ovecsize, unsigned clear)
     cap->next = NULL;
 
     p += sizeof(sre_capture_t);
-    cap->vector = (int *) p;
+    cap->vector = (sre_int_t *) p;
 
     if (clear) {
         (void) memset(cap->vector, -1, ovecsize);
@@ -45,8 +45,8 @@ sre_capture_create(sre_pool_t *pool, unsigned ovecsize, unsigned clear)
 
 
 sre_capture_t *
-sre_capture_update(sre_pool_t *pool, sre_capture_t *cap, unsigned group,
-    int pos, sre_capture_t **freecap)
+sre_capture_update(sre_pool_t *pool, sre_capture_t *cap, sre_uint_t group,
+    sre_int_t pos, sre_capture_t **freecap)
 {
     sre_capture_t       *newcap;
 
@@ -85,12 +85,12 @@ sre_capture_update(sre_pool_t *pool, sre_capture_t *cap, unsigned group,
 void
 sre_capture_dump(sre_capture_t *cap)
 {
-    unsigned            i, n;
+    sre_uint_t            i, n;
 
-    n = cap->ovecsize / sizeof(int);
+    n = cap->ovecsize / sizeof(sre_int_t);
 
     for (i = 0; i < n; i += 2) {
-        fprintf(stderr, " (%d, %d)", cap->vector[i], cap->vector[i + 1]);
+        fprintf(stderr, " (%lld, %lld)", (long long) cap->vector[i],
+                (long long) cap->vector[i + 1]);
     }
 }
-

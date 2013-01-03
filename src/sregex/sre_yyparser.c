@@ -103,7 +103,7 @@ typedef struct YYLTYPE {
 
 
 static int yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src);
-static void yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
+static void yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags,
     sre_regex_t **parsed, u_char **err_pos, char *s);
 static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
     sre_regex_t *subj, sre_regex_cquant_t *cquant, unsigned greedy);
@@ -164,7 +164,7 @@ typedef union YYSTYPE
 
     sre_regex_t         *re;
     u_char               ch;
-    unsigned             group;
+    sre_uint_t           group;
     sre_regex_cquant_t   cquant;
 
 
@@ -198,7 +198,7 @@ int yyparse ();
 #endif
 #else /* ! YYPARSE_PARAM */
 #if defined __STDC__ || defined __cplusplus
-int yyparse (sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos);
+int yyparse (sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos);
 #else
 int yyparse ();
 #endif
@@ -791,7 +791,7 @@ do {									  \
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
 #else
 static void
 yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, pool, src, ncaps, flags, parsed, err_pos)
@@ -801,7 +801,7 @@ yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, pool, src, ncaps
     YYLTYPE const * const yylocationp;
     sre_pool_t *pool;
     u_char **src;
-    unsigned *ncaps;
+    sre_uint_t *ncaps;
     int flags;
     sre_regex_t **parsed;
     u_char **err_pos;
@@ -839,7 +839,7 @@ yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, pool, src, ncaps
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
 #else
 static void
 yy_symbol_print (yyoutput, yytype, yyvaluep, yylocationp, pool, src, ncaps, flags, parsed, err_pos)
@@ -849,7 +849,7 @@ yy_symbol_print (yyoutput, yytype, yyvaluep, yylocationp, pool, src, ncaps, flag
     YYLTYPE const * const yylocationp;
     sre_pool_t *pool;
     u_char **src;
-    unsigned *ncaps;
+    sre_uint_t *ncaps;
     int flags;
     sre_regex_t **parsed;
     u_char **err_pos;
@@ -905,7 +905,7 @@ do {								\
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_reduce_print (YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
+yy_reduce_print (YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule, sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
 #else
 static void
 yy_reduce_print (yyvsp, yylsp, yyrule, pool, src, ncaps, flags, parsed, err_pos)
@@ -914,7 +914,7 @@ yy_reduce_print (yyvsp, yylsp, yyrule, pool, src, ncaps, flags, parsed, err_pos)
     int yyrule;
     sre_pool_t *pool;
     u_char **src;
-    unsigned *ncaps;
+    sre_uint_t *ncaps;
     int flags;
     sre_regex_t **parsed;
     u_char **err_pos;
@@ -1219,7 +1219,7 @@ yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocationp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
+yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocationp, sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
 #else
 static void
 yydestruct (yymsg, yytype, yyvaluep, yylocationp, pool, src, ncaps, flags, parsed, err_pos)
@@ -1229,7 +1229,7 @@ yydestruct (yymsg, yytype, yyvaluep, yylocationp, pool, src, ncaps, flags, parse
     YYLTYPE *yylocationp;
     sre_pool_t *pool;
     u_char **src;
-    unsigned *ncaps;
+    sre_uint_t *ncaps;
     int flags;
     sre_regex_t **parsed;
     u_char **err_pos;
@@ -1277,13 +1277,13 @@ yyparse (YYPARSE_PARAM)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 int
-yyparse (sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
+yyparse (sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos)
 #else
 int
 yyparse (pool, src, ncaps, flags, parsed, err_pos)
     sre_pool_t *pool;
     u_char **src;
-    unsigned *ncaps;
+    sre_uint_t *ncaps;
     int flags;
     sre_regex_t **parsed;
     u_char **err_pos;
@@ -2115,7 +2115,8 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
 {
     u_char               c;
     int                  from, to;
-    unsigned             i, n, num, seen_dash, no_dash, seen_curly_bracket;
+    sre_uint_t           i, n, num;
+    unsigned             seen_dash, no_dash, seen_curly_bracket;
     sre_regex_t         *r;
     sre_regex_range_t   *range, *last = NULL;
     sre_regex_type_t     type;
@@ -3506,7 +3507,7 @@ cquant_parsed:
 
 
 static void
-yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
+yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags,
     sre_regex_t **parsed, u_char **err_pos, char *msg)
 {
     *err_pos = locp->pos;
@@ -3514,8 +3515,8 @@ yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flag
 
 
 sre_regex_t *
-sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags,
-    int *err_offset)
+sre_regex_parse(sre_pool_t *pool, u_char *src, sre_uint_t *ncaps, int flags,
+    sre_int_t *err_offset)
 {
     u_char          *start, *err_pos = NULL;
     sre_regex_t     *re, *r;
@@ -3527,7 +3528,7 @@ sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags,
 
     if (yyparse(pool, &src, ncaps, flags, &parsed, &err_pos) != SRE_OK) {
         if (err_pos) {
-            *err_offset = (int) (err_pos - start);
+            *err_offset = (sre_int_t) (err_pos - start);
         }
 
         return NULL;

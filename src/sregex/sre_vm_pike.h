@@ -20,9 +20,9 @@ typedef struct sre_vm_pike_ctx_s  sre_vm_pike_ctx_t;
 
 
 sre_vm_pike_ctx_t *sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog,
-    int *ovector, unsigned ovecsize);
+    sre_int_t *ovector, size_t ovecsize);
 
-int sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t len,
+sre_int_t sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t len,
     unsigned eof);
 
 

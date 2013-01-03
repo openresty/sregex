@@ -16,17 +16,17 @@
 #include <sregex/sre_regex_compiler.h>
 
 
-static unsigned sre_program_len(sre_regex_t *r);
+static sre_uint_t sre_program_len(sre_regex_t *r);
 static sre_instruction_t *sre_regex_emit_bytecode(sre_pool_t *pool,
     sre_instruction_t *pc, sre_regex_t *re);
-static int sre_regex_compiler_add_char_class(sre_pool_t *pool,
+static sre_int_t sre_regex_compiler_add_char_class(sre_pool_t *pool,
     sre_instruction_t *pc, sre_regex_range_t *range);
 
 
 sre_program_t *
 sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
 {
-    unsigned             n;
+    sre_uint_t           n;
     u_char              *p;
     sre_program_t       *prog;
     sre_instruction_t   *pc;
@@ -64,7 +64,7 @@ sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
 }
 
 
-static unsigned
+static sre_uint_t
 sre_program_len(sre_regex_t *r)
 {
     switch(r->type) {
@@ -278,12 +278,12 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
 }
 
 
-static int
+static sre_int_t
 sre_regex_compiler_add_char_class(sre_pool_t *pool, sre_instruction_t *pc,
     sre_regex_range_t *range)
 {
     u_char               *p;
-    unsigned              i, n;
+    sre_uint_t            i, n;
     sre_regex_range_t    *r;
 
     n = 0;
@@ -311,4 +311,3 @@ sre_regex_compiler_add_char_class(sre_pool_t *pool, sre_instruction_t *pc,
 
     return SRE_OK;
 }
-

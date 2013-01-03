@@ -13,7 +13,7 @@
 void
 sre_program_dump(sre_program_t *prog)
 {
-    unsigned                i;
+    sre_uint_t              i;
     sre_vm_range_t         *range;
     sre_instruction_t      *pc, *start, *end;
 
@@ -67,7 +67,7 @@ sre_program_dump(sre_program_t *prog)
             break;
 
         case SRE_OPCODE_SAVE:
-            printf("%2d. save %d\n", (int) (pc - start), pc->v.group);
+            printf("%2d. save %d\n", (int) (pc - start), (int) pc->v.group);
             break;
 
         case SRE_OPCODE_ASSERT:

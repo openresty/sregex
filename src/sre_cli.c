@@ -19,22 +19,22 @@
 
 static void usage(void);
 static void process_string(u_char *s, size_t len, sre_program_t *prog,
-    int *ovector, unsigned ovecsize, unsigned ncaps);
+    sre_int_t *ovector, size_t ovecsize, sre_uint_t ncaps);
 
 
 int
 main(int argc, char **argv)
 {
-    int                  i, n;
+    sre_uint_t           i, n;
     int                  flags = 0;
-    int                  err_offset = -1;
+    sre_int_t            err_offset = -1;
     sre_pool_t          *ppool; /* parser pool */
     sre_pool_t          *cpool; /* compiler pool */
     sre_regex_t         *re;
     sre_program_t       *prog;
-    unsigned             ncaps;
-    int                 *ovector;
-    unsigned             ovecsize;
+    sre_uint_t           ncaps;
+    sre_int_t           *ovector;
+    size_t               ovecsize;
     u_char              *s, *p;
     size_t               len;
     unsigned             from_stdin = 0;
@@ -68,7 +68,8 @@ main(int argc, char **argv)
     re = sre_regex_parse(ppool, (u_char *) argv[i], &ncaps, flags, &err_offset);
     if (re == NULL) {
         if (err_offset >= 0) {
-            fprintf(stderr, "[error] syntax error at pos %d\n", err_offset);
+            fprintf(stderr, "[error] syntax error at pos %lld\n",
+                    (long long) err_offset);
         }
 
         fprintf(stderr, "unknown error\n");
@@ -80,7 +81,7 @@ main(int argc, char **argv)
     sre_regex_dump(re);
     printf("\n");
 
-    printf("captures: %d\n", ncaps);
+    printf("captures: %ld\n", (long) ncaps);
 
     cpool = sre_create_pool(1024);
     if (cpool == NULL) {
@@ -98,7 +99,7 @@ main(int argc, char **argv)
 
     sre_program_dump(prog);
 
-    ovecsize = 2 * (ncaps + 1) * sizeof(int);
+    ovecsize = 2 * (ncaps + 1) * sizeof(sre_int_t);
     ovector = sre_palloc(cpool, ovecsize);
     if (ovector == NULL) {
         return 2;
@@ -119,8 +120,8 @@ main(int argc, char **argv)
 
             n = fread(s, 1, len, stdin);
             if (n < len) {
-                fprintf(stderr, "failed to read %d bytes of string from "
-                        "stdin (only read %d bytes).", (int) len, n);
+                fprintf(stderr, "failed to read %ld bytes of string from "
+                        "stdin (only read %ld bytes).", (long) len, (long) n);
 
                 free(s);
                 return 2;
@@ -159,10 +160,11 @@ main(int argc, char **argv)
 
 
 static void
-process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
-    unsigned ovecsize, unsigned ncaps)
+process_string(u_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
+    size_t ovecsize, sre_uint_t ncaps)
 {
-    int                          i, j, rc;
+    sre_uint_t                   i, j;
+    sre_int_t                    rc;
     u_char                      *p;
     unsigned                     gen_empty_buf;
     sre_pool_t                  *pool;
@@ -274,7 +276,7 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
         printf("match");
 
         for (i = 0; i < 2 * (ncaps + 1); i += 2) {
-            printf(" (%d, %d)", ovector[i], ovector[i + 1]);
+            printf(" (%ld, %ld)", (long) ovector[i], (long) ovector[i + 1]);
         }
 
         printf("\n");
@@ -323,7 +325,8 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
             if (rc == SRE_AGAIN) {
                 printf("[");
                 for (j = 0; j < 2 * (ncaps + 1); j += 2) {
-                    printf("(%d, %d)", ovector[j], ovector[j + 1]);
+                    printf("(%ld, %ld)", (long) ovector[j],
+                           (long) ovector[j + 1]);
                 }
                 printf("] ");
             }
@@ -339,7 +342,7 @@ process_string(u_char *s, size_t len, sre_program_t *prog, int *ovector,
             printf("match");
 
             for (j = 0; j < 2 * (ncaps + 1); j += 2) {
-                printf(" (%d, %d)", ovector[j], ovector[j + 1]);
+                printf(" (%ld, %ld)", (long) ovector[j], (long) ovector[j + 1]);
             }
 
             printf("\n");

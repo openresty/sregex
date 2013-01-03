@@ -26,16 +26,16 @@ typedef struct sre_capture_s  sre_capture_t;
 
 struct sre_capture_s {
     unsigned         ref;  /* reference count */
-    unsigned         ovecsize;
-    int             *vector;
+    size_t           ovecsize;
+    sre_int_t       *vector;
     sre_capture_t   *next;
 };
 
 
-sre_capture_t *sre_capture_create(sre_pool_t *pool, unsigned ovecsize,
+sre_capture_t *sre_capture_create(sre_pool_t *pool, size_t ovecsize,
     unsigned clear);
 sre_capture_t *sre_capture_update(sre_pool_t *pool, sre_capture_t *cap,
-    unsigned group, int pos, sre_capture_t **freecap);
+    sre_uint_t group, sre_int_t pos, sre_capture_t **freecap);
 void sre_capture_dump(sre_capture_t *cap);
 
 

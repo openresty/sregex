@@ -46,7 +46,7 @@ typedef struct YYLTYPE {
 
 
 static int yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src);
-static void yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
+static void yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags,
     sre_regex_t **parsed, u_char **err_pos, char *s);
 static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
     sre_regex_t *subj, sre_regex_cquant_t *cquant, unsigned greedy);
@@ -67,7 +67,7 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
 
 %parse-param {sre_pool_t *pool}
 %parse-param {u_char **src}
-%parse-param {unsigned *ncaps}
+%parse-param {sre_uint_t *ncaps}
 %parse-param {int flags}
 %parse-param {sre_regex_t **parsed}
 %parse-param {u_char **err_pos}
@@ -79,7 +79,7 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
 %union {
     sre_regex_t         *re;
     u_char               ch;
-    unsigned             group;
+    sre_uint_t           group;
     sre_regex_cquant_t   cquant;
 }
 
@@ -339,7 +339,8 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
 {
     u_char               c;
     int                  from, to;
-    unsigned             i, n, num, seen_dash, no_dash, seen_curly_bracket;
+    sre_uint_t           i, n, num;
+    unsigned             seen_dash, no_dash, seen_curly_bracket;
     sre_regex_t         *r;
     sre_regex_range_t   *range, *last = NULL;
     sre_regex_type_t     type;
@@ -1730,7 +1731,7 @@ cquant_parsed:
 
 
 static void
-yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flags,
+yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags,
     sre_regex_t **parsed, u_char **err_pos, char *msg)
 {
     *err_pos = locp->pos;
@@ -1738,8 +1739,8 @@ yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, unsigned *ncaps, int flag
 
 
 sre_regex_t *
-sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags,
-    int *err_offset)
+sre_regex_parse(sre_pool_t *pool, u_char *src, sre_uint_t *ncaps, int flags,
+    sre_int_t *err_offset)
 {
     u_char          *start, *err_pos = NULL;
     sre_regex_t     *re, *r;
@@ -1751,7 +1752,7 @@ sre_regex_parse(sre_pool_t *pool, u_char *src, unsigned *ncaps, int flags,
 
     if (yyparse(pool, &src, ncaps, flags, &parsed, &err_pos) != SRE_OK) {
         if (err_pos) {
-            *err_offset = (int) (err_pos - start);
+            *err_offset = (sre_int_t) (err_pos - start);
         }
 
         return NULL;

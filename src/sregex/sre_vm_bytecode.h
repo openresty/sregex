@@ -34,7 +34,7 @@ typedef struct {
 
 
 typedef struct {
-    unsigned            count;
+    sre_uint_t          count;
     sre_vm_range_t     *head;
 } sre_vm_ranges_t;
 
@@ -52,7 +52,7 @@ struct sre_instruction_s {
     union {
         u_char                  ch;
         sre_vm_ranges_t        *ranges;
-        unsigned                group; /* capture group */
+        sre_uint_t              group; /* capture group */
         unsigned                greedy;  /* :1 */
         uint8_t                 assertion_type;
     } v;
@@ -61,7 +61,7 @@ struct sre_instruction_s {
 
 typedef struct {
     sre_instruction_t   *start;
-    unsigned             len;
+    sre_uint_t           len;
     unsigned             tag;
 } sre_program_t;
 

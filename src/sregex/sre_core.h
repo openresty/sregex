@@ -48,4 +48,15 @@
      || (c) == '_')
 
 
+#ifndef sre_int_t
+#define sre_int_t sre_int_t
+typedef intptr_t  sre_int_t;
+#endif
+
+#ifndef sre_uint_t
+#define sre_uint_t sre_uint_t
+typedef uintptr_t  sre_uint_t;
+#endif
+
+
 #endif /* _SRE_CORE_H_INCLUDED_ */

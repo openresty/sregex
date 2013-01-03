@@ -45,7 +45,7 @@ typedef struct {
 
 struct sre_vm_pike_ctx_s {
     unsigned                 tag;
-    unsigned                 processed_bytes;
+    sre_int_t                processed_bytes;
     u_char                  *buffer;
     sre_pool_t              *pool;
     sre_program_t           *program;
@@ -53,13 +53,13 @@ struct sre_vm_pike_ctx_s {
     sre_capture_t           *free_capture;
     sre_vm_pike_thread_t    *free_threads;
 
-    int                     *ovector;
-    unsigned                 ovecsize;
+    sre_int_t               *ovector;
+    size_t                   ovecsize;
 
     sre_vm_pike_thread_list_t       *current_threads;
     sre_vm_pike_thread_list_t       *next_threads;
 
-    int                      last_matched_pos; /* the pos for the last
+    sre_int_t                last_matched_pos; /* the pos for the last
                                                   (partial) match */
 
     unsigned                 first_buf:1;
@@ -72,15 +72,15 @@ struct sre_vm_pike_ctx_s {
 
 static sre_vm_pike_thread_list_t *
     sre_vm_pike_thread_list_create(sre_pool_t *pool);
-static int sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx,
+static sre_int_t sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx,
     sre_vm_pike_thread_list_t *l, sre_instruction_t *pc, sre_capture_t *capture,
-    int pos, sre_capture_t **pcap);
+    sre_int_t pos, sre_capture_t **pcap);
 static void sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx);
 
 
 sre_vm_pike_ctx_t *
-sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog, int *ovector,
-    unsigned ovecsize)
+sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog,
+    sre_int_t *ovector, size_t ovecsize)
 {
     sre_vm_pike_ctx_t               *ctx;
     sre_vm_pike_thread_list_t       *clist, *nlist;
@@ -127,13 +127,14 @@ sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog, int *ovector,
 }
 
 
-int
+sre_int_t
 sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
     unsigned eof)
 {
-    int                        rc, seen_word;
     u_char                    *sp, *last, *p;
-    unsigned                   i, in;
+    sre_int_t                  rc;
+    sre_uint_t                 i;
+    unsigned                   seen_word, in;
     sre_pool_t                *pool;
     sre_program_t             *prog;
     sre_capture_t             *cap, *matched;
@@ -186,7 +187,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
 
         ctx->tag = prog->tag + 1;
         rc = sre_vm_pike_add_thread(ctx, clist, prog->start, cap,
-                                   (int)(sp - input), NULL);
+                                   (sre_int_t) (sp - input), NULL);
         if (rc != SRE_OK) {
             prog->tag = ctx->tag;
             return SRE_ERROR;
@@ -238,8 +239,8 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
                 for (i = 0; i < pc->v.ranges->count; i++) {
                     range = &pc->v.ranges->head[i];
 
-                    dd("testing %d for [%d, %d] (%u)", *sp, range->from,
-                       range->to, i);
+                    dd("testing %d for [%d, %d] (%u)", *sp,
+                       (int) range->from, (int) range->to, (unsigned) i);
 
                     if (*sp >= range->from && *sp <= range->to) {
                         in = 1;
@@ -253,7 +254,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
                 }
 
                 rc = sre_vm_pike_add_thread(ctx, nlist, pc + 1, cap,
-                                           (int) (sp - input + 1), &cap);
+                                           (sre_int_t) (sp - input + 1), &cap);
 
                 if (rc == SRE_DONE) {
                     goto matched;
@@ -276,8 +277,8 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
                 for (i = 0; i < pc->v.ranges->count; i++) {
                     range = &pc->v.ranges->head[i];
 
-                    dd("testing %d for [%d, %d] (%u)", *sp, range->from,
-                       range->to, i);
+                    dd("testing %d for [%d, %d] (%u)", *sp, (int) range->from,
+                       (int) range->to, (unsigned) i);
 
                     if (*sp >= range->from && *sp <= range->to) {
                         in = 1;
@@ -291,7 +292,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
                 }
 
                 rc = sre_vm_pike_add_thread(ctx, nlist, pc + 1, cap,
-                                           (int) (sp - input + 1), &cap);
+                                           (sre_int_t) (sp - input + 1), &cap);
 
                 if (rc == SRE_DONE) {
                     goto matched;
@@ -315,7 +316,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
                 }
 
                 rc = sre_vm_pike_add_thread(ctx, nlist, pc + 1, cap,
-                                            (int) (sp - input + 1), &cap);
+                                            (sre_int_t) (sp - input + 1), &cap);
 
                 if (rc == SRE_DONE) {
                     goto matched;
@@ -336,7 +337,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, u_char *input, size_t size,
                 }
 
                 rc = sre_vm_pike_add_thread(ctx, nlist, pc + 1, cap,
-                                           (int) (sp - input + 1), &cap);
+                                           (sre_int_t) (sp - input + 1), &cap);
 
                 if (rc == SRE_DONE) {
                     goto matched;
@@ -410,7 +411,7 @@ assertion_hold:
 
                 list.head = NULL;
                 rc = sre_vm_pike_add_thread(ctx, &list, pc + 1, cap,
-                                           (int)(sp - input), NULL);
+                                           (sre_int_t) (sp - input), NULL);
 
                 if (rc != SRE_OK) {
                     prog->tag = ctx->tag + 1;
@@ -494,7 +495,8 @@ step_done:
     if (ctx->last_matched_pos >= 0) {
         p = input + ctx->last_matched_pos - ctx->processed_bytes;
         if (p > input) {
-            dd("diff: %d", ctx->last_matched_pos - ctx->processed_bytes);
+            dd("diff: %d",
+               (int) (ctx->last_matched_pos - ctx->processed_bytes));
             dd("p=%p, input=%p", p, ctx->buffer);
 
             ctx->seen_newline = (p[-1] == '\n');
@@ -537,9 +539,9 @@ step_done:
         return SRE_DECLINED;
     }
 
-    ctx->processed_bytes += sp - input;
+    ctx->processed_bytes += (sre_int_t) (sp - input);
 
-    dd("processed bytes: %u", ctx->processed_bytes);
+    dd("processed bytes: %u", (unsigned) ctx->processed_bytes);
 
     ctx->matched = matched;
 
@@ -559,17 +561,17 @@ step_done:
 static void
 sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx)
 {
-    int                      i, a, b;
-    int                      ngroups;
+    sre_int_t                a, b;
+    sre_uint_t               i, ngroups;
     sre_capture_t           *cap;
     sre_vm_pike_thread_t    *t;
 
     t = ctx->current_threads->head;
     if (t) {
 
-        ngroups = ctx->ovecsize / sizeof(int);
+        ngroups = ctx->ovecsize / sizeof(sre_int_t);
 
-        dd("ngroups: %d", ngroups);
+        dd("ngroups: %d", (int) ngroups);
 
         memcpy(ctx->ovector, t->capture->vector, ctx->ovecsize);
 
@@ -581,7 +583,7 @@ sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx)
                 b = cap->vector[i];
 
                 if (b != -1 && (a == -1 || b < a)) {
-                    dd("setting group %d to %d", i, cap->vector[i]);
+                    dd("setting group %d to %d", (int) i, (int) cap->vector[i]);
                     ctx->ovector[i] = b;
                 }
 
@@ -589,7 +591,8 @@ sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx)
                 b = cap->vector[i + 1];
 
                 if (b != -1 && (a == -1 || b > a)) {
-                    dd("setting group %d to %d", i + 1, cap->vector[i + 1]);
+                    dd("setting group %d to %d", (int) (i + 1),
+                       (int) cap->vector[i + 1]);
                     ctx->ovector[i + 1] = b;
                 }
             }
@@ -615,12 +618,12 @@ sre_vm_pike_thread_list_create(sre_pool_t *pool)
 }
 
 
-static int
+static sre_int_t
 sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
-    sre_instruction_t *pc, sre_capture_t *capture, int pos,
+    sre_instruction_t *pc, sre_capture_t *capture, sre_int_t pos,
     sre_capture_t **pcap)
 {
-    int                          rc;
+    sre_int_t                    rc;
     sre_vm_pike_thread_t        *t;
     sre_capture_t               *cap;
     unsigned                     seen_word = 0;
@@ -671,7 +674,8 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
            pc->v.group);
 #endif
 
-        dd("processed bytes: %u, pos: %u", ctx->processed_bytes, pos);
+        dd("processed bytes: %u, pos: %u", (unsigned) ctx->processed_bytes,
+           (unsigned) pos);
 
         cap = sre_capture_update(ctx->pool, capture, pc->v.group,
                                  ctx->processed_bytes + pos,

@@ -256,7 +256,7 @@ static void *
 sre_palloc_large(sre_pool_t *pool, size_t size)
 {
     void              *p;
-    unsigned           n;
+    sre_uint_t         n;
     sre_pool_large_t  *large;
 
     p = malloc(size);
@@ -408,4 +408,3 @@ sre_memalign(size_t alignment, size_t size)
 
     return p;
 }
-
