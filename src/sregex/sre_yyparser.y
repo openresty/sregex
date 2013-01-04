@@ -22,8 +22,8 @@
 
 #define YYLTYPE YYLTYPE
 typedef struct YYLTYPE {
-    u_char  *pos;
-    u_char  *last;
+    sre_char  *pos;
+    sre_char  *last;
 } YYLTYPE;
 
 
@@ -46,9 +46,9 @@ typedef struct YYLTYPE {
 #define sre_read_char(sp)  *(*(sp))++
 
 
-static int yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src);
-static void yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags,
-    sre_regex_t **parsed, u_char **err_pos, char *s);
+static int yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src);
+static void yyerror(YYLTYPE *locp, sre_pool_t *pool, sre_char **src, sre_uint_t *ncaps, int flags,
+    sre_regex_t **parsed, sre_char **err_pos, char *s);
 static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
     sre_regex_t *subj, sre_regex_cquant_t *cquant, unsigned greedy);
 
@@ -63,15 +63,15 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
 
 
 %lex-param {sre_pool_t *pool}
-%lex-param {u_char *src}
+%lex-param {sre_char *src}
 
 
 %parse-param {sre_pool_t *pool}
-%parse-param {u_char **src}
+%parse-param {sre_char **src}
 %parse-param {sre_uint_t *ncaps}
 %parse-param {int flags}
 %parse-param {sre_regex_t **parsed}
-%parse-param {u_char **err_pos}
+%parse-param {sre_char **err_pos}
 
 %locations
 
@@ -79,7 +79,7 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
 
 %union {
     sre_regex_t         *re;
-    u_char               ch;
+    sre_char             ch;
     sre_uint_t           group;
     sre_regex_cquant_t   cquant;
 }
@@ -336,9 +336,9 @@ atom: '(' count alt ')'
 
 
 static int
-yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
+yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
 {
-    u_char               c;
+    sre_char             c;
     int                  from, to;
     sre_uint_t           i, n, num;
     unsigned             seen_dash, no_dash, seen_curly_bracket;
@@ -346,28 +346,28 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
     sre_regex_range_t   *range, *last = NULL;
     sre_regex_type_t     type;
 
-    static u_char        esc_D_ranges[] = { 0, 47, 58, 255 };
+    static sre_char      esc_D_ranges[] = { 0, 47, 58, 255 };
 
-    static u_char        esc_w_ranges[] = { 'A', 'Z', 'a', 'z', '0', '9',
-                                            '_', '_' };
+    static sre_char      esc_w_ranges[] = { 'A', 'Z', 'a', 'z', '0', '9',
+                                          '_', '_' };
 
-    static u_char        esc_W_ranges[] = { 0, 47, 58, 64, 91, 94, 96, 96,
-                                            123, 255 };
+    static sre_char      esc_W_ranges[] = { 0, 47, 58, 64, 91, 94, 96, 96,
+                                          123, 255 };
 
-    static u_char        esc_s_ranges[] = { ' ', ' ', '\f', '\f', '\n', '\n',
-                                            '\r', '\r', '\t', '\t' };
+    static sre_char      esc_s_ranges[] = { ' ', ' ', '\f', '\f', '\n', '\n',
+                                          '\r', '\r', '\t', '\t' };
 
-    static u_char        esc_S_ranges[] = { 0, 8, 11, 11, 14, 31, 33, 255 };
+    static sre_char      esc_S_ranges[] = { 0, 8, 11, 11, 14, 31, 33, 255 };
 
-    static u_char        esc_h_ranges[] = { 0x09, 0x09, 0x20, 0x20, 0xa0, 0xa0 };
+    static sre_char      esc_h_ranges[] = { 0x09, 0x09, 0x20, 0x20, 0xa0, 0xa0 };
 
-    static u_char        esc_H_ranges[] = { 0x00, 0x08, 0x0a, 0x1f, 0x21, 0x9f,
-                                            0xa1, 0xff };
+    static sre_char      esc_H_ranges[] = { 0x00, 0x08, 0x0a, 0x1f, 0x21, 0x9f,
+                                          0xa1, 0xff };
 
-    static u_char        esc_v_ranges[] = { 0x0a, 0x0a, 0x0b, 0x0b, 0x0c, 0x0c,
-                                            0x0d, 0x0d, 0x85, 0x85 };
+    static sre_char      esc_v_ranges[] = { 0x0a, 0x0a, 0x0b, 0x0b, 0x0c, 0x0c,
+                                          0x0d, 0x0d, 0x85, 0x85 };
 
-    static u_char        esc_V_ranges[] = { 0x00, 0x09, 0x0e, 0x84, 0x86, 0xff };
+    static sre_char      esc_V_ranges[] = { 0x00, 0x09, 0x0e, 0x84, 0x86, 0xff };
 
     locp->pos = *src;
 
@@ -411,7 +411,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
                 c = **src;
 
                 if (c < '0' || c > '7') {
-                    lvalp->ch = (u_char) num;
+                    lvalp->ch = (sre_char) num;
                     locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
                 }
@@ -421,7 +421,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
                 (*src)++;
 
                 if (++i == 3) {
-                    lvalp->ch = (u_char) num;
+                    lvalp->ch = (sre_char) num;
                     locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
                 }
@@ -441,7 +441,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
                 c -= 32;
             }
 
-            lvalp->ch = (u_char) (c ^ 64);
+            lvalp->ch = (sre_char) (c ^ 64);
 
             dd("\\cK: %d", lvalp->ch);
 
@@ -467,7 +467,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
                     num = (c - '0') + (num << 3);
 
                 } else if (c == '}') {
-                    lvalp->ch = (u_char) num;
+                    lvalp->ch = (sre_char) num;
                     locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
 
@@ -496,7 +496,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
 
             dd("\\o{...}: %u, next: %c", num, **src);
 
-            lvalp->ch = (u_char) num;
+            lvalp->ch = (sre_char) num;
             locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
@@ -531,7 +531,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
                         return SRE_REGEX_TOKEN_BAD;
                     }
 
-                    lvalp->ch = (u_char) num;
+                    lvalp->ch = (sre_char) num;
                     locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
 
@@ -558,7 +558,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
 
             dd("\\x{...}: %u, next: %c", num, **src);
 
-            lvalp->ch = (u_char) num;
+            lvalp->ch = (sre_char) num;
             locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
@@ -1116,7 +1116,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
                         if (c < '0' || c > '7') {
                             dd("c before: %d", c);
 
-                            c = (u_char) num;
+                            c = (sre_char) num;
 
                             dd("c after: %d", c);
                             goto process_char;
@@ -1127,7 +1127,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
                         (*src)++;
 
                         if (++i == 3) {
-                            c = (u_char) num;
+                            c = (sre_char) num;
                             goto process_char;
                         }
                     }
@@ -1146,7 +1146,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
                         c -= 32;
                     }
 
-                    c = (u_char) (c ^ 64);
+                    c = (sre_char) (c ^ 64);
 
                     dd("\\cK: %d", lvalp->ch);
 
@@ -1171,7 +1171,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
                             num = (c - '0') + (num << 3);
 
                         } else if (c == '}') {
-                            c = (u_char) num;
+                            c = (sre_char) num;
                             goto process_char;
 
                         } else {
@@ -1195,7 +1195,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
 
                     dd("\\x{...}: %u, next: %c", num, **src);
 
-                    c = (u_char) num;
+                    c = (sre_char) num;
                     goto process_char;
 
                 case 'x':
@@ -1229,7 +1229,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
                                 return SRE_REGEX_TOKEN_BAD;
                             }
 
-                            c = (u_char) num;
+                            c = (sre_char) num;
                             goto process_char;
 
                         } else if (c == '\0') {
@@ -1259,7 +1259,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, u_char **src)
 
                     dd("\\x{...}: %u, next: %c", num, **src);
 
-                    c = (u_char) num;
+                    c = (sre_char) num;
                     goto process_char;
 
                 case 't':
@@ -1732,18 +1732,18 @@ cquant_parsed:
 
 
 static void
-yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags,
-    sre_regex_t **parsed, u_char **err_pos, char *msg)
+yyerror(YYLTYPE *locp, sre_pool_t *pool, sre_char **src, sre_uint_t *ncaps, int flags,
+    sre_regex_t **parsed, sre_char **err_pos, char *msg)
 {
     *err_pos = locp->pos;
 }
 
 
 SRE_API sre_regex_t *
-sre_regex_parse(sre_pool_t *pool, u_char *src, sre_uint_t *ncaps, int flags,
+sre_regex_parse(sre_pool_t *pool, sre_char *src, sre_uint_t *ncaps, int flags,
     sre_int_t *err_offset)
 {
-    u_char          *start, *err_pos = NULL;
+    sre_char        *start, *err_pos = NULL;
     sre_regex_t     *re, *r;
     sre_regex_t     *parsed = NULL;
 

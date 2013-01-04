@@ -63,7 +63,7 @@ typedef union YYSTYPE
 #line 80 "src/sregex/sre_yyparser.y"
 
     sre_regex_t         *re;
-    u_char               ch;
+    sre_char             ch;
     sre_uint_t           group;
     sre_regex_cquant_t   cquant;
 
@@ -98,7 +98,7 @@ int yyparse ();
 #endif
 #else /* ! YYPARSE_PARAM */
 #if defined __STDC__ || defined __cplusplus
-int yyparse (sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, u_char **err_pos);
+int yyparse (sre_pool_t *pool, sre_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, sre_char **err_pos);
 #else
 int yyparse ();
 #endif
