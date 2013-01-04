@@ -77,16 +77,12 @@ struct sre_pool_s {
 };
 
 
-sre_pool_t *sre_create_pool(size_t size);
-void sre_reset_pool(sre_pool_t *pool);
-void sre_destroy_pool(sre_pool_t *pool);
+SRE_NOAPI void *sre_palloc(sre_pool_t *pool, size_t size);
+SRE_NOAPI void *sre_pnalloc(sre_pool_t *pool, size_t size);
+SRE_NOAPI void *sre_pcalloc(sre_pool_t *pool, size_t size);
+SRE_NOAPI int sre_pfree(sre_pool_t *pool, void *p);
 
-void *sre_palloc(sre_pool_t *pool, size_t size);
-void *sre_pnalloc(sre_pool_t *pool, size_t size);
-void *sre_pcalloc(sre_pool_t *pool, size_t size);
-int sre_pfree(sre_pool_t *pool, void *p);
-
-sre_pool_cleanup_t *sre_pool_cleanup_add(sre_pool_t *p, size_t size);
+SRE_NOAPI sre_pool_cleanup_t *sre_pool_cleanup_add(sre_pool_t *p, size_t size);
 
 
 #endif /* _SRE_PALLOC_H_INCLUDED_ */

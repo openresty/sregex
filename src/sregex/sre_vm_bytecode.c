@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 
-void
+SRE_API void
 sre_program_dump(sre_program_t *prog)
 {
     sre_uint_t              i;
@@ -113,4 +113,3 @@ sre_program_dump(sre_program_t *prog)
         }
     }
 }
-

@@ -78,7 +78,7 @@ static sre_int_t sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx,
 static void sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx);
 
 
-sre_vm_pike_ctx_t *
+SRE_API sre_vm_pike_ctx_t *
 sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog,
     sre_int_t *ovector, size_t ovecsize)
 {
@@ -127,7 +127,7 @@ sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog,
 }
 
 
-sre_int_t
+SRE_API sre_int_t
 sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
     unsigned eof)
 {
@@ -791,4 +791,3 @@ add:
 
     return SRE_OK;
 }
-

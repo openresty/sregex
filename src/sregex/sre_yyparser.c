@@ -3515,7 +3515,7 @@ yyerror(YYLTYPE *locp, sre_pool_t *pool, u_char **src, sre_uint_t *ncaps, int fl
 }
 
 
-sre_regex_t *
+SRE_API sre_regex_t *
 sre_regex_parse(sre_pool_t *pool, u_char *src, sre_uint_t *ncaps, int flags,
     sre_int_t *err_offset)
 {

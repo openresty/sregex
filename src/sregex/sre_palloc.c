@@ -18,7 +18,9 @@
 static void *sre_palloc_block(sre_pool_t *pool, size_t size);
 #endif
 static void *sre_palloc_large(sre_pool_t *pool, size_t size);
+#if !(SRE_USE_VALGRIND)
 static void * sre_memalign(size_t alignment, size_t size);
+#endif
 
 
 sre_pool_t *
@@ -295,31 +297,6 @@ sre_palloc_large(sre_pool_t *pool, size_t size)
 }
 
 
-void *
-sre_pmemalign(sre_pool_t *pool, size_t size, size_t alignment)
-{
-    void              *p;
-    sre_pool_large_t  *large;
-
-    p = sre_memalign(alignment, size);
-    if (p == NULL) {
-        return NULL;
-    }
-
-    large = sre_palloc(pool, sizeof(sre_pool_large_t));
-    if (large == NULL) {
-        free(p);
-        return NULL;
-    }
-
-    large->alloc = p;
-    large->next = pool->large;
-    pool->large = large;
-
-    return p;
-}
-
-
 int
 sre_pfree(sre_pool_t *pool, void *p)
 {
@@ -394,6 +371,7 @@ sre_pool_cleanup_add(sre_pool_t *p, size_t size)
 }
 
 
+#if !(SRE_USE_VALGRIND)
 static void *
 sre_memalign(size_t alignment, size_t size)
 {
@@ -408,3 +386,4 @@ sre_memalign(size_t alignment, size_t size)
 
     return p;
 }
+#endif

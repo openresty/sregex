@@ -49,7 +49,7 @@ static sre_vm_thompson_thread_list_t *sre_vm_thompson_thread_list_create(
 
 
 
-sre_vm_thompson_ctx_t *
+SRE_API sre_vm_thompson_ctx_t *
 sre_vm_thompson_create_ctx(sre_pool_t *pool, sre_program_t *prog)
 {
     sre_uint_t                       len;
@@ -87,7 +87,7 @@ sre_vm_thompson_create_ctx(sre_pool_t *pool, sre_program_t *prog)
 }
 
 
-sre_int_t
+SRE_API sre_int_t
 sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, sre_char *input, size_t size,
     unsigned eof)
 {
@@ -381,4 +381,3 @@ sre_vm_thompson_thread_list_create(sre_pool_t *pool, sre_uint_t size)
 
     return l;
 }
-

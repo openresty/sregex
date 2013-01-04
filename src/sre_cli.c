@@ -102,7 +102,7 @@ main(int argc, char **argv)
     sre_program_dump(prog);
 
     ovecsize = 2 * (ncaps + 1) * sizeof(sre_int_t);
-    ovector = sre_palloc(cpool, ovecsize);
+    ovector = malloc(ovecsize);
     if (ovector == NULL) {
         return 2;
     }
@@ -117,6 +117,7 @@ main(int argc, char **argv)
 
             s = malloc(len);
             if (s == NULL) {
+                free(ovector);
                 return 2;
             }
 
@@ -126,6 +127,7 @@ main(int argc, char **argv)
                         "stdin (only read %ld bytes).", (long) len, (long) n);
 
                 free(s);
+                free(ovector);
                 return 2;
             }
 
@@ -142,6 +144,7 @@ main(int argc, char **argv)
 
             s = malloc(len);
             if (s == NULL) {
+                free(ovector);
                 return 2;
             }
 
@@ -156,6 +159,7 @@ main(int argc, char **argv)
     sre_destroy_pool(cpool);
     prog = NULL;
     cpool = NULL;
+    free(ovector);
 
     return 0;
 }

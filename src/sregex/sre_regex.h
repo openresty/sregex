@@ -71,10 +71,12 @@ struct sre_regex_s {
 };
 
 
-sre_regex_t *sre_regex_create(sre_pool_t *pool, sre_regex_type_t type,
+SRE_NOAPI sre_regex_t *sre_regex_create(sre_pool_t *pool, sre_regex_type_t type,
     sre_regex_t *left, sre_regex_t *right);
-sre_regex_range_t * sre_regex_turn_char_class_caseless(sre_pool_t *pool,
-        sre_regex_range_t *range);
+
+SRE_NOAPI sre_regex_range_t *
+    sre_regex_turn_char_class_caseless(sre_pool_t *pool,
+                                       sre_regex_range_t *range);
 
 
 #endif /* _SRE_REGEX_H_INCLUDED_ */

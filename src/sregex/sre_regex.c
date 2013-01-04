@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 
-sre_regex_t *
+SRE_NOAPI sre_regex_t *
 sre_regex_create(sre_pool_t *pool, sre_regex_type_t type, sre_regex_t *left,
     sre_regex_t *right)
 {
@@ -30,7 +30,7 @@ sre_regex_create(sre_pool_t *pool, sre_regex_type_t type, sre_regex_t *left,
 }
 
 
-void
+SRE_API void
 sre_regex_dump(sre_regex_t *r)
 {
     sre_regex_range_t       *range;
@@ -161,7 +161,7 @@ sre_regex_dump(sre_regex_t *r)
 }
 
 
-sre_regex_range_t *
+SRE_NOAPI sre_regex_range_t *
 sre_regex_turn_char_class_caseless(sre_pool_t *pool, sre_regex_range_t *range)
 {
     sre_char              from, to;
@@ -206,4 +206,3 @@ sre_regex_turn_char_class_caseless(sre_pool_t *pool, sre_regex_range_t *range)
 
     return range;
 }
-

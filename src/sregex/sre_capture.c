@@ -17,7 +17,7 @@
 #include <stdio.h>
 
 
-sre_capture_t *
+SRE_NOAPI sre_capture_t *
 sre_capture_create(sre_pool_t *pool, size_t ovecsize, unsigned clear)
 {
     sre_char            *p;
@@ -45,7 +45,7 @@ sre_capture_create(sre_pool_t *pool, size_t ovecsize, unsigned clear)
 }
 
 
-sre_capture_t *
+SRE_NOAPI sre_capture_t *
 sre_capture_update(sre_pool_t *pool, sre_capture_t *cap, sre_uint_t group,
     sre_int_t pos, sre_capture_t **freecap)
 {
@@ -83,7 +83,7 @@ sre_capture_update(sre_pool_t *pool, sre_capture_t *cap, sre_uint_t group,
 }
 
 
-void
+SRE_NOAPI void
 sre_capture_dump(sre_capture_t *cap)
 {
     sre_uint_t            i, n;

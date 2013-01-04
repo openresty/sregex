@@ -32,11 +32,14 @@ struct sre_capture_s {
 };
 
 
-sre_capture_t *sre_capture_create(sre_pool_t *pool, size_t ovecsize,
+SRE_NOAPI sre_capture_t *sre_capture_create(sre_pool_t *pool, size_t ovecsize,
     unsigned clear);
-sre_capture_t *sre_capture_update(sre_pool_t *pool, sre_capture_t *cap,
-    sre_uint_t group, sre_int_t pos, sre_capture_t **freecap);
-void sre_capture_dump(sre_capture_t *cap);
+
+SRE_NOAPI sre_capture_t *sre_capture_update(sre_pool_t *pool,
+    sre_capture_t *cap, sre_uint_t group, sre_int_t pos,
+    sre_capture_t **freecap);
+
+SRE_NOAPI void sre_capture_dump(sre_capture_t *cap);
 
 
 #endif /* _SRE_CAPTURE_H_INCLUDED_ */
