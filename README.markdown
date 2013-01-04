@@ -119,13 +119,13 @@ them into the prefix `/usr/local/` by default.
 
 If you want to install into a custom location, then just specify the `PREFIX` variable like this:
 
-    make
+    make PREFIX=/opt/sregex
     make install PREFIX=/opt/sregex
 
 If you are building a binary package (like an RPM package), then
 you will find the `DESTDIR` variable handy, as in
 
-    make
+    make PREFIX=/opt/sregex
     make install PREFIX=/opt/sregex DESTDIR=/path/to/my/build/root
 
 Usage
