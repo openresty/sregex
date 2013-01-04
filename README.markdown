@@ -112,7 +112,7 @@ Installation
     make
     make install
 
-Gnu make and gcc are required.
+Gnu make and gcc are required. (On operating systems like FreeBSD and Solaris, you should type `gmake` instead of `make` here.)
 
 It will build `libsregex.so`, `libsregex.a`, and the command-line utility `sregex-cli` and install
 them into the prefix `/usr/local/` by default.
