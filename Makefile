@@ -49,6 +49,11 @@ ifeq (,$(findstring Windows,$(OS)))
     INSTALL_SHORT1= $(INSTALL_LIB)/$(INSTALL_DYLIBSHORT1)
     INSTALL_SHORT2= $(INSTALL_LIB)/$(INSTALL_DYLIBSHORT2)
     LDCONFIG= :
+  else
+    ifeq (SunOS,$(shell uname -s))
+      INSTALL_X=cp -p
+      INSTALL_F=cp -p
+    endif
   endif
 endif
 
