@@ -108,6 +108,8 @@ $(FILE_T): src/sre_cli.o $(lib_o_files)
 $(FILE_SO): $(lib_o_files)
 	$(E) "DYNLINK   $@"
 	$(Q)$(CC) $(TARGET_XSHLDFLAGS) -o $@ $+
+	$(E) "SYMLINK   $(INSTALL_SOSHORT2)"
+	$(Q)$(SYMLINK) $@ $(INSTALL_SOSHORT2)
 
 $(FILE_A): $(lib_o_files)
 	$(E) "AR        $@"

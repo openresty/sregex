@@ -3,6 +3,7 @@
 *.swo
 *.o
 *.so
+*.so.*
 reindex
 *.html
 tags
