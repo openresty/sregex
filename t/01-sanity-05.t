@@ -130,3 +130,19 @@ __DATA__
 --- s: ZAHhello
 --- flags: i
 
+
+
+=== TEST 20: match early
+--- re: \s+
+--- s eval: "abc \t\n\f\rd"
+--- temp_cap chop
+[(1, -1)] [(2, -1)] [(3, -1)] [(3, -1)](3, 4) [(3, -1)](3, 5) [(3, -1)](3, 6) [(3, -1)](3, 7) [(3, -1)](3, 8)
+
+
+
+=== TEST 21: pending match
+--- re: abcde|bc
+--- s eval: "abcdf"
+--- temp_cap chop
+[(0, -1)] [(0, -1)] [(0, -1)](1, 3) [(0, -1)](1, 3)
+

@@ -247,7 +247,7 @@ sub parse_res ($) {
         } elsif (/^splitted pike (.+)/) {
             my $res = $1;
 
-            if ($res =~ s/^(?:\s*\[(?:\(-?\d+, -?\d+\))+\])+\s*//) {
+            if ($res =~ s/^(?:\s*\[(?:\(-?\d+, -?\d+\))+\](?:\(-?\d+, -?\d+\))?)+\s*//) {
                 $splitted_pike_temp_cap = $&;
                 $splitted_pike_temp_cap =~ s/^\s+|\s+$//g;
             }

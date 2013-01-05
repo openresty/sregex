@@ -126,7 +126,7 @@ SRE_API sre_vm_pike_ctx_t *sre_vm_pike_create_ctx(sre_pool_t *pool,
     sre_program_t *prog, sre_int_t *ovector, size_t ovecsize);
 
 SRE_API sre_int_t sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input,
-    size_t len, unsigned eof);
+    size_t len, unsigned eof, sre_int_t **pending_matched);
 
 
 /* the Thompson VM API */

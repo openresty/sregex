@@ -173,6 +173,7 @@ process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
     sre_int_t                    rc;
     sre_char                    *p;
     unsigned                     gen_empty_buf;
+    sre_int_t                   *pending_matched;
     sre_pool_t                  *pool;
     sre_vm_pike_ctx_t           *pctx;
     sre_vm_thompson_ctx_t       *tctx;
@@ -186,6 +187,7 @@ process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
 
     pool = sre_create_pool(1024);
     if (pool == NULL) {
+        free(p);
         exit(2);
     }
 
@@ -275,7 +277,7 @@ process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
     pctx = sre_vm_pike_create_ctx(pool, prog, ovector, ovecsize);
     assert(pctx);
 
-    rc = sre_vm_pike_exec(pctx, s, len, 1 /* eof */);
+    rc = sre_vm_pike_exec(pctx, s, len, 1 /* eof */, NULL);
 
     switch (rc) {
     case SRE_OK:
@@ -316,16 +318,18 @@ process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
 
     for (i = 0; i <= len; i++) {
         if (i == len) {
-            rc = sre_vm_pike_exec(pctx, NULL, 0 /* len */, 1 /* eof */);
+            rc = sre_vm_pike_exec(pctx, NULL, 0 /* len */, 1 /* eof */,
+                                  &pending_matched);
 
         } else if (gen_empty_buf) {
-            rc = sre_vm_pike_exec(pctx, NULL, 0 /* len */, 0 /* eof */);
+            rc = sre_vm_pike_exec(pctx, NULL, 0 /* len */, 0 /* eof */, NULL);
             gen_empty_buf = 0;
             i--;
 
         } else {
             p[0] = s[i];
-            rc = sre_vm_pike_exec(pctx, p, 1 /* len */, 0 /* eof */);
+            rc = sre_vm_pike_exec(pctx, p, 1 /* len */, 0 /* eof */,
+                                  &pending_matched);
 
 #if 1
             if (rc == SRE_AGAIN) {
@@ -334,7 +338,15 @@ process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
                     printf("(%ld, %ld)", (long) ovector[j],
                            (long) ovector[j + 1]);
                 }
-                printf("] ");
+                printf("]");
+
+                if (pending_matched) {
+                    printf("(%ld, %ld) ", (long) pending_matched[0],
+                           (long) pending_matched[1]);
+
+                } else {
+                    printf(" ");
+                }
             }
 #endif
 

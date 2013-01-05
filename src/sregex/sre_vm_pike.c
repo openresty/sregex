@@ -129,7 +129,7 @@ sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog,
 
 SRE_API sre_int_t
 sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
-    unsigned eof)
+    unsigned eof, sre_int_t **pending_matched)
 {
     sre_char                  *sp, *last, *p;
     sre_int_t                  rc;
@@ -200,7 +200,9 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
     last = input + size;
 
     for (; sp < last || (eof && sp == last); sp++) {
-        dd("=== pos %d (char '%c' (%d)).\n", (int)(sp - input),
+        dd("=== pos %d, offset %d (char '%c' (%d)).\n",
+           (int)(sp - input + ctx->processed_bytes),
+           (int)(sp - input),
            sp < last ? *sp : '?', sp < last ? *sp : 0);
 
         if (clist->head == NULL) {
@@ -439,7 +441,6 @@ matched:
 #if (DDEBUG)
                     sre_capture_dump(matched);
 #endif
-
                     sre_capture_decr_ref(ctx, matched);
                 }
 
@@ -513,30 +514,43 @@ step_done:
     ctx->current_threads = clist;
     ctx->next_threads = nlist;
 
-    if (matched && (clist->head == NULL || eof)) {
-        memcpy(ctx->ovector, matched->vector, ctx->ovecsize);
-        /* sre_capture_decr_ref(matched, freecap); */
+    if (matched) {
+        if (eof || clist->head == NULL) {
+            memcpy(ctx->ovector, matched->vector, ctx->ovecsize);
+            /* sre_capture_decr_ref(matched, freecap); */
 
-        if (clist->head) {
-            *clist->next = ctx->free_threads;
-            ctx->free_threads = clist->head;
-            clist->head = NULL;
-            ctx->eof = 1;
+            if (clist->head) {
+                *clist->next = ctx->free_threads;
+                ctx->free_threads = clist->head;
+                clist->head = NULL;
+                ctx->eof = 1;
+            }
+
+            ctx->processed_bytes = ctx->ovector[1];
+            ctx->empty_capture = (ctx->ovector[0] == ctx->ovector[1]);
+
+            dd("set empty capture: %u", ctx->empty_capture);
+            ctx->matched = NULL;
+            ctx->first_buf = 1;
+
+            return SRE_OK;
         }
 
-        ctx->processed_bytes = ctx->ovector[1];
-        ctx->empty_capture = (ctx->ovector[0] == ctx->ovector[1]);
+        dd("clist head cap == matched: %d", clist->head->capture == matched);
 
-        dd("set empty capture: %u", ctx->empty_capture);
-        ctx->matched = NULL;
-        ctx->first_buf = 1;
+        if (pending_matched) {
+            *pending_matched = matched->vector;
+        }
 
-        return SRE_OK;
-    }
+    } else {
+        if (eof) {
+            ctx->eof = 1;
+            return SRE_DECLINED;
+        }
 
-    if (eof) {
-        ctx->eof = 1;
-        return SRE_DECLINED;
+        if (pending_matched) {
+            *pending_matched = NULL;
+        }
     }
 
     ctx->processed_bytes += (sre_int_t) (sp - input);
@@ -674,8 +688,8 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
            pc->v.group);
 #endif
 
-        dd("processed bytes: %u, pos: %u", (unsigned) ctx->processed_bytes,
-           (unsigned) pos);
+        dd("save: processed bytes: %u, pos: %u",
+           (unsigned) ctx->processed_bytes, (unsigned) pos);
 
         cap = sre_capture_update(ctx->pool, capture, pc->v.group,
                                  ctx->processed_bytes + pos,
@@ -745,10 +759,12 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
 
         ctx->last_matched_pos = capture->vector[1];
 
-        if (pcap && l->head == NULL) {
+#if 1
+        if (pcap) {
             *pcap = capture;
             return SRE_DONE;
         }
+#endif
 
     default:
 
