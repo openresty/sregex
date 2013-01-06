@@ -211,7 +211,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
         }
 
 #if (DDEBUG)
-        fprintf(stderr, "cur list:");
+        fprintf(stderr, "sregex: cur list:");
         for (t = clist->head; t; t = t->next) {
             fprintf(stderr, " %d", (int) (t->pc - prog->start));
         }
@@ -585,7 +585,7 @@ sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx)
 
         ngroups = ctx->ovecsize / sizeof(sre_int_t);
 
-        dd("ngroups: %d", (int) ngroups);
+        dd("ngroups: %d, next=%p", (int) ngroups, t->next);
 
         memcpy(ctx->ovector, t->capture->vector, ctx->ovecsize);
 
@@ -596,6 +596,8 @@ sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx)
                 a = ctx->ovector[i];
                 b = cap->vector[i];
 
+                dd("%d: %d -> %d", (int) i, (int) b, (int) a);
+
                 if (b != -1 && (a == -1 || b < a)) {
                     dd("setting group %d to %d", (int) i, (int) cap->vector[i]);
                     ctx->ovector[i] = b;
@@ -603,6 +605,8 @@ sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx)
 
                 a = ctx->ovector[i + 1];
                 b = cap->vector[i + 1];
+
+                dd("%d: %d -> %d", (int) (i + 1), (int) b, (int) a);
 
                 if (b != -1 && (a == -1 || b > a)) {
                     dd("setting group %d to %d", (int) (i + 1),
@@ -688,7 +692,8 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
            pc->v.group);
 #endif
 
-        dd("save: processed bytes: %u, pos: %u",
+        dd("save %u: processed bytes: %u, pos: %u",
+           (unsigned) pc->v.group,
            (unsigned) ctx->processed_bytes, (unsigned) pos);
 
         cap = sre_capture_update(ctx->pool, capture, pc->v.group,
