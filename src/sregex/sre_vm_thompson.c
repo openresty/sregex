@@ -141,8 +141,8 @@ sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, sre_char *input, size_t size,
                 for (j = 0; j < pc->v.ranges->count; j++) {
                     range = &pc->v.ranges->head[j];
 
-                    dd("testing %d for [%d, %d] (%u)", *sp, range->from,
-                       range->to, j);
+                    dd("testing %d for [%d, %d] (%u)", *sp, (int) range->from,
+                       (int) range->to, (unsigned) j);
 
                     if (*sp >= range->from && *sp <= range->to) {
                         in = 1;
@@ -166,8 +166,8 @@ sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, sre_char *input, size_t size,
                 for (j = 0; j < pc->v.ranges->count; j++) {
                     range = &pc->v.ranges->head[j];
 
-                    dd("testing %d for [%d, %d] (%u)", *sp, range->from,
-                       range->to, j);
+                    dd("testing %d for [%d, %d] (%u)", *sp, (int) range->from,
+                       (int) range->to, (unsigned) j);
 
                     if (*sp >= range->from && *sp <= range->to) {
                         in = 1;
