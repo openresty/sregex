@@ -97,7 +97,7 @@ plist_vfiles= $(patsubst src/sregex/%.c,%.plist,$(lib_c_files))
 INSTALL_H_FILES= src/sregex/sregex.h src/sregex/ddebug.h
 
 .PHONY: all clean test val install uninstall
-.PRECIOUS: src/sre_regex_parser.c
+.PRECIOUS: src/sregex/sre_yyparser.c src/sregex/sre_yyparser.h
 
 all: $(FILE_SO) $(FILE_A) $(FILE_T)
 
