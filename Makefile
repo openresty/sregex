@@ -91,7 +91,15 @@ lib_c_files= \
    src/sregex/sre_capture.c
 
 lib_o_files= $(patsubst %.c,%.o,$(lib_c_files))
-h_files= $(wildcard src/sregex/*.h)
+
+h_files= src/sregex/sre_capture.h \
+        src/sregex/sre_palloc.h \
+        src/sregex/sre_vm_bytecode.h \
+        src/sregex/sre_yyparser.h \
+        src/sregex/sre_core.h \
+        src/sregex/sre_regex.h \
+        src/sregex/sregex.h
+
 plist_vfiles= $(patsubst src/sregex/%.c,%.plist,$(lib_c_files))
 
 INSTALL_H_FILES= src/sregex/sregex.h src/sregex/ddebug.h
@@ -119,13 +127,14 @@ $(FILE_A): $(lib_o_files)
 	$(E) "CC        $@"
 	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
 
-%.c: %.y
+%.c %.h: %.y
 	$(E) "BISON     $@"
 	$(Q)bison -v $<
 
 clean:
-	$(HOST_RM) src/*.o $(lib_o_files) core $(TARGET) src/sre_regex_parser.c \
-	    src/*.output $(FILE_T) $(FILE_SO) $(FILE_A)
+	$(HOST_RM) src/*.o $(lib_o_files) core $(TARGET) \
+		src/sregex/sre_yyparser.[ch] src/sregex/*.output \
+		$(FILE_T) $(FILE_SO) $(FILE_A)
 
 test: all
 	prove -j$(jobs) -r t
