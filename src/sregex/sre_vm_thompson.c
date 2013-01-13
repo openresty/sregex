@@ -25,7 +25,7 @@ typedef struct {
 
 typedef struct {
     sre_uint_t                  count;
-    sre_vm_thompson_thread_t   *threads;
+    sre_vm_thompson_thread_t    threads[1];
 } sre_vm_thompson_thread_list_t;
 
 
@@ -44,7 +44,7 @@ struct sre_vm_thompson_ctx_s {
 
 static void sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
     sre_vm_thompson_thread_list_t *l, sre_instruction_t *pc, sre_char *sp);
-static sre_vm_thompson_thread_list_t *sre_vm_thompson_thread_list_create(
+static sre_vm_thompson_thread_list_t *sre_vm_thompson_create_thread_list(
     sre_pool_t *pool, sre_uint_t size);
 
 
@@ -66,14 +66,14 @@ sre_vm_thompson_create_ctx(sre_pool_t *pool, sre_program_t *prog)
 
     len = prog->len;
 
-    clist = sre_vm_thompson_thread_list_create(pool, len);
+    clist = sre_vm_thompson_create_thread_list(pool, len);
     if (clist == NULL) {
         return NULL;
     }
 
     ctx->current_threads = clist;
 
-    nlist = sre_vm_thompson_thread_list_create(pool, len);
+    nlist = sre_vm_thompson_create_thread_list(pool, len);
     if (nlist == NULL) {
         return NULL;
     }
@@ -361,21 +361,15 @@ sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
 
 
 static sre_vm_thompson_thread_list_t *
-sre_vm_thompson_thread_list_create(sre_pool_t *pool, sre_uint_t size)
+sre_vm_thompson_create_thread_list(sre_pool_t *pool, sre_uint_t size)
 {
-    sre_char                            *p;
     sre_vm_thompson_thread_list_t       *l;
 
-    p = sre_pnalloc(pool, sizeof(sre_vm_thompson_thread_list_t)
-                    + size * sizeof(sre_vm_thompson_thread_t));
-    if (p == NULL) {
+    l = sre_pnalloc(pool, sizeof(sre_vm_thompson_thread_list_t)
+                    + (size - 1) * sizeof(sre_vm_thompson_thread_t));
+    if (l == NULL) {
         return NULL;
     }
-
-    l = (sre_vm_thompson_thread_list_t *) p;
-
-    p += sizeof(sre_vm_thompson_thread_list_t);
-    l->threads = (sre_vm_thompson_thread_t *) p;
 
     l->count = 0;
 
