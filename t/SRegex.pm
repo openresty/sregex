@@ -137,8 +137,17 @@ sub run_test ($) {
                 my $expected_cap = $block->cap;
 
                 ok($thompson_match, "$name - thompson vm should match");
-                ok($jitted_thompson_match, "$name - jitted thompson vm should match");
-                ok($splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should match");
+
+                SKIP: {
+                    skip "Thompson JIT disabled", 1 if $jitted_thompson_match == -1;
+                    ok($jitted_thompson_match, "$name - jitted thompson vm should match");
+                }
+
+                SKIP: {
+                    skip "Thompson JIT disabled", 1 if $splitted_jitted_thompson_match == -1;
+                    ok($splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should match");
+                }
+
                 ok($splitted_thompson_match, "$name - splitted thompson vm should match");
 
                 ok($pike_match, "$name - pike vm should match");
@@ -157,8 +166,17 @@ sub run_test ($) {
                 #warn "regex: $prefix$re";
 
                 ok($thompson_match, "$name - thompson vm should match");
-                ok($jitted_thompson_match, "$name - jitted thompson vm should match");
-                ok($splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should match");
+
+                SKIP: {
+                    skip "Thompson JIT disabled", 1 if $jitted_thompson_match == -1;
+                    ok($jitted_thompson_match, "$name - jitted thompson vm should match");
+                }
+
+                SKIP: {
+                    skip "Thompson JIT disabled", 1 if $splitted_jitted_thompson_match == -1;
+                    ok($splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should match");
+                }
+
                 ok($splitted_thompson_match, "$name - splitted thompson vm should match");
 
                 ok($pike_match, "$name - pike vm should match");
@@ -173,8 +191,17 @@ sub run_test ($) {
 
             } else {
                 ok(!$thompson_match, "$name - thompson vm should not match");
-                ok(!$jitted_thompson_match, "$name - jitted thompson vm should not match");
-                ok(!$splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should not match");
+
+                SKIP: {
+                    skip "Thompson JIT disabled", 1 if $jitted_thompson_match == -1;
+                    ok(!$jitted_thompson_match, "$name - jitted thompson vm should not match");
+                }
+
+                SKIP: {
+                    skip "Thompson JIT disabled", 1 if $splitted_jitted_thompson_match == -1;
+                    ok(!$splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should not match");
+                }
+
                 ok(!$splitted_thompson_match, "$name - splitted thompson vm should not match");
                 ok(!$pike_match, "$name - pike vm should not match");
                 ok(!$splitted_pike_match, "$name - splitted pike vm should not match");
@@ -226,6 +253,9 @@ sub parse_res ($) {
             } elsif ($res eq 'no match') {
                 $jitted_thompson_match = 0;
 
+            } elsif ($res eq 'disabled') {
+                $jitted_thompson_match = -1;
+
             } else {
                 warn "unknown jitted thompson result: $res\n";
                 $jitted_thompson_match = 0;
@@ -244,6 +274,9 @@ sub parse_res ($) {
 
             } elsif ($res eq 'no match') {
                 $splitted_jitted_thompson_match = 0;
+
+            } elsif ($res eq 'disabled') {
+                $splitted_jitted_thompson_match = -1;
 
             } else {
                 warn "unknown splitted jitted thompson result: $res\n";

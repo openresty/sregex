@@ -291,7 +291,8 @@ process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
 
     rc = sre_vm_thompson_jit_compile(pool, prog, &tcode);
     if (rc == SRE_DECLINED) {
-        printf("thompson jit disabled\n");
+        printf("jitted thompson disabled\n");
+        printf("splitted jitted thompson disabled\n");
         goto pike;
     }
 
