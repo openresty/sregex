@@ -25,6 +25,7 @@
 #include <sregex/sre_vm_bytecode.h>
 #if (SRE_TARGET != SRE_ARCH_UNKNOWN)
 #include <sys/mman.h>
+#include <stdio.h>
 #endif
 
 
@@ -76,9 +77,11 @@ sre_vm_thompson_jit_compile(sre_pool_t *pool, sre_program_t *prog,
 
     size = codesz + sizeof(sre_vm_thompson_code_t);
 
-    mem = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, 0,
-               0);
+    dd("size: %d, codesiz: %d", (int) size, (int) codesz);
+
+    mem = mmap(NULL, size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_PRIVATE, -1, 0);
     if (mem == MAP_FAILED) {
+        perror("mmap");
         dasm_free(&dasm);
         return SRE_ERROR;
     }
