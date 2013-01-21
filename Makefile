@@ -145,8 +145,9 @@ $(FILE_A): $(lib_o_files)
 	$(Q)$(DASM) $(DASM_FLAGS) -o $@ $<
 
 clean:
-	$(HOST_RM) src/*.o $(lib_o_files) core $(TARGET) src/sre_regex_parser.c \
-	    src/*.output $(FILE_T) $(FILE_SO) $(FILE_A)
+	$(HOST_RM) src/*.o $(lib_o_files) core $(TARGET) \
+		src/sregex/sre_yyparser.[ch] src/sregex/*.output \
+		$(FILE_T) $(FILE_SO) $(FILE_A)
 
 test: all
 	prove -j$(jobs) -r t

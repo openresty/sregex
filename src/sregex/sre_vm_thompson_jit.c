@@ -199,14 +199,14 @@ sre_vm_thompson_jit_create_ctx(sre_pool_t *pool, sre_program_t *prog)
 
     len = prog->uniq_threads;
 
-    clist = sre_vm_thompson_thread_list_create(pool, len);
+    clist = sre_vm_thompson_create_thread_list(pool, len);
     if (clist == NULL) {
         return NULL;
     }
 
     ctx->current_threads = clist;
 
-    nlist = sre_vm_thompson_thread_list_create(pool, len);
+    nlist = sre_vm_thompson_create_thread_list(pool, len);
     if (nlist == NULL) {
         return NULL;
     }

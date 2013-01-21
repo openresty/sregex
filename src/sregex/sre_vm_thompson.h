@@ -41,8 +41,8 @@ struct sre_vm_thompson_ctx_s {
 };
 
 
-sre_vm_thompson_thread_list_t *sre_vm_thompson_thread_list_create(
-    sre_pool_t *pool, sre_uint_t size);
+sre_vm_thompson_thread_list_t *
+    sre_vm_thompson_create_thread_list(sre_pool_t *pool, sre_uint_t size);
 
 unsigned sre_vm_thompson_jit_get_threads_added_size(sre_program_t *prog);
 
