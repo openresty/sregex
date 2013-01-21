@@ -75,27 +75,27 @@ sre_program_dump(sre_program_t *prog)
             printf("%2d. assert ", (int) (pc - start));
 
             switch (pc->v.assertion_type) {
-            case SRE_REGEX_ASSERTION_BIG_A:
+            case SRE_REGEX_ASSERT_BIG_A:
                 printf("\\A");
                 break;
 
-            case SRE_REGEX_ASSERTION_CARET:
+            case SRE_REGEX_ASSERT_CARET:
                 printf("^");
                 break;
 
-            case SRE_REGEX_ASSERTION_SMALL_Z:
+            case SRE_REGEX_ASSERT_SMALL_Z:
                 printf("\\z");
                 break;
 
-            case SRE_REGEX_ASSERTION_BIG_B:
+            case SRE_REGEX_ASSERT_BIG_B:
                 printf("\\B");
                 break;
 
-            case SRE_REGEX_ASSERTION_SMALL_B:
+            case SRE_REGEX_ASSERT_SMALL_B:
                 printf("\\b");
                 break;
 
-            case SRE_REGEX_ASSERTION_DOLLAR:
+            case SRE_REGEX_ASSERT_DOLLAR:
                 printf("$");
                 break;
 

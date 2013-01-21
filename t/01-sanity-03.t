@@ -6,305 +6,304 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: match a form feed in char class
+=== TEST 1: to exceeding 100
+--- re: {0,100}
+--- s eval: 'x' x 16
+--- fatal
+
+
+
+=== TEST 2:
+--- re: x{1}
+--- s eval: 'x' x 16
+
+
+
+=== TEST 3:
+--- re: x{1}?
+--- s eval: 'x' x 16
+
+
+
+=== TEST 4:
+--- re: x{2}
+--- s eval: 'x' x 16
+
+
+
+=== TEST 5:
+--- re: x{2}?
+--- s eval: 'x' x 16
+
+
+
+=== TEST 6:
+--- re: x{11}
+--- s eval: 'x' x 16
+
+
+
+=== TEST 7:
+--- re: x{0,0}
+--- s: hab
+
+
+
+=== TEST 8: match a tab
+--- re: \t
+--- s eval: " \t"
+
+
+
+=== TEST 9: match a tab in char class
+--- re: [\t]
+--- s eval: " \t"
+
+
+
+=== TEST 10: match a newline
+--- re: \n
+--- s eval: " \n"
+
+
+
+=== TEST 11: match a newline in char class
+--- re: [\n]
+--- s eval: " \n"
+
+
+
+=== TEST 12: match a return
+--- re: \r
+--- s eval: " \r"
+
+
+
+=== TEST 13: match a return in char class
+--- re: [\r]
+--- s eval: " \r"
+
+
+
+=== TEST 14: match a form feed
+--- re: \f
+--- s eval: " \f"
+
+
+
+=== TEST 15: match a form feed in char class
 --- re: [\f]
 --- s eval: " \f"
 
 
 
-=== TEST 2: match an alarm feed
+=== TEST 16: match an alarm feed
 --- re: \a
 --- s eval: " \a"
 
 
 
-=== TEST 3: match an alarm in char class
+=== TEST 17: match an alarm in char class
 --- re: [\a]
 --- s eval: " \a"
 
 
 
-=== TEST 4: match an escape feed
+=== TEST 18: match an escape feed
 --- re: \e
 --- s eval: " \e"
 
 
 
-=== TEST 5: match an escape in char class
+=== TEST 19: match an escape in char class
 --- re: [\e]
 --- s eval: " \e"
 
 
 
-=== TEST 6: \A
+=== TEST 20: \A
 --- re: \Ahello
 --- s eval: "hello"
 
 
 
-=== TEST 7: \A
+=== TEST 21: \A
+--- re: \Ahello
+--- s eval: "ahello"
+
+
+
+=== TEST 22: \A
 --- re: \Ahello
 --- s eval: "blah\nhello"
 
 
 
-=== TEST 8: ^
+=== TEST 23: ^
+--- re: ^h
+--- s eval: "h"
+
+
+
+=== TEST 24: ^^
+--- re: ^^hello
+--- s eval: "hello"
+
+
+
+=== TEST 25: ^^
+--- re: ^h^ello
+--- s eval: "hello"
+
+
+
+=== TEST 26: ^^
+--- re: ^\n^ello
+--- s eval: "\nello"
+
+
+
+=== TEST 27: ^
 --- re: ^hello
 --- s eval: "hello"
 
 
 
-=== TEST 9: ^
+=== TEST 28: ^
 --- re: ^hello
 --- s eval: "blah\nhello"
 
 
 
-=== TEST 10: ^ not match
+=== TEST 29: ^ not match
 --- re: ^ello
 --- s eval: "blah\nhello"
 
 
 
-=== TEST 11: ^
+=== TEST 30: ^
 --- re: (a.*(^hello))
 --- s eval: "blah\nhello"
 
 
 
-=== TEST 12: ^
+=== TEST 31: ^
 --- re: ^
 --- s:
 
 
 
-=== TEST 13: ^
+=== TEST 32: ^
 --- re: (^)+
 --- s: "\n\n\n"
 
 
 
-=== TEST 14: \z
+=== TEST 33: \z
+--- re: o\z
+--- s eval: "o"
+
+
+
+=== TEST 34: \z & $
+--- re: $\z\n
+--- s eval: "o\n"
+
+
+
+=== TEST 35: \z & $
+--- re: \z$\n
+--- s eval: "o\n"
+
+
+
+=== TEST 36: \z
+--- re: l\z
+--- s eval: "hello"
+
+
+
+=== TEST 37: \z
 --- re: hello\z
 --- s eval: "blah\nhello"
 
 
 
-=== TEST 15: \z
+=== TEST 38: \z
 --- re: hello\z
 --- s eval: "blah\nhello\n"
 
 
 
-=== TEST 16: $
+=== TEST 39: $
 --- re: hello$
 --- s eval: "blah\nhello"
 
 
 
-=== TEST 17: $
+=== TEST 40: $
 --- re: hello$
 --- s eval: "blah\nhello\n"
 
 
 
-=== TEST 18: $
+=== TEST 41: $
 --- re: hell$
 --- s eval: "blah\nhello\n"
 
 
 
-=== TEST 19: $
+=== TEST 42: $
 --- re: \w+$
 --- s eval: "blah\nhello"
 
 
 
-=== TEST 20: $
+=== TEST 43: $
 --- re: .*(\w+)$
 --- s eval: "blah\nhello"
 
 
 
-=== TEST 21: $
+=== TEST 44: $
 --- re: .*(\w+)$\n
 --- s eval: "blah\nhello"
 
 
 
-=== TEST 22: $
+=== TEST 45: $
 --- re: ((\w+)$\n?)+
 --- s eval: "a\nb"
 
 
 
-=== TEST 23: $
+=== TEST 46: $
 --- re: ((\w+)$\n?)+
 --- s eval: "abc\ndef"
 
 
 
-=== TEST 24: \b
+=== TEST 47: \b
+--- re: a\b
+--- s eval: "a\ndef"
+
+
+
+=== TEST 48: \b
 --- re: ab\b
 --- s eval: "ab\ndef"
 
 
 
-=== TEST 25: \b
+=== TEST 49: \b
 --- re: ab\b
 --- s eval: "abdef"
 
 
 
-=== TEST 26: \b
---- re: ([+a])\b([-b])
+=== TEST 50: \b
+--- re: a\bb
 --- s eval: "ab"
-
-
-
-=== TEST 27: \b
---- re: ([+a])\b([-b])
---- s eval: "a-"
-
-
-
-=== TEST 28: \b
---- re: ([+a])\b([-b])
---- s eval: "+-"
-
-
-
-=== TEST 29: \b
---- re: ([+a])\b([-b])
---- s eval: "+b"
-
-
-
-=== TEST 30: \b
---- re: ([+a])\b\b([-b])
---- s eval: "+b"
-
-
-
-=== TEST 31: \b
---- re: \b([-b])
---- s eval: "b"
-
-
-
-=== TEST 32: \b
---- re: \b([-b])
---- s eval: "-"
-
-
-
-=== TEST 33: \b\z
---- re: a\b\z
---- s eval: "a\n"
-
-
-
-=== TEST 34: \B
---- re: ([+a])\B([-b])
---- s eval: "ab"
-
-
-
-=== TEST 35: \B
---- re: ([+a])\B([-b])
---- s eval: "a-"
-
-
-
-=== TEST 36: \B
---- re: ([+a])\B([-b])
---- s eval: "+-"
-
-
-
-=== TEST 37: \B
---- re: ([+a])\B([-b])
---- s eval: "+b"
-
-
-
-=== TEST 38: \B
---- re: ([+a])\B\B([-b])
---- s eval: "+b"
-
-
-
-=== TEST 39: \B
---- re: \B([-b])
---- s eval: "b"
-
-
-
-=== TEST 40: \B
---- re: \B([-b])
---- s eval: "-"
-
-
-
-=== TEST 41: \B\z
---- re: a\B\z
---- s eval: "a\n"
-
-
-
-=== TEST 42: \h
---- re: \h+
---- s eval: "\f\r\t "
-
-
-
-=== TEST 43: \H
---- re: \H+
---- s eval: "\f\r\t "
-
-
-
-=== TEST 44: \v
---- re: \v+
---- s eval: " \t\n\x0b\f\r\x85\x86"
-
-
-
-=== TEST 45: \V
---- re: \v+
---- s eval: "\x86 \t\n\x0b\f\r\x85"
-
-
-
-=== TEST 46: \h
---- re: [\h]+
---- s eval: "\f\r\t "
-
-
-
-=== TEST 47: \H
---- re: [\H]+
---- s eval: "\f\r\t "
-
-
-
-=== TEST 48: \v
---- re: [\v]+
---- s eval: " \t\n\x0b\f\r\x85\x86"
---- cap: (2, 7)
-
-
-
-=== TEST 49: \V
---- re: [\V]+
---- s eval: "\x86 \t\n\x0b\f\r\x85"
---- cap: (0, 3)
-
-
-
-=== TEST 50: [\b]
---- re: [\b]+
---- s eval: "a\b\b"
 
 
 

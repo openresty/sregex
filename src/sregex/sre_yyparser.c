@@ -1823,7 +1823,7 @@ yyreduce:
             YYABORT;
         }
 
-        (yyval.re)->assertion_type = SRE_REGEX_ASSERTION_CARET;
+        (yyval.re)->assertion_type = SRE_REGEX_ASSERT_CARET;
       }
     break;
 
@@ -1836,7 +1836,7 @@ yyreduce:
             YYABORT;
         }
 
-        (yyval.re)->assertion_type = SRE_REGEX_ASSERTION_DOLLAR;
+        (yyval.re)->assertion_type = SRE_REGEX_ASSERT_DOLLAR;
       }
     break;
 
@@ -2345,7 +2345,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 break;
             }
 
-            r->assertion_type = SRE_REGEX_ASSERTION_BIG_B;
+            r->assertion_type = SRE_REGEX_ASSERT_BIG_B;
 
             lvalp->re = r;
             locp->last = *src;
@@ -2358,7 +2358,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 break;
             }
 
-            r->assertion_type = SRE_REGEX_ASSERTION_SMALL_B;
+            r->assertion_type = SRE_REGEX_ASSERT_SMALL_B;
 
             lvalp->re = r;
             locp->last = *src;
@@ -2371,7 +2371,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 break;
             }
 
-            r->assertion_type = SRE_REGEX_ASSERTION_SMALL_Z;
+            r->assertion_type = SRE_REGEX_ASSERT_SMALL_Z;
 
             lvalp->re = r;
             locp->last = *src;
@@ -2385,7 +2385,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 break;
             }
 
-            r->assertion_type = SRE_REGEX_ASSERTION_BIG_A;
+            r->assertion_type = SRE_REGEX_ASSERT_BIG_A;
 
             lvalp->re = r;
             locp->last = *src;

@@ -6,43 +6,219 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: [[]]
+=== TEST 1: \b
+--- re: (a\b|a\b)b
+--- s eval: "ab"
+
+
+
+=== TEST 2: \b
+--- re: ([+a])\b([-b])
+--- s eval: "ab"
+
+
+
+=== TEST 3: \b
+--- re: ([+a])\b([-b])
+--- s eval: "a-"
+
+
+
+=== TEST 4: \b
+--- re: ([+a])\b([-b])
+--- s eval: "+-"
+
+
+
+=== TEST 5: \b
+--- re: ([+a])\b([-b])
+--- s eval: "+b"
+
+
+
+=== TEST 6: \b
+--- re: ([+a])\b\b([-b])
+--- s eval: "+b"
+
+
+
+=== TEST 7: \b
+--- re: \bb
+--- s eval: "b"
+
+
+
+=== TEST 8: \b
+--- re: \b([-b])
+--- s eval: "b"
+
+
+
+=== TEST 9: \b
+--- re: \b([-b])
+--- s eval: "-"
+
+
+
+=== TEST 10: \b\z
+--- re: a\b\z
+--- s eval: "a\n"
+
+
+
+=== TEST 11: testinput1:1641
+--- re: .*\b5
+--- s eval: "5"
+
+
+
+=== TEST 12: testinput1:1641
+--- re: .*\b5+$
+--- s eval: "55"
+
+
+
+=== TEST 13: \B
+--- re: ([+a])\B([-b])
+--- s eval: "ab"
+
+
+
+=== TEST 14: \B
+--- re: ([+a])\B([-b])
+--- s eval: "a-"
+
+
+
+=== TEST 15: \B
+--- re: ([+a])\B([-b])
+--- s eval: "+-"
+
+
+
+=== TEST 16: \B
+--- re: ([+a])\B([-b])
+--- s eval: "+b"
+
+
+
+=== TEST 17: \B
+--- re: ([+a])\B\B([-b])
+--- s eval: "+b"
+
+
+
+=== TEST 18: \B
+--- re: \B([-b])
+--- s eval: "b"
+
+
+
+=== TEST 19: \B
+--- re: \B([-b])
+--- s eval: "-"
+
+
+
+=== TEST 20: \B\z
+--- re: a\B\z
+--- s eval: "a\n"
+
+
+
+=== TEST 21: \h
+--- re: \h+
+--- s eval: "\f\r\t "
+
+
+
+=== TEST 22: \H
+--- re: \H+
+--- s eval: "\f\r\t "
+
+
+
+=== TEST 23: \v
+--- re: \v+
+--- s eval: " \t\n\x0b\f\r\x85\x86"
+
+
+
+=== TEST 24: \V
+--- re: \v+
+--- s eval: "\x86 \t\n\x0b\f\r\x85"
+
+
+
+=== TEST 25: \h
+--- re: [\h]+
+--- s eval: "\f\r\t "
+
+
+
+=== TEST 26: \H
+--- re: [\H]+
+--- s eval: "\f\r\t "
+
+
+
+=== TEST 27: \v
+--- re: [\v]+
+--- s eval: " \t\n\x0b\f\r\x85\x86"
+--- cap: (2, 7)
+
+
+
+=== TEST 28: \V
+--- re: [\V]+
+--- s eval: "\x86 \t\n\x0b\f\r\x85"
+--- cap: (0, 3)
+
+
+
+=== TEST 29: [\b]
+--- re: [\b]+
+--- s eval: "a\b\b"
+
+
+
+=== TEST 30: [[]]
 --- re: [[]]+
 --- s eval: "a[[[[]]]]"
 
 
 
-=== TEST 2: [][]
+=== TEST 31: [][]
 --- re: [][]+
 --- s eval: "a[[[[]]]]"
 
 
 
-=== TEST 3: [][]
+=== TEST 32: [][]
 --- re: [^][]+
 --- s eval: "ab[[[[]]]]"
 
 
 
-=== TEST 4: \N
+=== TEST 33: \N
 --- re: \N+
 --- s eval: "hello!\r\t "
 
 
 
-=== TEST 5: \x{DD}
+=== TEST 34: \x{DD}
 --- re: \x{0a}
 --- s eval: "a\nb"
 
 
 
-=== TEST 6: \x{DD}
+=== TEST 35: \x{DD}
 --- re: \x{0a}b
 --- s eval: "a\nb"
 
 
 
-=== TEST 7: \x{DD}
+=== TEST 36: \x{DD}
 --- re: \x{0a
 --- s eval: "a\nb"
 --- err
@@ -50,281 +226,87 @@ __DATA__
 
 
 
-=== TEST 8: \x{DD}
+=== TEST 37: \x{DD}
 --- re: \xa
 --- s eval: "a\nb"
 
 
 
-=== TEST 9: \xDD
+=== TEST 38: \xDD
 --- re: \x0a
 --- s eval: "a\nb"
 
 
 
-=== TEST 10: \xDD
+=== TEST 39: \xDD
 --- re: \x0ab
 --- s eval: "a\nb"
 
 
 
-=== TEST 11: \xDD
+=== TEST 40: \xDD
 --- re: [\x0ab]+
 --- s eval: "a\nb"
 
 
 
-=== TEST 12: \xD
+=== TEST 41: \xD
 --- re: [\xa]+
 --- s eval: "a\nb"
 
 
 
-=== TEST 13: \xDD
+=== TEST 42: \xDD
 --- re: \x0a!
 --- s eval: "a\n!"
 
 
 
-=== TEST 14: \xDD
+=== TEST 43: \xDD
 --- re: \xa!
 --- s eval: "a\n!"
 
 
 
-=== TEST 15: \x{DD}
+=== TEST 44: \x{DD}
 --- re: \x{a}b
 --- s eval: "a\nb"
 
 
 
-=== TEST 16: \x{DD}
+=== TEST 45: \x{DD}
 --- re: \x{A}b
 --- s eval: "a\nb"
 
 
 
-=== TEST 17: \x{DD}
+=== TEST 46: \x{DD}
 --- re: [\x{A}b]+
 --- s eval: "a\nb"
 
 
 
-=== TEST 18: \o{dd}
+=== TEST 47: \o{dd}
 --- re: \o{12}
 --- s eval: "a\nb"
 
 
 
-=== TEST 19: \o{ddd}
+=== TEST 48: \o{ddd}
 --- re: \o{012}b
 --- s eval: "a\nb"
 
 
 
-=== TEST 20: \o{ddd}
+=== TEST 49: \o{ddd}
 --- re: [\o{012}b]+
 --- s eval: "a\nb"
 
 
 
-=== TEST 21: \o{ddd}
+=== TEST 50: \o{ddd}
 --- re: [\o{12}b]+
 --- s eval: "a\nb"
-
-
-
-=== TEST 22: \o{ddd}
---- re: [\o{1}b]+
---- s eval: "a\1b"
-
-
-
-=== TEST 23: \o{ddd}
---- re: [\o{1
---- s eval: "a\1b"
---- err
-[error] syntax error at pos 0
-
-
-
-=== TEST 24: \oDD
---- re: \o12
---- s eval: "a\nb"
---- err
-[error] syntax error at pos 0
-
-
-
-=== TEST 25: \oDD
---- re: \o{12
---- s eval: "a\nb"
---- err
-[error] syntax error at pos 0
-
-
-
-=== TEST 26: [\02]
---- re: [\02]
---- s eval: "a\2b"
-
-
-
-=== TEST 27: [\12]
---- re: [\12]
---- s eval: "a\nb"
-
-
-
-=== TEST 28:
---- re: [\012]
---- s eval: "a\nb"
-
-
-
-=== TEST 29:
---- re: [\0123]
---- s eval: "a\n3"
-
-
-
-=== TEST 30:
---- re: [\0123]+
---- s eval: "a\n3"
-
-
-
-=== TEST 31:
---- re: [\0123]+
---- s eval: "a\n23"
-
-
-
-=== TEST 32: [\012]
---- re: [\018]
---- s eval: "a\n8"
-
-
-
-=== TEST 33:
---- re: \02
---- s eval: "a\2b"
-
-
-
-=== TEST 34:
---- re: \12
---- s eval: "a\nb"
-
-
-
-=== TEST 35:
---- re: \012
---- s eval: "a\nb"
-
-
-
-=== TEST 36:
---- re: \0123
---- s eval: "a\n3"
-
-
-
-=== TEST 37: [\012]
---- re: \018
---- s eval: "a\n8"
-
-
-
-=== TEST 38: \cb
---- re: \cb
---- s eval: "a\0028"
-
-
-
-=== TEST 39: \cB
---- re: \cB
---- s eval: "a\0028"
-
-
-
-=== TEST 40: \c
---- re: \c
---- s eval: "a\0028"
---- err
-[error] syntax error at pos 0
-
-
-
-=== TEST 41: [\cb]
---- re: [\cb]+
---- s eval: "a\0028"
-
-
-
-=== TEST 42: \cB
---- re: [\cB]+
---- s eval: "a\0028"
-
-
-
-=== TEST 43: \c
---- re: [\c]
---- s eval: "a\0028"
---- err
-[error] syntax error at pos 0
-
-
-
-=== TEST 44: \cB8
---- re: [\cB8]+
---- s eval: "a\0028"
-
-
-
-=== TEST 45: literal :
---- re: a:\w+
---- s eval: "a:hello"
-
-
-
-=== TEST 46: from > to and to == 0
---- re: a{1,0}
---- s: a
---- err
-[error] syntax error at pos 1
-
-
-
-=== TEST 47: trailing \
---- re: \
---- s: a
---- err
-[error] syntax error at pos 0
-
-
-
-=== TEST 48: from > to
---- re: [D-C]
---- s: a
---- err
-[error] syntax error at pos 0
-
-
-
-=== TEST 49: the "possessive" quantifier form not supported
---- re: a++
---- s: a
---- err
-[error] syntax error at pos 2
-
-
-
-=== TEST 50: the "possessive" quantifier form not supported
---- re: a*+
---- s: a
---- err
-[error] syntax error at pos 2
 
 
 

@@ -32,13 +32,24 @@ typedef enum {
 
 
 typedef enum {
-    SRE_REGEX_ASSERTION_SMALL_B    = 0,
-    SRE_REGEX_ASSERTION_BIG_B      = 1,
-    SRE_REGEX_ASSERTION_BIG_A      = 2,
-    SRE_REGEX_ASSERTION_SMALL_Z    = 3,
-    SRE_REGEX_ASSERTION_CARET      = 4,
-    SRE_REGEX_ASSERTION_DOLLAR     = 5
+    SRE_REGEX_ASSERT_SMALL_Z    = 0x01,
+    SRE_REGEX_ASSERT_DOLLAR     = 0x02,
+    SRE_REGEX_ASSERT_BIG_B      = 0x04,
+    SRE_REGEX_ASSERT_SMALL_B    = 0x08,
+    SRE_REGEX_ASSERT_BIG_A      = 0x10,
+    SRE_REGEX_ASSERT_CARET      = 0x20
 } sre_regex_assertion_type_t;
+
+
+enum {
+    SRE_REGEX_ASSERT_LOOKAHEAD = SRE_REGEX_ASSERT_SMALL_Z
+                                 | SRE_REGEX_ASSERT_DOLLAR
+                                 | SRE_REGEX_ASSERT_BIG_B
+                                 | SRE_REGEX_ASSERT_SMALL_B,
+
+    SRE_REGEX_ASSERT_WORD_BOUNDARY = SRE_REGEX_ASSERT_SMALL_B
+                                     | SRE_REGEX_ASSERT_BIG_B
+};
 
 
 typedef struct sre_regex_range_s  sre_regex_range_t;
@@ -65,9 +76,8 @@ struct sre_regex_s {
     sre_char             ch;
     sre_regex_range_t   *range;
     unsigned             group;
+    unsigned             assertion_type;
     unsigned             greedy; /* :1 */
-
-    sre_regex_assertion_type_t   assertion_type:8;
 };
 
 

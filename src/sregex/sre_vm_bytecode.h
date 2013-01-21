@@ -63,6 +63,9 @@ struct sre_program_s {
     sre_instruction_t   *start;
     sre_uint_t           len;
     unsigned             tag;
+    unsigned             uniq_threads; /* unique thread count */
+    unsigned             dup_threads;  /* duplicatable thread count */
+    unsigned             lookahead_asserts;
 };
 
 

@@ -106,7 +106,8 @@ sub run_test ($) {
 
         } else {
 
-            my ($thompson_match, $splitted_thompson_match, $pike_match, $pike_cap,
+            my ($thompson_match, $jitted_thompson_match, $splitted_jitted_thompson_match,
+                $splitted_thompson_match, $pike_match, $pike_cap,
                 $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap)
                 = parse_res($res);
 
@@ -136,6 +137,8 @@ sub run_test ($) {
                 my $expected_cap = $block->cap;
 
                 ok($thompson_match, "$name - thompson vm should match");
+                ok($jitted_thompson_match, "$name - jitted thompson vm should match");
+                ok($splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should match");
                 ok($splitted_thompson_match, "$name - splitted thompson vm should match");
 
                 ok($pike_match, "$name - pike vm should match");
@@ -154,6 +157,8 @@ sub run_test ($) {
                 #warn "regex: $prefix$re";
 
                 ok($thompson_match, "$name - thompson vm should match");
+                ok($jitted_thompson_match, "$name - jitted thompson vm should match");
+                ok($splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should match");
                 ok($splitted_thompson_match, "$name - splitted thompson vm should match");
 
                 ok($pike_match, "$name - pike vm should match");
@@ -168,6 +173,8 @@ sub run_test ($) {
 
             } else {
                 ok(!$thompson_match, "$name - thompson vm should not match");
+                ok(!$jitted_thompson_match, "$name - jitted thompson vm should not match");
+                ok(!$splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should not match");
                 ok(!$splitted_thompson_match, "$name - splitted thompson vm should not match");
                 ok(!$pike_match, "$name - pike vm should not match");
                 ok(!$splitted_pike_match, "$name - splitted pike vm should not match");
@@ -181,7 +188,8 @@ sub parse_res ($) {
     my $res = shift;
     open my $in, '<', \$res or die $!;
 
-    my ($thompson_match, $splitted_thompson_match, $pike_match, $pike_cap,
+    my ($thompson_match, $jitted_thompson_match, $splitted_jitted_thompson_match,
+        $splitted_thompson_match, $pike_match, $pike_cap,
         $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap);
 
     while (<$in>) {
@@ -202,6 +210,44 @@ sub parse_res ($) {
             } else {
                 warn "unknown thompson result: $res\n";
                 $thompson_match = 0;
+            }
+
+        } elsif (/^jitted thompson (.+)/) {
+            my $res = $1;
+
+            if (defined $jitted_thompson_match) {
+                warn "duplicate jitted thompson result: $_";
+                next;
+            }
+
+            if ($res eq 'match') {
+                $jitted_thompson_match = 1;
+
+            } elsif ($res eq 'no match') {
+                $jitted_thompson_match = 0;
+
+            } else {
+                warn "unknown jitted thompson result: $res\n";
+                $jitted_thompson_match = 0;
+            }
+
+        } elsif (/^splitted jitted thompson (.+)/) {
+            my $res = $1;
+
+            if (defined $splitted_jitted_thompson_match) {
+                warn "duplicate splitted jitted thompson result: $_";
+                next;
+            }
+
+            if ($res eq 'match') {
+                $splitted_jitted_thompson_match = 1;
+
+            } elsif ($res eq 'no match') {
+                $splitted_jitted_thompson_match = 0;
+
+            } else {
+                warn "unknown splitted jitted thompson result: $res\n";
+                $splitted_jitted_thompson_match = 0;
             }
 
         } elsif (/^splitted thompson (.+)/) {
@@ -273,7 +319,8 @@ sub parse_res ($) {
 
     }
 
-    return ($thompson_match, $splitted_thompson_match, $pike_match, $pike_cap,
+    return ($thompson_match, $jitted_thompson_match, $splitted_jitted_thompson_match,
+        $splitted_thompson_match, $pike_match, $pike_cap,
         $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap);
 }
 

@@ -59,6 +59,9 @@ sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
 
     prog->len = pc - prog->start;
     prog->tag = 0;
+    prog->lookahead_asserts = 0;
+    prog->dup_threads = 0;
+    prog->uniq_threads = 0;
 
     return prog;
 }

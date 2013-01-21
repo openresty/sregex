@@ -13,40 +13,13 @@
 #include <sregex/ddebug.h>
 
 
+#include <sregex/sre_vm_thompson.h>
 #include <sregex/sre_capture.h>
 #include <sregex/sre_vm_bytecode.h>
 
 
-typedef struct {
-    sre_instruction_t       *pc;
-    unsigned                 seen_word; /* :1 */
-} sre_vm_thompson_thread_t;
-
-
-typedef struct {
-    sre_uint_t                  count;
-    sre_vm_thompson_thread_t   *threads;
-} sre_vm_thompson_thread_list_t;
-
-
-struct sre_vm_thompson_ctx_s {
-    sre_pool_t          *pool;
-    sre_program_t       *program;
-    unsigned             tag;
-    sre_char            *buffer;
-
-    sre_vm_thompson_thread_list_t       *current_threads;
-    sre_vm_thompson_thread_list_t       *next_threads;
-
-    unsigned             first_buf;     /* :1 */
-};
-
-
 static void sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
     sre_vm_thompson_thread_list_t *l, sre_instruction_t *pc, sre_char *sp);
-static sre_vm_thompson_thread_list_t *sre_vm_thompson_thread_list_create(
-    sre_pool_t *pool, sre_uint_t size);
-
 
 
 SRE_API sre_vm_thompson_ctx_t *
@@ -141,8 +114,8 @@ sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, sre_char *input, size_t size,
                 for (j = 0; j < pc->v.ranges->count; j++) {
                     range = &pc->v.ranges->head[j];
 
-                    dd("testing %d for [%d, %d] (%u)", *sp, range->from,
-                       range->to, j);
+                    dd("testing %d for [%d, %d] (%u)", *sp, (int) range->from,
+                       (int) range->to, (unsigned) j);
 
                     if (*sp >= range->from && *sp <= range->to) {
                         in = 1;
@@ -166,8 +139,8 @@ sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, sre_char *input, size_t size,
                 for (j = 0; j < pc->v.ranges->count; j++) {
                     range = &pc->v.ranges->head[j];
 
-                    dd("testing %d for [%d, %d] (%u)", *sp, range->from,
-                       range->to, j);
+                    dd("testing %d for [%d, %d] (%u)", *sp, (int) range->from,
+                       (int) range->to, (unsigned) j);
 
                     if (*sp >= range->from && *sp <= range->to) {
                         in = 1;
@@ -200,21 +173,21 @@ sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, sre_char *input, size_t size,
 
             case SRE_OPCODE_ASSERT:
                 switch (pc->v.assertion_type) {
-                case SRE_REGEX_ASSERTION_SMALL_Z:
+                case SRE_REGEX_ASSERT_SMALL_Z:
                     if (sp != last) {
                         break;
                     }
 
                     goto assertion_hold;
 
-                case SRE_REGEX_ASSERTION_DOLLAR:
+                case SRE_REGEX_ASSERT_DOLLAR:
                     if (sp != last && *sp != '\n') {
                         break;
                     }
 
                     goto assertion_hold;
 
-                case SRE_REGEX_ASSERTION_BIG_B:
+                case SRE_REGEX_ASSERT_BIG_B:
                     if (t->seen_word ^ (sp != last && sre_isword(*sp))) {
                         dd("\\B assertion failed: %u %c", t->seen_word, *sp);
                         break;
@@ -225,13 +198,22 @@ sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, sre_char *input, size_t size,
                     goto assertion_hold;
 
 
-                case SRE_REGEX_ASSERTION_SMALL_B:
-                    if ((t->seen_word ^ (sp != last && sre_isword(*sp))) == 0) {
-                        dd("\\b assertion failed: %u %c", t->seen_word, *sp);
+                case SRE_REGEX_ASSERT_SMALL_B:
+                    dd("seen word: %d, sp == last: %d, char=%d",
+                       t->seen_word, sp == last, sp == last ? 0 : *sp);
+                    if ((t->seen_word
+                        ^ (sp != last && sre_isword(*sp))) == 0)
+                    {
+                        dd("\\b assertion failed: %u %c, cur is word: %d, "
+                           "pc=%d",
+                           (int) t->seen_word, sp == last ? 0 : *sp,
+                           sp != last && sre_isword(*sp),
+                           (int) (pc - ctx->program->start));
                         break;
                     }
 
-                    dd("\\b assertion passed: %u %c", t->seen_word, *sp);
+                    dd("\\b assertion passed: %u %c", (int) t->seen_word,
+                       sp != last ? *sp : 0);
 
                     goto assertion_hold;
 
@@ -292,8 +274,8 @@ static void
 sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
     sre_vm_thompson_thread_list_t *l, sre_instruction_t *pc, sre_char *sp)
 {
+    uint8_t                          seen_word = 0;
     sre_vm_thompson_thread_t        *t;
-    unsigned                         seen_word = 0;
 
     if (pc->tag == ctx->tag) {  /* already on list */
         return;
@@ -317,7 +299,7 @@ sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
 
     case SRE_OPCODE_ASSERT:
         switch (pc->v.assertion_type) {
-        case SRE_REGEX_ASSERTION_BIG_A:
+        case SRE_REGEX_ASSERT_BIG_A:
             if (sp != ctx->buffer) {
                 dd("\\A assertion failed: %d", (int) (sp - ctx->buffer));
                 return;
@@ -326,7 +308,7 @@ sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
             sre_vm_thompson_add_thread(ctx, l, pc + 1, sp);
             return;
 
-        case SRE_REGEX_ASSERTION_CARET:
+        case SRE_REGEX_ASSERT_CARET:
             if (sp != ctx->buffer && sp[-1] != '\n') {
                 return;
             }
@@ -334,10 +316,13 @@ sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
             sre_vm_thompson_add_thread(ctx, l, pc + 1, sp);
             return;
 
-        case SRE_REGEX_ASSERTION_SMALL_B:
-        case SRE_REGEX_ASSERTION_BIG_B:
+        case SRE_REGEX_ASSERT_SMALL_B:
+        case SRE_REGEX_ASSERT_BIG_B:
             seen_word = (sp != ctx->buffer && sre_isword(sp[-1]));
-            dd("seen word: %u %c", seen_word, *sp);
+            dd("pc=%d, setting seen word: %u %c",
+               (int) (pc - ctx->program->start),
+               (int) seen_word,
+               (sp != ctx->buffer) ? sp[-1] : 0);
             break;
 
         default:
@@ -360,22 +345,16 @@ sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
 }
 
 
-static sre_vm_thompson_thread_list_t *
+sre_vm_thompson_thread_list_t *
 sre_vm_thompson_thread_list_create(sre_pool_t *pool, sre_uint_t size)
 {
-    sre_char                            *p;
     sre_vm_thompson_thread_list_t       *l;
 
-    p = sre_pnalloc(pool, sizeof(sre_vm_thompson_thread_list_t)
-                    + size * sizeof(sre_vm_thompson_thread_t));
-    if (p == NULL) {
+    l = sre_palloc(pool, sizeof(sre_vm_thompson_thread_list_t)
+                    + (size - 1) * sizeof(sre_vm_thompson_thread_t));
+    if (l == NULL) {
         return NULL;
     }
-
-    l = (sre_vm_thompson_thread_list_t *) p;
-
-    p += sizeof(sre_vm_thompson_thread_list_t);
-    l->threads = (sre_vm_thompson_thread_t *) p;
 
     l->count = 0;
 

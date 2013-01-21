@@ -1,0 +1,955 @@
+
+/*
+ * Copyright 2012 Yichun "agentzh" Zhang
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+
+|.arch x64
+|.actionlist sre_vm_thompson_jit_actions
+
+|.globals SRE_VM_THOMPSON_GLOB_
+
+#if (DDEBUG)
+|.globalnames sre_vm_thompson_jit_global_names
+#endif
+
+/* thread count */
+|.define TC,    r14  // callee-save
+
+/* seen word */
+|.define SW,    r13  // callee-save
+
+/* string pointer */
+|.define SP,    r12  // callee-save
+
+|.define LAST,  rdx  // overriding 3rd arg
+|.define INPUT, rsi  // 2nd arg
+|.define EOF,   bl   // 4th arg
+
+/* seen last byte */
+|.define LB,    bh
+
+/* current input string byte */
+|.define C,     r11b
+
+/* the position after the last thread */
+|.define LT,    r9
+
+/* recording threads added */
+|.define ADDED, rcx
+
+|.type CTX, sre_vm_thompson_ctx_t,          rdi  // 1st arg
+|.type TL,  sre_vm_thompson_thread_list_t,  r15  // callee-save
+|.type T,   sre_vm_thompson_thread_t,       r8   // callee-save
+|.type CT,  sre_vm_thompson_thread_t,       rbp  // callee-save
+
+/* current thread list */
+|.type CTL, sre_vm_thompson_thread_list_t,  r10  // callee-save
+
+|.macro addThreadWithoutCheck, target
+|
+||if (asserts & SRE_REGEX_ASSERT_WORD_BOUNDARY) {
+|    mov T->seen_word, al
+||}
+|
+|  lea rax, [target]
+|  mov T->pc, rax
+|
+||if (jit->program->lookahead_asserts) {
+||  if (asserts) {
+|
+|     lea rax, [=>(jit->program->len + asserts - 1)]
+|     mov T->asserts_handler, rax
+|
+||  } else {
+|     xor rax, rax
+|     mov T->asserts_handler, rax
+||  }
+||}
+|
+|  inc TC
+|
+||if (n != path->nthreads) {
+|    add T, #T
+||}
+|
+|.endmacro
+
+
+|.macro addThreadWithCheck, target
+|
+||if (jit->threads_added_in_memory) {
+||  if (tid / 64 != prev_word) {
+||    prev_word = tid / 64;
+|     mov ADDED, CTX->threads_added[(tid / 64)]
+||  }
+|
+||  bofs = tid % 64;
+|
+||} else {
+||  bofs = tid;
+||}
+|
+|  bts ADDED, (bofs)  // load CF with the bit and set the bit
+|  jb >2  // jump if CF = 1
+|
+||if (jit->threads_added_in_memory) {
+|    mov CTX->threads_added[(tid / 64)], ADDED
+||}
+|
+||if (asserts & SRE_REGEX_ASSERT_WORD_BOUNDARY) {
+|    mov T->seen_word, al
+||}
+|
+|  lea rax, [target]
+|  mov T->pc, rax
+|
+||if (jit->program->lookahead_asserts) {
+||  if (asserts) {
+|     lea rax, [=>(jit->program->len + asserts - 1)]
+|     mov T->asserts_handler, rax
+|
+||  } else {
+|     xor rax, rax
+|     mov T->asserts_handler, rax
+||  }
+||}
+|
+|  inc TC
+|
+||if (n != path->nthreads) {
+|    add T, #T
+||}
+|
+|2:
+|
+|.endmacro
+
+
+|.macro testWordChar
+||if (!char_always_valid) {
+|   test LB, LB
+|   jnz >2
+||}
+|  cmp C, byte '0'
+|  jb >2
+|  cmp C, byte '9'
+|  jbe >3
+|  cmp C, byte 'A'
+|  jb >2
+|  cmp C, byte 'Z'
+|  jbe >3
+|  cmp C, byte 'a'
+|  jb >2
+|  cmp C, byte 'z'
+|  jbe >3
+|  cmp C, byte '_'
+|  je >3
+|2:
+|  // not word
+|  xor al, al
+|  jmp >4
+|3:
+|  // word
+|  mov al, 1
+|4:
+|.endmacro
+
+
+/* This affects the "|" DynASM lines. */
+#define Dst  dasm
+
+
+#include <sregex/sre_core.h>
+#include <sregex/sre_regex.h>
+#include <sregex/sre_palloc.h>
+#include <sregex/sre_vm_thompson.h>
+#include <stdio.h>
+
+
+typedef struct sre_vm_thompson_path_s  sre_vm_thompson_path_t;
+
+typedef struct {
+    sre_pool_t      *pool;
+    sre_program_t   *program;
+    dasm_State     **dasm;
+    unsigned         tag;
+    unsigned         thread_index_factor;
+
+    uint8_t         *bc_accessed;  /* TODO: use a sparse or bit array here */
+    int             *dup_thread_ids;  /* TODO: use a sparse array here */
+    unsigned         threads_added_in_memory;  /* 1: use ctx->threads_added;
+                                                  0: use the CPU register
+                                                     ADDED only */
+
+    sre_vm_thompson_path_t  *path;
+} sre_vm_thompson_jit_t;
+
+
+typedef struct sre_vm_thompson_state_s  sre_vm_thompson_state_t;
+
+struct sre_vm_thompson_state_s {
+    unsigned                     asserts;
+    unsigned                     thread_index;
+    unsigned                     is_thread;
+    sre_instruction_t           *bc;
+    sre_vm_thompson_state_t     *next;
+};
+
+
+struct sre_vm_thompson_path_s {
+    unsigned                 nthreads;
+    sre_instruction_t       *from;
+    sre_vm_thompson_state_t *to;
+    sre_vm_thompson_path_t  *next;
+};
+
+
+static sre_int_t sre_vm_thompson_jit_compile_path(sre_vm_thompson_jit_t *jit,
+    sre_vm_thompson_path_t *path);
+static sre_int_t sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit);
+static sre_int_t sre_vm_thompson_jit_get_next_states(sre_vm_thompson_jit_t *jit,
+    sre_instruction_t *pc, sre_vm_thompson_state_t ***plast_state,
+    unsigned *nthreads, unsigned asserts);
+static sre_int_t sre_vm_thompson_jit_epilogue(sre_vm_thompson_jit_t *jit);
+static sre_int_t sre_vm_thompson_jit_build_paths(sre_vm_thompson_jit_t *jit,
+    sre_instruction_t *pc, sre_vm_thompson_path_t ***plast_path);
+static unsigned sre_vm_thompson_jit_gen_thread_index(sre_vm_thompson_jit_t *jit,
+     sre_instruction_t *pc, unsigned asserts);
+
+
+SRE_NOAPI sre_int_t
+sre_vm_thompson_jit_do_compile(dasm_State **dasm, sre_pool_t *pool,
+    sre_program_t *prog)
+{
+    unsigned                        i, n, count;
+    sre_vm_thompson_jit_t           jit;
+    sre_vm_thompson_path_t         *path, **last_path;
+
+    jit.pool = pool;
+    jit.program = prog;
+    jit.dasm = dasm;
+
+    jit.bc_accessed = sre_pcalloc(pool, prog->len);
+    if (jit.bc_accessed == NULL) {
+        return SRE_ERROR;
+    }
+
+    jit.thread_index_factor = (SRE_REGEX_ASSERT_LOOKAHEAD + 1);
+
+    dd("prog len: %d", (int) prog->len);
+    dd("thread index factor: %d", (int) jit.thread_index_factor);
+
+    count = prog->len * jit.thread_index_factor;
+    dd("thread index count: %d", (int) count);
+
+    jit.dup_thread_ids = sre_pcalloc(pool, count * sizeof(int));
+    if (jit.dup_thread_ids == NULL) {
+        return SRE_ERROR;
+    }
+
+    jit.path = NULL;
+    last_path = &jit.path;
+
+    if (sre_vm_thompson_jit_build_paths(&jit, prog->start, &last_path)
+        != SRE_OK)
+    {
+        return SRE_ERROR;
+    }
+
+    dd("first path: %p, pc: %d", jit.path,
+       (int) (jit.path->from - jit.program->start));
+
+    n = 0;
+    for (i = 0; i < count; i++) {
+        if (jit.dup_thread_ids[i] > 0) {
+            dd("found unique thread at pc %d, ref count: %d",
+               (int) (i / jit.thread_index_factor), (int) jit.dup_thread_ids[i]);
+
+            prog->uniq_threads++;
+
+            if (jit.dup_thread_ids[i] > 1) {
+                dd("found duplicatable thread at pc %d, ref count: %d",
+                   (int) (i / jit.thread_index_factor), (int) jit.dup_thread_ids[i]);
+
+                jit.dup_thread_ids[i] = n++;
+                continue;
+            }
+        }
+
+        jit.dup_thread_ids[i] = -1;
+    }
+
+    prog->dup_threads = n;
+
+    dd("unique threads: %u, duplicatable threads: %u",
+       prog->uniq_threads, prog->dup_threads);
+
+    jit.threads_added_in_memory = (prog->dup_threads > 64);
+
+#if 0
+    jit.threads_added_in_memory = 1;
+#endif
+
+    n = prog->len + prog->lookahead_asserts;
+
+    dd("growing pc label to %d, prog len: %d", n, (int) prog->len);
+    dasm_growpc(dasm, n);
+
+    if (sre_vm_thompson_jit_prologue(&jit) != SRE_OK) {
+        return SRE_ERROR;
+    }
+
+    for (path = jit.path; path; path = path->next) {
+
+        dd("compiling path %p with pc %d", path,
+           (int) (path->from - jit.program->start));
+
+        if (sre_vm_thompson_jit_compile_path(&jit, path) != SRE_OK) {
+            return SRE_ERROR;
+        }
+    }
+
+    if (sre_vm_thompson_jit_epilogue(&jit) != SRE_OK) {
+        return SRE_ERROR;
+    }
+
+    return SRE_OK;
+}
+
+
+static sre_int_t
+sre_vm_thompson_jit_build_paths(sre_vm_thompson_jit_t *jit, sre_instruction_t *pc,
+    sre_vm_thompson_path_t ***plast_path)
+{
+    sre_vm_thompson_path_t      *path;
+    sre_vm_thompson_state_t     *state, **last_state;
+
+    jit->bc_accessed[pc - jit->program->start] = 1;
+
+    path = sre_pcalloc(jit->pool, sizeof(sre_vm_thompson_path_t));
+    if (path == NULL) {
+        return SRE_ERROR;
+    }
+
+    dd("build path from pc %d", (int) (pc - jit->program->start));
+
+    path->from = pc;
+    last_state = &path->to;
+    jit->tag = jit->program->tag + 1;
+
+    if (pc == jit->program->start) {
+        if (sre_vm_thompson_jit_get_next_states(jit, pc, &last_state,
+                                                &path->nthreads, 0)
+            != SRE_OK)
+        {
+            jit->program->tag = jit->tag;
+            return SRE_ERROR;
+        }
+
+    } else {
+        if (pc + 1 >= jit->program->start + jit->program->len) {
+            jit->program->tag = jit->tag;
+            return SRE_ERROR;
+        }
+
+        if (sre_vm_thompson_jit_get_next_states(jit, pc + 1, &last_state,
+                                                &path->nthreads, 0)
+            != SRE_OK)
+        {
+            jit->program->tag = jit->tag;
+            return SRE_ERROR;
+        }
+    }
+
+    jit->program->tag = jit->tag;
+
+    if (path->to == NULL) {
+        return SRE_ERROR;
+    }
+
+    **plast_path = path;
+    *plast_path = &path->next;
+
+    for (state = path->to; state; state = state->next) {
+        if (state->bc->opcode == SRE_OPCODE_MATCH) {
+            continue;
+        }
+
+        if (jit->bc_accessed[state->bc - jit->program->start]) {
+            continue;
+        }
+
+        if (sre_vm_thompson_jit_build_paths(jit, state->bc,
+                                            plast_path)
+            != SRE_OK)
+        {
+            return SRE_ERROR;
+        }
+    }
+
+    return SRE_OK;
+}
+
+
+static sre_int_t
+sre_vm_thompson_jit_compile_path(sre_vm_thompson_jit_t *jit,
+    sre_vm_thompson_path_t *path)
+{
+    sre_char             c;
+    unsigned             i, n, asserts, char_always_valid = 1;
+    int                  tid, prev_word;
+    unsigned             bofs;
+    sre_int_t            ofs;
+    dasm_State         **dasm;
+    sre_vm_range_t      *range;
+    sre_instruction_t   *bc, *pc;
+
+    sre_vm_thompson_state_t          *state;
+
+    dasm = jit->dasm;
+    pc = path->from;
+    ofs = pc - jit->program->start;
+
+    if (dasm_getpclabel(dasm, ofs) >= 0) {
+        dd("bc %d already compiled", (int) ofs);
+        return SRE_ERROR;
+    }
+
+    dd("compiling path at pc %d", (int) (pc - jit->program->start));
+
+    |=>(ofs):
+
+    switch (pc->opcode) {
+    case SRE_OPCODE_ANY:
+        |  test LB, LB
+        |  jnz >1
+
+        break;
+
+    case SRE_OPCODE_CHAR:
+        c = pc->v.ch;
+
+        |  test LB, LB
+        |  jnz >1
+        |
+        |  cmp C, byte (c)
+        |  jne >1
+
+        break;
+
+    case SRE_OPCODE_IN:
+        |  test LB, LB
+        |  jnz >1
+
+        for (i = 0; i < pc->v.ranges->count; i++) {
+            range = &pc->v.ranges->head[i];
+
+            dd("compile opcode IN: [%d, %d] (%u)", (int) range->from,
+               (int) range->to, (unsigned) i);
+
+            if (range->from == range->to) {
+                |  cmp C, byte (range->from)
+                |  je >2
+
+            } else {
+                if (range->from != 0x00) {
+                    |  cmp C, byte (range->from)
+                    |  jb >3
+                }
+
+                if (range->to == 0xff) {
+                    |  jmp >2
+
+                } else {
+                    |  cmp C, byte (range->to)
+                    |  jbe >2
+                }
+
+                |3:
+            }
+        }
+
+        |  jmp >1
+        |2:
+
+        break;
+
+    case SRE_OPCODE_NOTIN:
+        |  test LB, LB
+        |  jnz >1
+
+        for (i = 0; i < pc->v.ranges->count; i++) {
+            range = &pc->v.ranges->head[i];
+
+            dd("compile opcode IN: [%d, %d] (%u)", (int) range->from,
+               (int) range->to, (unsigned) i);
+
+            if (range->from == range->to) {
+                |  cmp C, byte (range->from)
+                |  je >1
+
+            } else {
+                if (range->from != 0x00) {
+                    |  cmp C, byte (range->from)
+                    |  jb >2
+                }
+
+                if (range->to == 0xff) {
+                    |  jmp >1
+
+                } else {
+                    |  cmp C, byte (range->to)
+                    |  jbe >1
+                }
+
+                if (range->from != 0x00) {
+                    |2:
+                }
+            }
+        }
+
+        break;
+
+    default:
+        /* do nothing */
+        break;
+    }
+
+    prev_word = -1;
+    n = 0;
+    for (state = path->to; state; state = state->next) {
+        bc = state->bc;
+        asserts = state->asserts;
+
+        if (state->is_thread) {
+            n++;
+
+            if (n == 1) {
+                |  imul rax, TC, #T  // thread index offset
+                |  lea T, [TL + rax + offsetof(sre_vm_thompson_thread_list_t, threads)]
+            }
+        }
+
+        if (asserts) {
+            if (asserts & SRE_REGEX_ASSERT_BIG_A) {
+                asserts &= ~SRE_REGEX_ASSERT_BIG_A;
+
+                if (pc != jit->program->start) {
+                    /* assertion always does not hold */
+                    continue;
+                }
+
+                /* assertion always holds when pc == jit->program->start */
+            }
+
+            if (asserts & SRE_REGEX_ASSERT_CARET) {
+                asserts &= ~SRE_REGEX_ASSERT_CARET;
+
+                /* assertion always holds when pc == jit->program->start */
+
+                if (pc != jit->program->start) {
+                    |  cmp C, byte '\n'
+                    |  jne >9
+                }
+            }
+
+            if (asserts & SRE_REGEX_ASSERT_WORD_BOUNDARY) {
+                if (pc == jit->program->start) {
+                    |  xor al, al
+
+                } else {
+                    |  testWordChar
+                }
+            }
+        }
+
+        if (bc->opcode == SRE_OPCODE_MATCH) {
+
+            dd("seen a match bc: %d, len: %d",
+               (int) (bc - jit->program->start), (int) jit->program->len);
+
+            if (asserts) {
+                ofs = bc - jit->program->start;
+                tid = jit->dup_thread_ids[state->thread_index];
+
+                dd("compiling asserts for match: %d", asserts);
+
+                if (tid >= 0 && pc != jit->program->start) {
+                    |  addThreadWithCheck ->match
+
+                } else {
+                    dd("seen a non thread entry match at bc %d", (int) ofs);
+
+                    |  addThreadWithoutCheck ->match
+                }
+
+            } else {
+                |  mov eax, 1
+                |  ret
+            }
+
+        } else {
+            /* being bytecode ANY, CHAR, IN, or NOTIN */
+
+            ofs = bc - jit->program->start;
+            tid = jit->dup_thread_ids[state->thread_index];
+
+            if (tid >= 0 && pc != jit->program->start) {
+                dd("seen a thread entry bc at bc %d, id=%d", (int) ofs,
+                   (int) tid);
+
+                |  addThreadWithCheck =>(ofs)
+
+            } else {
+                dd("seen a non thread entry bc at bc %d", (int) ofs);
+                |  addThreadWithoutCheck =>(ofs)
+            }
+        }
+
+        |9:
+    } /* for */
+
+    |1:
+    |  xor eax, eax
+    |  ret
+
+    return SRE_OK;
+}
+
+
+static sre_int_t
+sre_vm_thompson_jit_get_next_states(sre_vm_thompson_jit_t *jit,
+    sre_instruction_t *pc, sre_vm_thompson_state_t ***plast_state,
+    unsigned *nthreads, unsigned asserts)
+{
+    sre_vm_thompson_state_t     *state;
+
+    if (pc->tag == jit->tag) {
+        return SRE_OK;
+    }
+
+    pc->tag = jit->tag;
+
+    switch (pc->opcode) {
+    case SRE_OPCODE_SPLIT:
+        if (sre_vm_thompson_jit_get_next_states(jit, pc->x, plast_state,
+                                                nthreads, asserts)
+            != SRE_OK)
+        {
+            return SRE_ERROR;
+        }
+
+        return sre_vm_thompson_jit_get_next_states(jit, pc->y, plast_state,
+                                                   nthreads, asserts);
+
+    case SRE_OPCODE_JMP:
+        return sre_vm_thompson_jit_get_next_states(jit, pc->x, plast_state,
+                                                   nthreads, asserts);
+
+    case SRE_OPCODE_SAVE:
+        if (++pc == jit->program->start + jit->program->len) {
+            return SRE_OK;
+        }
+
+        return sre_vm_thompson_jit_get_next_states(jit, pc, plast_state,
+                                                   nthreads, asserts);
+
+    case SRE_OPCODE_MATCH:
+        dd("seen match bc %d, asserts %d",
+           (int) (pc - jit->program->start), (int) asserts);
+
+        state = sre_pcalloc(jit->pool, sizeof(sre_vm_thompson_state_t));
+        if (state == NULL) {
+            return SRE_ERROR;
+        }
+
+        state->asserts = asserts;
+        state->bc = pc;
+        state->thread_index = sre_vm_thompson_jit_gen_thread_index(jit, pc,
+                                                                   asserts);
+
+        if (asserts & SRE_REGEX_ASSERT_LOOKAHEAD) {
+            jit->dup_thread_ids[state->thread_index]++;
+
+            state->is_thread = 1;
+            (*nthreads)++;
+        }
+
+        **plast_state = state;
+        *plast_state = &state->next;
+
+        return SRE_OK;
+
+    case SRE_OPCODE_ASSERT:
+        dd("seen assert bc at %d", (int) (pc - jit->program->start));
+
+        asserts |= pc->v.assertion_type;
+
+        jit->program->lookahead_asserts |= (asserts & SRE_REGEX_ASSERT_LOOKAHEAD);
+
+        if (++pc == jit->program->start + jit->program->len) {
+            return SRE_OK;
+        }
+
+        return sre_vm_thompson_jit_get_next_states(jit, pc, plast_state,
+                                                   nthreads, asserts);
+
+    default:
+        /* CHAR, ANY, IN, NOTIN */
+
+        state = sre_pcalloc(jit->pool, sizeof(sre_vm_thompson_state_t));
+        if (state == NULL) {
+            return SRE_ERROR;
+        }
+
+        state->asserts = asserts;
+        state->bc = pc;
+        state->thread_index = sre_vm_thompson_jit_gen_thread_index(jit, pc,
+                                                                   asserts);
+
+        jit->dup_thread_ids[state->thread_index]++;
+        state->is_thread = 1;
+
+        **plast_state = state;
+        *plast_state = &state->next;
+
+        (*nthreads)++;
+
+        dd("seen terminal bc: %d", (int) (pc - jit->program->start));
+        return SRE_OK;
+    }
+
+    /* impossible to reach here */
+}
+
+
+static unsigned
+sre_vm_thompson_jit_gen_thread_index(sre_vm_thompson_jit_t *jit,
+     sre_instruction_t *pc, unsigned asserts)
+{
+    return (pc - jit->program->start) * jit->thread_index_factor
+           + (asserts & SRE_REGEX_ASSERT_LOOKAHEAD);
+}
+
+
+static sre_int_t
+sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit)
+{
+    size_t       size;
+    dasm_State **dasm;
+
+    dasm = jit->dasm;
+
+    |  push TC; push TL; push T; push SW; push LAST; push SP;
+    |  push CTL; push CT; push LT; push rbx; push r11; push ADDED
+    |
+    |  // check the 4th arg, "eof"
+    |  test ecx, ecx
+    |  jz >1
+    |  mov EOF, 1
+    |  jmp >2
+    |
+    |1:
+    |  xor EOF, EOF
+    |
+    |2:
+    |  mov CTL, CTX->current_threads
+    |  mov TC, CTL->count
+    |  xor LB, LB
+    |
+    |  mov al, CTX->first_buf
+    |  test al, al
+    |  jz ->not_first_buf
+    |
+    |->first_buf:
+    |  mov byte CTX->first_buf, 0
+    |
+    |  mov TL, CTL
+    |  xor SW, SW
+    |  call =>0
+    |  test eax, eax
+    |  jz ->not_first_buf
+    |  xor rax, rax // (SRE_OK)
+    |  jmp ->return
+    |
+    |->not_first_buf:
+    |  add LAST, INPUT  // last = input + size
+    |  mov TL, CTX->next_threads
+    |  mov SP, INPUT
+    |
+    |  jmp ->sp_loop_start
+    |
+    |->sp_loop_next:
+    |  inc SP
+    |
+    |->sp_loop_start:
+    |  cmp SP, LAST
+    |  je ->buf_consumed
+    |
+    |  // sp != last
+    |  mov C, byte [SP]
+    |  jmp ->run_cur_threads
+    |
+    |->buf_consumed:
+    |  test EOF, EOF
+    |  jz ->again
+    |  mov LB, 1
+    |
+    |->run_cur_threads:
+    |  test TC, TC
+    |  jz ->done
+    |
+
+    if (jit->threads_added_in_memory) {
+        size = sre_vm_thompson_jit_get_threads_added_size(jit->program);
+
+        /* clear the CTX->threads_added bit array */
+
+        |  // rcx is for ADDED, and r8 is for T
+        |  lea r8, CTX->threads_added
+        |  xor rax, rax
+        |  mov rcx, (size / 8)
+        |1:
+        |  mov qword [r8], rax
+        |  add r8, 8
+        |  dec rcx
+        |  jnz <1
+
+    } else {
+        |  xor ADDED, ADDED
+    }
+
+    |  imul rax, TC, #T  // thread index offset
+    |  lea LT, [CTL + rax + offsetof(sre_vm_thompson_thread_list_t, threads)]
+    |  lea CT, [CTL + offsetof(sre_vm_thompson_thread_list_t, threads)]
+    |  xor TC, TC
+    |  jmp ->run_thread
+    |
+    |->run_next_thread:
+    |  add CT, #T
+    |
+    |->run_thread:
+    |  cmp CT, LT
+    |  je ->run_threads_done
+    |
+
+    if (jit->program->lookahead_asserts) {
+        |  mov rax, CT->asserts_handler
+        |  test rax, rax
+        |  jz >1
+        |  call rax
+        |  test eax, eax
+        |  jz ->run_next_thread
+        |
+        |1:
+    }
+
+    |  call aword CT->pc
+    |
+    |  test eax, eax
+    |  jz ->run_next_thread
+    |
+    |  // matched
+    |  xor rax, rax // (SRE_OK)
+    |  jmp ->return
+    |
+    |->run_threads_done:
+    |  mov rax, CTL
+    |  mov CTL, TL
+    |  mov TL, rax
+    |
+    |  test LB, LB
+    |  jz ->sp_loop_next
+    |
+    |->done:
+    |  test EOF, EOF
+    |  jz ->again
+    |  mov rax, (SRE_DECLINED)
+    |  jmp ->return
+    |
+    |->again:
+    |  mov rax, (SRE_AGAIN)
+    |
+    |->return:
+    |  mov CTX->current_threads, CTL
+    |  mov CTL->count, TC
+    |
+    |  mov CTX->next_threads, TL
+    |  xor TC, TC
+    |  mov TL->count, TC
+    |
+    |  pop ADDED; pop r11; pop rbx; pop LT; pop CT; pop CTL;
+    |  pop SP; pop LAST; pop SW; pop T; pop TL; pop TC
+    |  ret
+
+    return SRE_OK;
+}
+
+
+static sre_int_t
+sre_vm_thompson_jit_epilogue(sre_vm_thompson_jit_t *jit)
+{
+    unsigned     flags, char_always_valid = 0;
+    sre_uint_t   len;
+    dasm_State **dasm;
+
+    if (jit->program->lookahead_asserts) {
+
+        dasm = jit->dasm;
+        len = jit->program->len;
+
+        |->match:
+        |  mov eax, 1
+        |  ret
+
+        for (flags = 1; flags <= SRE_REGEX_ASSERT_LOOKAHEAD; flags++) {
+
+            if ((flags & jit->program->lookahead_asserts) != flags) {
+                continue;
+            }
+
+            |=>(len + flags - 1):
+
+            if (flags & SRE_REGEX_ASSERT_SMALL_Z) {
+                |  test LB, LB
+                |  jz >1
+            }
+
+            if (flags & SRE_REGEX_ASSERT_DOLLAR) {
+                if (!(flags & SRE_REGEX_ASSERT_SMALL_Z)) {
+                    |  test LB, LB
+                    |  jnz >2
+                }
+
+                |  cmp C, '\n'
+                |  jne >1
+                |2:
+            }
+
+            if (flags & SRE_REGEX_ASSERT_WORD_BOUNDARY) {
+                |  mov ah, byte CT->seen_word
+                |  testWordChar
+                |  xor al, ah
+
+                if (flags & SRE_REGEX_ASSERT_SMALL_B) {
+                    |  jz >1
+
+                } else {
+                    /* SRE_REGEX_ASSERT_BIG_B */
+                    |  jnz >1
+                }
+            }
+
+            |  mov eax, 1
+            |  ret
+            |1:
+            |  xor eax, eax
+            |  ret
+        }
+    }
+
+    return SRE_OK;
+}

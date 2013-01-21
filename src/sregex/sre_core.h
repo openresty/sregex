@@ -18,7 +18,7 @@
 #endif
 
 
-#define SRE_UNSET_PTR   (void *) -1
+#define SRE_UNSET_PTR        (void *) -1
 
 
 #define sre_memzero(buf, n)  (void) memset(buf, 0, n)
@@ -42,6 +42,31 @@ typedef intptr_t  sre_int_t;
 #ifndef sre_uint_t
 #define sre_uint_t sre_uint_t
 typedef uintptr_t  sre_uint_t;
+#endif
+
+
+#define SRE_ARCH_UNKNOWN     0
+#define SRE_ARCH_X86         1
+#define SRE_ARCH_X64         2
+
+
+#ifndef SRE_TARGET
+
+#if defined(__i386) || defined(__i386__) || defined(_M_IX86)
+#   define SRE_TARGET   SRE_ARCH_X86
+#elif defined(__x86_64__) || defined(__x86_64) || defined(_M_X64)           \
+      || defined(_M_AMD64)
+#   define SRE_TARGET   SRE_ARCH_X64
+#else
+#   define SRE_TARGET   SRE_ARCH_UNKNOWN
+#endif
+
+#endif /* SRE_TARGET */
+
+
+#if 0
+#   undef SRE_TARGET
+#   define SRE_TARGET 0
 #endif
 
 

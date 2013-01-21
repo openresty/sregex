@@ -11,7 +11,7 @@ FILE_A= libsregex.a
 FILE_SO= libsregex.so
 
 CC= gcc
-CFLAGS+= -fpic -g -Wall -Werror -O -Isrc
+CFLAGS+= -fpic -g -Wall -Werror -O -Isrc -I.
 PREFIX= /usr/local
 DESTDIR=
 INSTALL_X= install -m 0755
@@ -22,6 +22,9 @@ UNINSTALL= $(HOST_RM)
 HOST_RM= rm -f
 LDCONFIG= ldconfig -n
 SYMLINK= ln -sf
+LUA= luajit
+DASM= $(LUA) dynasm/dynasm.lua
+DASM_FLAGS=
 
 INSTALL_INC= $(DESTDIR)$(PREFIX)/include/sregex
 INSTALL_LIB= $(DESTDIR)$(PREFIX)/lib
@@ -88,16 +91,30 @@ lib_c_files= \
    src/sregex/sre_vm_bytecode.c \
    src/sregex/sre_vm_thompson.c \
    src/sregex/sre_vm_pike.c \
-   src/sregex/sre_capture.c
+   src/sregex/sre_capture.c \
+   src/sregex/sre_vm_thompson_jit.c
 
 lib_o_files= $(patsubst %.c,%.o,$(lib_c_files))
-h_files= $(wildcard src/sregex/*.h)
+
+h_files= src/sregex/sre_capture.h \
+	 src/sregex/sre_palloc.h \
+	 src/sregex/sre_vm_bytecode.h \
+	 src/sregex/sre_yyparser.h \
+	 src/sregex/sre_core.h \
+	 src/sregex/sre_regex.h \
+	 src/sregex/sre_vm_thompson_x64.h \
+	 src/sregex/sre_vm_thompson.h \
+	 src/sregex/sregex.h \
+
 plist_vfiles= $(patsubst src/sregex/%.c,%.plist,$(lib_c_files))
 
 INSTALL_H_FILES= src/sregex/sregex.h src/sregex/ddebug.h
 
 .PHONY: all clean test val install uninstall
-.PRECIOUS: src/sre_regex_parser.c
+.PRECIOUS: \
+    src/sregex/sre_yyparser.c \
+    src/sregex/sre_yyparser.h \
+    src/sregex/sre_vm_thompson_x64.h
 
 all: $(FILE_SO) $(FILE_A) $(FILE_T)
 
@@ -119,9 +136,13 @@ $(FILE_A): $(lib_o_files)
 	$(E) "CC        $@"
 	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
 
-%.c: %.y
+%.c %.h: %.y
 	$(E) "BISON     $@"
 	$(Q)bison -v $<
+
+%.h: %.dasc
+	$(E) "DYNASM    $@"
+	$(Q)$(DASM) $(DASM_FLAGS) -o $@ $<
 
 clean:
 	$(HOST_RM) src/*.o $(lib_o_files) core $(TARGET) src/sre_regex_parser.c \
@@ -139,9 +160,9 @@ valtest: val
 
 clang: $(plist_vfiles)
 
-%.plist: src/sregex/%.c
+%.plist: src/sregex/%.c $(h_files)
 	@echo $<
-	-@clang -O --analyze -Wextra -Wall -Werror -Isrc $<
+	-@clang -O --analyze -Wextra -Wall -Werror -Isrc -I. $<
 
 install: all
 	@echo "==== Installing sregex $(VERSION) to $(PREFIX) ===="

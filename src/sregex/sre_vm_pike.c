@@ -354,14 +354,14 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
 
             case SRE_OPCODE_ASSERT:
                 switch (pc->v.assertion_type) {
-                case SRE_REGEX_ASSERTION_SMALL_Z:
+                case SRE_REGEX_ASSERT_SMALL_Z:
                     if (sp != last) {
                         break;
                     }
 
                     goto assertion_hold;
 
-                case SRE_REGEX_ASSERTION_DOLLAR:
+                case SRE_REGEX_ASSERT_DOLLAR:
 
                     if (sp != last && *sp != '\n') {
                         break;
@@ -372,7 +372,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
 
                     goto assertion_hold;
 
-                case SRE_REGEX_ASSERTION_BIG_B:
+                case SRE_REGEX_ASSERT_BIG_B:
 
                     seen_word = (t->seen_word
                                  || (sp == input && ctx->seen_word));
@@ -384,7 +384,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
 
                     goto assertion_hold;
 
-                case SRE_REGEX_ASSERTION_SMALL_B:
+                case SRE_REGEX_ASSERT_SMALL_B:
 
                     seen_word = (t->seen_word
                                  || (sp == input && ctx->seen_word));
@@ -712,14 +712,14 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
 
     case SRE_OPCODE_ASSERT:
         switch (pc->v.assertion_type) {
-        case SRE_REGEX_ASSERTION_BIG_A:
+        case SRE_REGEX_ASSERT_BIG_A:
             if (pos || ctx->processed_bytes) {
                 break;
             }
 
             return sre_vm_pike_add_thread(ctx, l, pc + 1, capture, pos, pcap);
 
-        case SRE_REGEX_ASSERTION_CARET:
+        case SRE_REGEX_ASSERT_CARET:
             dd("seen newline: %u", ctx->seen_newline);
 
             if (pos == 0) {
@@ -737,8 +737,8 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
 
             return sre_vm_pike_add_thread(ctx, l, pc + 1, capture, pos, pcap);
 
-        case SRE_REGEX_ASSERTION_SMALL_B:
-        case SRE_REGEX_ASSERTION_BIG_B:
+        case SRE_REGEX_ASSERT_SMALL_B:
+        case SRE_REGEX_ASSERT_BIG_B:
             {
                 sre_char c;
 

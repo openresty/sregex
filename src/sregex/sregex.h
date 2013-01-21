@@ -143,4 +143,27 @@ SRE_API sre_int_t sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, sre_char *inp
     size_t len, unsigned eof);
 
 
+/* Thompson VM JIT API */
+
+
+struct sre_vm_thompson_code_s;
+typedef struct sre_vm_thompson_code_s  sre_vm_thompson_code_t;
+
+
+typedef sre_int_t (*sre_vm_thompson_exec_pt)(sre_vm_thompson_ctx_t *ctx,
+    sre_char *input, size_t size, unsigned eof);
+
+
+SRE_API sre_int_t sre_vm_thompson_jit_compile(sre_pool_t *pool,
+    sre_program_t *prog, sre_vm_thompson_code_t **pcode);
+
+SRE_API sre_vm_thompson_ctx_t *sre_vm_thompson_jit_create_ctx(sre_pool_t *pool,
+    sre_program_t *prog);
+
+SRE_API sre_vm_thompson_exec_pt
+    sre_vm_thompson_jit_get_handler(sre_vm_thompson_code_t *code);
+
+SRE_API sre_int_t sre_vm_thompson_jit_free(sre_vm_thompson_code_t *code);
+
+
 #endif /* _SREGEX_H_INCLUDED_ */

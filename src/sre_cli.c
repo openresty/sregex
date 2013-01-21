@@ -22,6 +22,8 @@
 static void usage(void);
 static void process_string(sre_char *s, size_t len, sre_program_t *prog,
     sre_int_t *ovector, size_t ovecsize, sre_uint_t ncaps);
+sre_int_t run_jitted_thompson(sre_vm_thompson_exec_pt handler,
+    sre_vm_thompson_ctx_t *ctx, sre_char *input, size_t size, unsigned eof);
 
 
 int
@@ -92,6 +94,7 @@ main(int argc, char **argv)
 
     prog = sre_regex_compile(cpool, re);
     if (prog == NULL) {
+        fprintf(stderr, "failed to compile the regex.\n");
         return 2;
     }
 
@@ -177,6 +180,8 @@ process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
     sre_pool_t                  *pool;
     sre_vm_pike_ctx_t           *pctx;
     sre_vm_thompson_ctx_t       *tctx;
+    sre_vm_thompson_code_t      *tcode;
+    sre_vm_thompson_exec_pt      texec;
 
     printf("## %.*s (len %d)\n", (int) len, s, (int) len);
 
@@ -190,6 +195,10 @@ process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
         free(p);
         exit(2);
     }
+
+    /*
+     * Thompson
+     */
 
     printf("thompson ");
 
@@ -220,6 +229,10 @@ process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
     }
 
     sre_reset_pool(pool);
+
+    /*
+     * Splitted Thompson
+     */
 
     printf("splitted thompson ");
 
@@ -272,6 +285,128 @@ process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
 
     sre_reset_pool(pool);
 
+    /*
+     * run Thompson VM's JIT compiler
+     */
+
+    rc = sre_vm_thompson_jit_compile(pool, prog, &tcode);
+    if (rc == SRE_DECLINED) {
+        printf("thompson jit disabled\n");
+        goto pike;
+    }
+
+    if (rc != SRE_OK) {
+        fprintf(stderr, "failed to run thompson jit compile: %ld\n", (long) rc);
+        exit(2);
+    }
+
+    texec = sre_vm_thompson_jit_get_handler(tcode);
+    if (texec == NULL) {
+        fprintf(stderr, "failed to get thompson jit handler.\n");
+        exit(2);
+    }
+
+    /*
+     * JITted Thompson
+     */
+
+    printf("jitted thompson ");
+
+    tctx = sre_vm_thompson_jit_create_ctx(pool, prog);
+    assert(tctx);
+
+    rc = run_jitted_thompson(texec, tctx, s, len, 1);
+#if 0
+    rc = (sre_int_t) run_jitted_thompson;
+#endif
+
+    switch (rc) {
+    case SRE_OK:
+        printf("match\n");
+        break;
+
+    case SRE_DECLINED:
+        printf("no match\n");
+        break;
+
+    case SRE_AGAIN:
+        printf("again\n");
+        break;
+
+    case SRE_ERROR:
+        printf("error\n");
+        break;
+
+    default:
+        printf("bad retval: %lx\n", (unsigned long) rc);
+        break;
+    }
+
+    sre_reset_pool(pool);
+
+    /*
+     * Splitted JITted Thompson
+     */
+
+    printf("splitted jitted thompson ");
+
+    tctx = sre_vm_thompson_jit_create_ctx(pool, prog);
+    assert(tctx);
+
+    gen_empty_buf = 1;
+
+    for (i = 0; i <= len; i++) {
+        if (i == len) {
+            rc = run_jitted_thompson(texec, tctx, NULL, 0 /* len */,
+                                     1 /* eof */);
+
+        } else if (gen_empty_buf) {
+            rc = run_jitted_thompson(texec, tctx, NULL, 0 /* len */,
+                                     0 /* eof */);
+            gen_empty_buf = 0;
+            i--;
+
+        } else {
+            p[0] = s[i];
+
+            rc = run_jitted_thompson(texec, tctx, p, 1 /* len */, 0 /* eof */);
+            gen_empty_buf = 1;
+        }
+
+        switch (rc) {
+        case SRE_AGAIN:
+#if 0
+            printf("again");
+#endif
+            continue;
+
+        case SRE_OK:
+            printf("match\n");
+            break;
+
+        case SRE_DECLINED:
+            printf("no match\n");
+            break;
+
+        case SRE_ERROR:
+            printf("error\n");
+            break;
+
+        default:
+            assert(rc);
+        }
+
+        break;
+    }
+
+    if (sre_vm_thompson_jit_free(tcode) != SRE_OK) {
+        fprintf(stderr, "failed to free thompson jit.\n");
+        exit(2);
+    }
+
+    sre_reset_pool(pool);
+
+pike:
     printf("pike ");
 
     pctx = sre_vm_pike_create_ctx(pool, prog, ovector, ovecsize);
@@ -353,7 +488,7 @@ process_string(sre_char *s, size_t len, sre_program_t *prog, sre_int_t *ovector,
             gen_empty_buf = 1;
         }
 
-        dd("i = %d, rc = %d", i, rc);
+        dd("i = %d, rc = %d", (int) i, (int) rc);
 
         switch (rc) {
         case SRE_OK:
@@ -401,3 +536,10 @@ usage(void)
     exit(2);
 }
 
+
+sre_int_t
+run_jitted_thompson(sre_vm_thompson_exec_pt handler, sre_vm_thompson_ctx_t *ctx,
+    sre_char *input, size_t size, unsigned eof)
+{
+    return handler(ctx, input, size, eof);
+}

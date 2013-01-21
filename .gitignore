@@ -45,3 +45,16 @@ re_tests
 testinput1
 *.png
 r
+*.s
+src/sregex/tjit.c
+src/sregex/tx64.dasc
+src/sregex/tx64.h
+dasm
+src/sregex/list.[ch]
+*.patch
+b.pl
+b.txt
+c.txt
+src/sregex/x64.h
+src/sregex/jit.c
+src/sregex/sre_list.[ch]
