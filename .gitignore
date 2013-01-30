@@ -58,3 +58,7 @@ c.txt
 src/sregex/x64.h
 src/sregex/jit.c
 src/sregex/sre_list.[ch]
+bench/sregex
+bench/pcre
+bench/re2
+bench/*.txt
