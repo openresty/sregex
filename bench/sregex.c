@@ -184,6 +184,7 @@ main(int argc, char **argv)
 
     run_engines(prog, engine_types, ncaps, input, len);
 
+    free(input);
     sre_destroy_pool(cpool);
     return 0;
 }
@@ -361,6 +362,7 @@ run_engines(sre_program_t *prog, unsigned engine_types, sre_uint_t ncaps,
 
         printf(": %.02lf ms elapsed.\n", elapsed);
 
+        free(ovector);
         sre_reset_pool(pool);
     }
 

@@ -159,6 +159,9 @@ main(int argc, char **argv)
 
     run_engines(re, engine_types, ncaps, input, len);
 
+    free(input);
+    pcre_free(re);
+
     return 0;
 }
 
@@ -218,6 +221,13 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
         }
 
         printf(": %.02lf ms elapsed.\n", elapsed);
+
+        if (extra) {
+            pcre_free_study(extra);
+            extra = NULL;
+        }
+
+        free(ovector);
     }
 
     if (engine_types & ENGINE_JIT) {
@@ -262,6 +272,13 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
         }
 
         printf(": %.02lf ms elapsed.\n", elapsed);
+
+        if (extra) {
+            pcre_free_study(extra);
+            extra = NULL;
+        }
+
+        free(ovector);
     }
 
     if (engine_types & ENGINE_DFA) {
@@ -307,6 +324,13 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
         }
 
         printf(": %.02lf ms elapsed.\n", elapsed);
+
+        if (extra) {
+            pcre_free_study(extra);
+            extra = NULL;
+        }
+
+        free(ovector);
     }
 }
 

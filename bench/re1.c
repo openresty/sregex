@@ -149,6 +149,8 @@ main(int argc, char **argv)
 
     run_engines(prog, engine_types, ncaps, input);
 
+    free(re);
+    free(prog);
     return 0;
 }
 
