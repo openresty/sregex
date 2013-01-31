@@ -1,0 +1,29 @@
+diff --git a/src/sregex/sre_vm_thompson_x64.dasc b/src/sregex/sre_vm_thompson_x64.dasc
+index c7f59e4..0d3b8bd 100644
+--- a/src/sregex/sre_vm_thompson_x64.dasc
++++ b/src/sregex/sre_vm_thompson_x64.dasc
+@@ -39,6 +39,7 @@
+ 
+ /* recording threads added */
+ |.define ADDED, rcx
++|.define ADDEDd, ecx
+ 
+ |.type CTX, sre_vm_thompson_ctx_t,          rdi  // 1st arg
+ |.type TL,  sre_vm_thompson_thread_list_t,  r15  // callee-save
+@@ -92,8 +93,16 @@
+ ||  bofs = tid;
+ ||}
+ |
++||if (bofs < 32) {
++|   test ADDEDd, (1 << bofs)
++|   jnz >2
++|   or ADDEDd, (1 << bofs)
++|
++||} else {
++|
+ |  bts ADDED, (bofs)  // load CF with the bit and set the bit
+ |  jb >2  // jump if CF = 1
++||}
+ |
+ ||if (jit->threads_added_in_memory) {
+ |    mov CTX->threads_added[(tid / 64)], ADDED
