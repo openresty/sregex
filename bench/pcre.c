@@ -313,7 +313,7 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
 static void
 usage(int rc)
 {
-    fprintf(stderr, "usage: sregex [options] <regexp> <file>\n"
+    fprintf(stderr, "usage: pcre [options] <regexp> <file>\n"
             "options:\n"
             "   -i                  use case insensitive matching\n"
             "   --default           use the default PCRE engine\n"
