@@ -34,17 +34,6 @@
      || (c) == '_')
 
 
-#ifndef sre_int_t
-#define sre_int_t sre_int_t
-typedef intptr_t  sre_int_t;
-#endif
-
-#ifndef sre_uint_t
-#define sre_uint_t sre_uint_t
-typedef uintptr_t  sre_uint_t;
-#endif
-
-
 #define SRE_ARCH_UNKNOWN     0
 #define SRE_ARCH_X86         1
 #define SRE_ARCH_X64         2
