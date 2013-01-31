@@ -69,7 +69,7 @@
 ||  }
 ||}
 |
-|  inc TC
+|  add TC, 1
 |
 ||if (n != path->nthreads) {
 |    add T, #T
@@ -117,7 +117,7 @@
 ||  }
 ||}
 |
-|  inc TC
+|  add TC, 1
 |
 ||if (n != path->nthreads) {
 |    add T, #T
@@ -783,7 +783,7 @@ sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit)
     |  jmp ->sp_loop_start
     |
     |->sp_loop_next:
-    |  inc SP
+    |  add SP, 1
     |
     |->sp_loop_start:
     |  cmp SP, LAST
