@@ -76,7 +76,7 @@ main(int argc, char **argv)
     p[len + 1] = ')';
     p[len + 2] = '\0';
 
-    printf("regex: %s\n", p);
+    //printf("regex: %s\n", p);
 
     re = new RE2(p);
     if (re == NULL) {
