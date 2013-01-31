@@ -51,7 +51,7 @@ src/sregex/tx64.dasc
 src/sregex/tx64.h
 dasm
 src/sregex/list.[ch]
-*.patch
+x64*.patch
 b.pl
 b.txt
 c.txt
