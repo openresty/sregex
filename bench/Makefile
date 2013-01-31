@@ -1,7 +1,7 @@
 RE1_LIB=../../re1
 RE1_INC=../../re1
-PCRE_LIB=/opt/pcre832jit/lib
-PCRE_INC=/opt/pcre832jit/include
+PCRE_LIB=/opt/pcre/lib
+PCRE_INC=/opt/pcre/include
 
 CFLAGS= -c -Wall -Werror -O3 -g
 REGEX1=
