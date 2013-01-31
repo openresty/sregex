@@ -26,6 +26,21 @@ enum {
 };
 
 
+#define TIMER_START                                                          \
+        if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin) == -1) {         \
+            perror("clock_gettime");                                         \
+            exit(2);                                                         \
+        }
+
+
+#define TIMER_STOP                                                           \
+        if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end) == -1) {           \
+            perror("clock_gettime");                                         \
+            exit(2);                                                         \
+        }                                                                    \
+        elapsed = (end.tv_sec - begin.tv_sec) * 1e3 + (end.tv_nsec - begin.tv_nsec) * 1e-6;
+
+
 int
 main(int argc, char **argv)
 {
@@ -156,7 +171,8 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
     int                 *ovector;
     size_t               ovecsize;
     pcre_extra          *extra;
-    clock_t              begin, elapsed;
+    struct timespec      begin, end;
+    double               elapsed;
     const char          *errstr = NULL;
 
     if (engine_types & ENGINE_DEFAULT) {
@@ -173,19 +189,11 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
             exit(2);
         }
 
-        begin = clock();
-        if (begin == -1) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_START
 
         rc = pcre_exec(re, extra, input, len, 0, 0, ovector, ovecsize);
 
-        elapsed = clock() - begin;
-        if (elapsed < 0) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_STOP
 
         if (rc == 0) {
             fprintf(stderr, "capture size too small");
@@ -208,7 +216,7 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
             }
         }
 
-        printf(": %ld clock units elapsed.\n", (long) elapsed);
+        printf(": %.02lf ms elapsed.\n", elapsed);
     }
 
     if (engine_types & ENGINE_JIT) {
@@ -225,19 +233,11 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
             exit(2);
         }
 
-        begin = clock();
-        if (begin == -1) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_START
 
         rc = pcre_exec(re, extra, input, len, 0, 0, ovector, ovecsize);
 
-        elapsed = clock() - begin;
-        if (elapsed < 0) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_STOP
 
         if (rc == 0) {
             fprintf(stderr, "capture size too small");
@@ -260,7 +260,7 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
             }
         }
 
-        printf(": %ld clock units elapsed.\n", (long) elapsed);
+        printf(": %.02lf ms elapsed.\n", elapsed);
     }
 
     if (engine_types & ENGINE_DFA) {
@@ -278,20 +278,12 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
             exit(2);
         }
 
-        begin = clock();
-        if (begin == -1) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_START
 
         rc = pcre_dfa_exec(re, extra, input, len, 0, 0, ovector, ovecsize,
                            ws, sizeof(ws)/sizeof(ws[0]));
 
-        elapsed = clock() - begin;
-        if (elapsed < 0) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_STOP
 
         if (rc == 0) {
             rc = 1;
@@ -313,10 +305,8 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
             }
         }
 
-        printf(": %ld clock units elapsed.\n", (long) elapsed);
+        printf(": %.02lf ms elapsed.\n", elapsed);
     }
-
-    printf("(1 clock unit is %lf sec)\n", (double) 1.0 / CLOCKS_PER_SEC);
 }
 
 

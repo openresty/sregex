@@ -29,6 +29,21 @@ enum {
 };
 
 
+#define TIMER_START                                                          \
+        if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin) == -1) {         \
+            perror("clock_gettime");                                         \
+            exit(2);                                                         \
+        }
+
+
+#define TIMER_STOP                                                           \
+        if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end) == -1) {           \
+            perror("clock_gettime");                                         \
+            exit(2);                                                         \
+        }                                                                    \
+        elapsed = (end.tv_sec - begin.tv_sec) * 1e3 + (end.tv_nsec - begin.tv_nsec) * 1e-6;
+
+
 int
 main(int argc, char **argv)
 {
@@ -182,7 +197,8 @@ run_engines(sre_program_t *prog, unsigned engine_types, sre_uint_t ncaps,
     sre_int_t           *ovector;
     size_t               ovecsize;
     sre_pool_t          *pool;
-    clock_t              begin, elapsed;
+    struct timespec      begin, end;
+    double               elapsed;
 
     sre_vm_thompson_ctx_t       *tctx;
     sre_vm_pike_ctx_t           *pctx;
@@ -196,26 +212,18 @@ run_engines(sre_program_t *prog, unsigned engine_types, sre_uint_t ncaps,
 
     if (engine_types & ENGINE_THOMPSON) {
 
-        printf("sregex thompson ");
+        printf("sregex Thompson ");
 
         tctx = sre_vm_thompson_create_ctx(pool, prog);
         if (tctx == NULL) {
             alloc_error();
         }
 
-        begin = clock();
-        if (begin == -1) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_START
 
         rc = sre_vm_thompson_exec(tctx, input, len, 1);
 
-        elapsed = clock() - begin;
-        if (elapsed < 0) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_STOP
 
         switch (rc) {
         case SRE_OK:
@@ -239,7 +247,7 @@ run_engines(sre_program_t *prog, unsigned engine_types, sre_uint_t ncaps,
             exit(2);
         }
 
-        printf(": %ld clock units elapsed.\n", (long) elapsed);
+        printf(": %.02lf ms elapsed.\n", elapsed);
 
         sre_reset_pool(pool);
     }
@@ -259,33 +267,22 @@ run_engines(sre_program_t *prog, unsigned engine_types, sre_uint_t ncaps,
 
         texec = sre_vm_thompson_jit_get_handler(tcode);
         if (texec == NULL) {
-            fprintf(stderr, "failed to get thompson jit handler.\n");
+            fprintf(stderr, "failed to get Thompson JIT handler.\n");
             exit(2);
         }
 
-        printf("sregex thompson JIT ");
+        printf("sregex Thompson JIT ");
 
         tctx = sre_vm_thompson_jit_create_ctx(pool, prog);
         if (tctx == NULL) {
             alloc_error();
         }
 
-        begin = clock();
-        if (begin == -1) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_START
 
         rc = run_jitted_thompson(texec, tctx, input, len, 1);
-#if 0
-        rc = (sre_int_t) run_jitted_thompson;
-#endif
 
-        elapsed = clock() - begin;
-        if (elapsed < 0) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_STOP
 
         switch (rc) {
         case SRE_OK:
@@ -309,7 +306,7 @@ run_engines(sre_program_t *prog, unsigned engine_types, sre_uint_t ncaps,
             exit(2);
         }
 
-        printf(": %ld clock units elapsed.\n", (long) elapsed);
+        printf(": %.02lf ms elapsed.\n", elapsed);
 
         sre_reset_pool(pool);
     }
@@ -321,26 +318,18 @@ run_engines(sre_program_t *prog, unsigned engine_types, sre_uint_t ncaps,
             alloc_error();
         }
 
-        printf("sregex pike ");
+        printf("sregex Pike ");
 
         pctx = sre_vm_pike_create_ctx(pool, prog, ovector, ovecsize);
         if (pctx == NULL) {
             alloc_error();
         }
 
-        begin = clock();
-        if (begin == -1) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_START
 
         rc = sre_vm_pike_exec(pctx, input, len, 1 /* eof */, NULL);
 
-        elapsed = clock() - begin;
-        if (elapsed < 0) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_STOP
 
         switch (rc) {
         case SRE_OK:
@@ -369,14 +358,12 @@ run_engines(sre_program_t *prog, unsigned engine_types, sre_uint_t ncaps,
             break;
         }
 
-        printf(": %ld clock units elapsed.\n", (long) elapsed);
+        printf(": %.02lf ms elapsed.\n", elapsed);
 
         sre_reset_pool(pool);
     }
 
     sre_destroy_pool(pool);
-
-    printf("(1 clock unit is %lf sec)\n", (double) 1.0 / CLOCKS_PER_SEC);
 }
 
 

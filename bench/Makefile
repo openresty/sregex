@@ -12,13 +12,13 @@ FILE1=abc.txt
 all: sregex re1 pcre
 
 sregex: sregex.o ../libsregex.a
-	$(CC) -o $@ -Wl,-rpath,.. -L.. $< -lsregex
+	$(CC) -o $@ -Wl,-rpath,.. -L.. $< -lsregex -lrt
 
 re1: re1.o $(RE1_LIB)/libre1.a
-	$(CC) -o $@ -Wl,-rpath,$(RE1_LIB) -L$(RE1_LIB) $< -lre1
+	$(CC) -o $@ -Wl,-rpath,$(RE1_LIB) -L$(RE1_LIB) $< -lre1 -lrt
 
 pcre: pcre.o
-	$(CC) -o $@ -Wl,-rpath,$(PCRE_LIB) -L$(PCRE_LIB) $< -lpcre
+	$(CC) -o $@ -Wl,-rpath,$(PCRE_LIB) -L$(PCRE_LIB) $< -lpcre -lrt
 
 %.o: %.c
 	$(CC) $(CFLAGS) -I../src -I$(RE1_INC) -I$(PCRE_INC) $<

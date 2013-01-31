@@ -25,6 +25,21 @@ enum {
 };
 
 
+#define TIMER_START                                                          \
+        if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &begin) == -1) {         \
+            perror("clock_gettime");                                         \
+            exit(2);                                                         \
+        }
+
+
+#define TIMER_STOP                                                           \
+        if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end) == -1) {           \
+            perror("clock_gettime");                                         \
+            exit(2);                                                         \
+        }                                                                    \
+        elapsed = (end.tv_sec - begin.tv_sec) * 1e3 + (end.tv_nsec - begin.tv_nsec) * 1e-6;
+
+
 int
 main(int argc, char **argv)
 {
@@ -144,7 +159,8 @@ run_engines(Prog *prog, unsigned engine_types, unsigned ncaps, char *input)
     int                  rc;
     char                *ovector[MAXSUB];
     size_t               ovecsize;
-    clock_t              begin, elapsed;
+    struct timespec      begin, end;
+    double               elapsed;
     long                 from, to;
 
     if (engine_types & ENGINE_THOMPSON) {
@@ -153,19 +169,11 @@ run_engines(Prog *prog, unsigned engine_types, unsigned ncaps, char *input)
 
         memset(ovector, 0, sizeof(ovector));
 
-        begin = clock();
-        if (begin == -1) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_START
 
         rc = thompsonvm(prog, input, ovector, nelem(ovector));
 
-        elapsed = clock() - begin;
-        if (elapsed < 0) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_STOP
 
         if (!rc) {
             printf("no match");
@@ -174,7 +182,7 @@ run_engines(Prog *prog, unsigned engine_types, unsigned ncaps, char *input)
             printf("match");
         }
 
-        printf(": %ld clock units elapsed.\n", (long) elapsed);
+        printf(": %.02lf ms elapsed.\n", elapsed);
     }
 
     if (engine_types & ENGINE_PIKE) {
@@ -182,19 +190,11 @@ run_engines(Prog *prog, unsigned engine_types, unsigned ncaps, char *input)
 
         memset(ovector, 0, sizeof(ovector));
 
-        begin = clock();
-        if (begin == -1) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_START
 
         rc = pikevm(prog, input, ovector, nelem(ovector));
 
-        elapsed = clock() - begin;
-        if (elapsed < 0) {
-            perror("clock");
-            exit(2);
-        }
+        TIMER_STOP
 
         if (!rc) {
             printf("no match");
@@ -227,10 +227,8 @@ run_engines(Prog *prog, unsigned engine_types, unsigned ncaps, char *input)
             }
         }
 
-        printf(": %ld clock units elapsed.\n", (long) elapsed);
+        printf(": %.02lf ms elapsed.\n", elapsed);
     }
-
-    printf("(1 clock unit is %lf sec)\n", (double) 1.0 / CLOCKS_PER_SEC);
 }
 
 
