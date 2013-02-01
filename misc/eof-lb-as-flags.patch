@@ -1,0 +1,141 @@
+diff --git a/src/sregex/sre_vm_thompson_x64.dasc b/src/sregex/sre_vm_thompson_x64.dasc
+index c27441c..ab342e0 100644
+--- a/src/sregex/sre_vm_thompson_x64.dasc
++++ b/src/sregex/sre_vm_thompson_x64.dasc
+@@ -26,13 +26,10 @@
+ 
+ |.define LAST,  rdx  // overriding 3rd arg
+ |.define INPUT, rsi  // 2nd arg
+-|.define EOF,   bl   // 4th arg
+-
+-/* seen last byte */
+-|.define LB,    bh
++|.define FLAGS, bh   // 4th arg
+ 
+ /* current input string byte */
+-|.define C,     r11b
++|.define C,     bl
+ 
+ /* the position after the last thread */
+ |.define LT,    r9
+@@ -130,7 +127,7 @@
+ 
+ |.macro testWordChar
+ ||if (!char_always_valid) {
+-|   test LB, LB
++|   test FLAGS, (FLAG_LB)
+ |   jnz >2
+ ||}
+ |  cmp C, byte '0'
+@@ -162,6 +159,10 @@
+ #define Dst  dasm
+ 
+ 
++#define FLAG_EOF   0x01
++#define FLAG_LB    0x02
++
++
+ #include <sregex/sre_core.h>
+ #include <sregex/sre_regex.h>
+ #include <sregex/sre_palloc.h>
+@@ -424,7 +425,7 @@ sre_vm_thompson_jit_compile_path(sre_vm_thompson_jit_t *jit,
+ 
+     switch (pc->opcode) {
+     case SRE_OPCODE_ANY:
+-        |  test LB, LB
++        |  test FLAGS, (FLAG_LB)
+         |  jnz >1
+ 
+         break;
+@@ -432,7 +433,7 @@ sre_vm_thompson_jit_compile_path(sre_vm_thompson_jit_t *jit,
+     case SRE_OPCODE_CHAR:
+         c = pc->v.ch;
+ 
+-        |  test LB, LB
++        |  test FLAGS, (FLAG_LB)
+         |  jnz >1
+         |
+         |  cmp C, byte (c)
+@@ -441,7 +442,7 @@ sre_vm_thompson_jit_compile_path(sre_vm_thompson_jit_t *jit,
+         break;
+ 
+     case SRE_OPCODE_IN:
+-        |  test LB, LB
++        |  test FLAGS, (FLAG_LB)
+         |  jnz >1
+ 
+         for (i = 0; i < pc->v.ranges->count; i++) {
+@@ -478,7 +479,7 @@ sre_vm_thompson_jit_compile_path(sre_vm_thompson_jit_t *jit,
+         break;
+ 
+     case SRE_OPCODE_NOTIN:
+-        |  test LB, LB
++        |  test FLAGS, (FLAG_LB)
+         |  jnz >1
+ 
+         for (i = 0; i < pc->v.ranges->count; i++) {
+@@ -746,19 +747,16 @@ sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit)
+     |  push TC; push TL; push T; push SW; push LAST; push SP;
+     |  push CTL; push CT; push LT; push rbx; push r11; push ADDED
+     |
++    |  xor FLAGS, FLAGS
++    |
+     |  // check the 4th arg, "eof"
+     |  test ecx, ecx
+     |  jz >1
+-    |  mov EOF, 1
+-    |  jmp >2
++    |  or FLAGS, (FLAG_EOF)
+     |
+     |1:
+-    |  xor EOF, EOF
+-    |
+-    |2:
+     |  mov CTL, CTX->current_threads
+     |  mov TC, CTL->count
+-    |  xor LB, LB
+     |
+     |  mov al, CTX->first_buf
+     |  test al, al
+@@ -794,9 +792,9 @@ sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit)
+     |  jmp ->run_cur_threads
+     |
+     |->buf_consumed:
+-    |  test EOF, EOF
++    |  test FLAGS, (FLAG_EOF)
+     |  jz ->again
+-    |  mov LB, 1
++    |  or FLAGS, (FLAG_LB)
+     |
+     |->run_cur_threads:
+     |  test TC, TC
+@@ -861,11 +859,11 @@ sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit)
+     |  mov CTL, TL
+     |  mov TL, rax
+     |
+-    |  test LB, LB
++    |  test FLAGS, (FLAG_LB)
+     |  jz ->sp_loop_next
+     |
+     |->done:
+-    |  test EOF, EOF
++    |  test FLAGS, (FLAG_EOF)
+     |  jz ->again
+     |  mov rax, (SRE_DECLINED)
+     |  jmp ->return
+@@ -914,13 +912,13 @@ sre_vm_thompson_jit_epilogue(sre_vm_thompson_jit_t *jit)
+             |=>(len + flags - 1):
+ 
+             if (flags & SRE_REGEX_ASSERT_SMALL_Z) {
+-                |  test LB, LB
++                |  test FLAGS, (FLAG_LB)
+                 |  jz >1
+             }
+ 
+             if (flags & SRE_REGEX_ASSERT_DOLLAR) {
+                 if (!(flags & SRE_REGEX_ASSERT_SMALL_Z)) {
+-                    |  test LB, LB
++                    |  test FLAGS, (FLAG_LB)
+                     |  jnz >2
+                 }
+ 

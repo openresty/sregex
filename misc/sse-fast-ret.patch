@@ -1,0 +1,99 @@
+diff --git a/src/sregex/sre_vm_thompson_x64.dasc b/src/sregex/sre_vm_thompson_x64.dasc
+index c27441c..3a754bb 100644
+--- a/src/sregex/sre_vm_thompson_x64.dasc
++++ b/src/sregex/sre_vm_thompson_x64.dasc
+@@ -158,6 +158,13 @@
+ |.endmacro
+ 
+ 
++|.macro fastRet
++|  // r8 is T, which is no longer used
++|  movd r8, xmm0
++|  jmp r8
++|.endmacro
++
++
+ /* This affects the "|" DynASM lines. */
+ #define Dst  dasm
+ 
+@@ -588,7 +595,7 @@ sre_vm_thompson_jit_compile_path(sre_vm_thompson_jit_t *jit,
+ 
+             } else {
+                 |  mov eax, 1
+-                |  ret
++                |  fastRet
+             }
+ 
+         } else {
+@@ -614,7 +621,7 @@ sre_vm_thompson_jit_compile_path(sre_vm_thompson_jit_t *jit,
+ 
+     |1:
+     |  xor eax, eax
+-    |  ret
++    |  fastRet
+ 
+     return SRE_OK;
+ }
+@@ -769,7 +776,11 @@ sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit)
+     |
+     |  mov TL, CTL
+     |  xor SW, SW
+-    |  call =>0
++    |  lea rax, [->init_pc_called]
++    |  movd xmm0, rax
++    |  jmp =>0
++    |
++    |->init_pc_called:
+     |  test eax, eax
+     |  jz ->not_first_buf
+     |  xor rax, rax // (SRE_OK)
+@@ -839,16 +850,23 @@ sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit)
+     if (jit->program->lookahead_asserts) {
+         |  mov rax, CT->asserts_handler
+         |  test rax, rax
+-        |  jz >1
+-        |  call rax
++        |  jz >2
++        |
++        |  lea r8, qword [>1]
++        |  movd xmm0, r8
++        |  jmp rax
++        |1:
+         |  test eax, eax
+         |  jz ->run_next_thread
+         |
+-        |1:
++        |2:
+     }
+ 
+-    |  call aword CT->pc
++    |  lea r8, qword [->pc_called]
++    |  movd xmm0, r8
++    |  jmp aword CT->pc
+     |
++    |->pc_called:
+     |  test eax, eax
+     |  jz ->run_next_thread
+     |
+@@ -903,7 +921,7 @@ sre_vm_thompson_jit_epilogue(sre_vm_thompson_jit_t *jit)
+ 
+         |->match:
+         |  mov eax, 1
+-        |  ret
++        |  fastRet
+ 
+         for (flags = 1; flags <= SRE_REGEX_ASSERT_LOOKAHEAD; flags++) {
+ 
+@@ -944,10 +962,10 @@ sre_vm_thompson_jit_epilogue(sre_vm_thompson_jit_t *jit)
+             }
+ 
+             |  mov eax, 1
+-            |  ret
++            |  fastRet
+             |1:
+             |  xor eax, eax
+-            |  ret
++            |  fastRet
+         }
+     }
+ 

@@ -1,0 +1,122 @@
+diff --git a/src/sregex/sre_vm_thompson_x64.dasc b/src/sregex/sre_vm_thompson_x64.dasc
+index c27441c..ead5f11 100644
+--- a/src/sregex/sre_vm_thompson_x64.dasc
++++ b/src/sregex/sre_vm_thompson_x64.dasc
+@@ -19,7 +19,7 @@
+ |.define TC,    r14  // callee-save
+ 
+ /* seen word */
+-|.define SW,    r13  // callee-save
++|.define RETADDR,    r13  // callee-save
+ 
+ /* string pointer */
+ |.define SP,    r12  // callee-save
+@@ -158,6 +158,11 @@
+ |.endmacro
+ 
+ 
++|.macro fastRet
++|  jmp RETADDR
++|.endmacro
++
++
+ /* This affects the "|" DynASM lines. */
+ #define Dst  dasm
+ 
+@@ -588,7 +593,7 @@ sre_vm_thompson_jit_compile_path(sre_vm_thompson_jit_t *jit,
+ 
+             } else {
+                 |  mov eax, 1
+-                |  ret
++                |  fastRet
+             }
+ 
+         } else {
+@@ -614,7 +619,7 @@ sre_vm_thompson_jit_compile_path(sre_vm_thompson_jit_t *jit,
+ 
+     |1:
+     |  xor eax, eax
+-    |  ret
++    |  fastRet
+ 
+     return SRE_OK;
+ }
+@@ -743,7 +748,7 @@ sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit)
+ 
+     dasm = jit->dasm;
+ 
+-    |  push TC; push TL; push T; push SW; push LAST; push SP;
++    |  push TC; push TL; push T; push RETADDR; push LAST; push SP;
+     |  push CTL; push CT; push LT; push rbx; push r11; push ADDED
+     |
+     |  // check the 4th arg, "eof"
+@@ -768,8 +773,10 @@ sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit)
+     |  mov byte CTX->first_buf, 0
+     |
+     |  mov TL, CTL
+-    |  xor SW, SW
+-    |  call =>0
++    |  lea RETADDR, [->init_pc_called]
++    |  jmp =>0
++    |
++    |->init_pc_called:
+     |  test eax, eax
+     |  jz ->not_first_buf
+     |  xor rax, rax // (SRE_OK)
+@@ -839,16 +846,21 @@ sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit)
+     if (jit->program->lookahead_asserts) {
+         |  mov rax, CT->asserts_handler
+         |  test rax, rax
+-        |  jz >1
+-        |  call rax
++        |  jz >2
++        |
++        |  lea RETADDR, qword [>1]
++        |  jmp rax
++        |1:
+         |  test eax, eax
+         |  jz ->run_next_thread
+         |
+-        |1:
++        |2:
+     }
+ 
+-    |  call aword CT->pc
++    |  lea RETADDR, qword [->pc_called]
++    |  jmp aword CT->pc
+     |
++    |->pc_called:
+     |  test eax, eax
+     |  jz ->run_next_thread
+     |
+@@ -882,7 +894,7 @@ sre_vm_thompson_jit_prologue(sre_vm_thompson_jit_t *jit)
+     |  mov TL->count, TC
+     |
+     |  pop ADDED; pop r11; pop rbx; pop LT; pop CT; pop CTL;
+-    |  pop SP; pop LAST; pop SW; pop T; pop TL; pop TC
++    |  pop SP; pop LAST; pop RETADDR; pop T; pop TL; pop TC
+     |  ret
+ 
+     return SRE_OK;
+@@ -903,7 +915,7 @@ sre_vm_thompson_jit_epilogue(sre_vm_thompson_jit_t *jit)
+ 
+         |->match:
+         |  mov eax, 1
+-        |  ret
++        |  fastRet
+ 
+         for (flags = 1; flags <= SRE_REGEX_ASSERT_LOOKAHEAD; flags++) {
+ 
+@@ -944,10 +956,10 @@ sre_vm_thompson_jit_epilogue(sre_vm_thompson_jit_t *jit)
+             }
+ 
+             |  mov eax, 1
+-            |  ret
++            |  fastRet
+             |1:
+             |  xor eax, eax
+-            |  ret
++            |  fastRet
+         }
+     }
+ 
