@@ -16,8 +16,7 @@
 
 
 static void usage(int rc);
-static void run_engines(Prog *prog, unsigned engine_types, unsigned ncaps,
-    char *input);
+static void run_engines(Prog *prog, unsigned engine_types, char *input);
 
 
 enum {
@@ -48,7 +47,6 @@ main(int argc, char **argv)
     unsigned             i;
     Regexp              *re;
     Prog                *prog;
-    unsigned             ncaps;
     char                *input;
     FILE                *f;
     size_t               len;
@@ -147,7 +145,7 @@ main(int argc, char **argv)
         return 1;
     }
 
-    run_engines(prog, engine_types, ncaps, input);
+    run_engines(prog, engine_types, input);
 
     free(re);
     free(prog);
@@ -156,7 +154,7 @@ main(int argc, char **argv)
 
 
 static void
-run_engines(Prog *prog, unsigned engine_types, unsigned ncaps, char *input)
+run_engines(Prog *prog, unsigned engine_types, char *input)
 {
     unsigned             i;
     int                  rc;
