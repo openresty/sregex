@@ -1,6 +1,7 @@
 package t::SRegex;
 
 
+use 5.016002;
 use bytes;
 use Test::Base -Base;
 use IPC::Run3;
