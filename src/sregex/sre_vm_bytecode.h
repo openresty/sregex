@@ -54,7 +54,7 @@ struct sre_instruction_s {
         sre_vm_ranges_t        *ranges;
         sre_uint_t              group; /* capture group */
         unsigned                greedy;  /* :1 */
-        uint8_t                 assertion_type;
+        uint8_t                 assertion;
     } v;
 };
 

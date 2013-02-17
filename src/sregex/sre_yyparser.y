@@ -144,7 +144,7 @@ repeat: atom
                 YYABORT;
             }
 
-            $$->greedy = 1;
+            $$->data.greedy = 1;
         }
 
       | atom '*' '?'
@@ -164,7 +164,7 @@ repeat: atom
                 YYABORT;
             }
 
-            $$->greedy = 1;
+            $$->data.greedy = 1;
         }
 
       | atom '+' '?'
@@ -184,7 +184,7 @@ repeat: atom
                 YYABORT;
             }
 
-            $$->greedy = 1;
+            $$->data.greedy = 1;
         }
 
       | atom '?' '?'
@@ -225,7 +225,7 @@ atom: '(' count alt ')'
             YYABORT;
         }
 
-        $$->group = $2;
+        $$->data.group = $2;
       }
 
     | '(' '?' ':' alt ')'
@@ -245,32 +245,32 @@ atom: '(' count alt ')'
                 YYABORT;
             }
 
-            $$->range = sre_palloc(pool, sizeof(sre_regex_range_t));
-            if ($$->range == NULL) {
+            $$->data.range = sre_palloc(pool, sizeof(sre_regex_range_t));
+            if ($$->data.range == NULL) {
                 YYABORT;
             }
 
-            $$->range->from = $1;
-            $$->range->to = $1;
+            $$->data.range->from = $1;
+            $$->data.range->to = $1;
 
-            $$->range->next = sre_palloc(pool, sizeof(sre_regex_range_t));
-            if ($$->range->next == NULL) {
+            $$->data.range->next = sre_palloc(pool, sizeof(sre_regex_range_t));
+            if ($$->data.range->next == NULL) {
                 YYABORT;
             }
 
             if ($1 <= 'Z') {
                 /* upper case */
-                $$->range->next->from = $1 + 32;
-                $$->range->next->to = $1 + 32;
+                $$->data.range->next->from = $1 + 32;
+                $$->data.range->next->to = $1 + 32;
 
             } else {
                 /* lower case */
 
-                $$->range->next->from = $1 - 32;
-                $$->range->next->to = $1 - 32;
+                $$->data.range->next->from = $1 - 32;
+                $$->data.range->next->to = $1 - 32;
             }
 
-            $$->range->next->next = NULL;
+            $$->data.range->next->next = NULL;
 
         } else {
             $$ = sre_regex_create(pool, SRE_REGEX_TYPE_LIT, NULL, NULL);
@@ -297,7 +297,7 @@ atom: '(' count alt ')'
             YYABORT;
         }
 
-        $$->assertion_type = SRE_REGEX_ASSERT_CARET;
+        $$->data.assertion = SRE_REGEX_ASSERT_CARET;
       }
 
     | '$'
@@ -307,14 +307,15 @@ atom: '(' count alt ')'
             YYABORT;
         }
 
-        $$->assertion_type = SRE_REGEX_ASSERT_DOLLAR;
+        $$->data.assertion = SRE_REGEX_ASSERT_DOLLAR;
       }
 
     | SRE_REGEX_TOKEN_ASSERTION
     | SRE_REGEX_TOKEN_CHAR_CLASS
       {
         if (flags & SRE_REGEX_CASELESS) {
-            $$->range = sre_regex_turn_char_class_caseless(pool, $1->range);
+            $$->data.range = sre_regex_turn_char_class_caseless(pool,
+                                                                $1->data.range);
             if ($$ == NULL) {
                 YYABORT;
             }
@@ -569,7 +570,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 break;
             }
 
-            r->assertion_type = SRE_REGEX_ASSERT_BIG_B;
+            r->data.assertion = SRE_REGEX_ASSERT_BIG_B;
 
             lvalp->re = r;
             locp->last = *src;
@@ -582,7 +583,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 break;
             }
 
-            r->assertion_type = SRE_REGEX_ASSERT_SMALL_B;
+            r->data.assertion = SRE_REGEX_ASSERT_SMALL_B;
 
             lvalp->re = r;
             locp->last = *src;
@@ -595,7 +596,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 break;
             }
 
-            r->assertion_type = SRE_REGEX_ASSERT_SMALL_Z;
+            r->data.assertion = SRE_REGEX_ASSERT_SMALL_Z;
 
             lvalp->re = r;
             locp->last = *src;
@@ -609,7 +610,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 break;
             }
 
-            r->assertion_type = SRE_REGEX_ASSERT_BIG_A;
+            r->data.assertion = SRE_REGEX_ASSERT_BIG_A;
 
             lvalp->re = r;
             locp->last = *src;
@@ -633,7 +634,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
             range->to = '9';
             range->next = NULL;
 
-            r->range = range;
+            r->data.range = range;
 
             lvalp->re = r;
             locp->last = *src;
@@ -657,7 +658,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
             range->to = '9';
             range->next = NULL;
 
-            r->range = range;
+            r->data.range = range;
 
             lvalp->re = r;
             locp->last = *src;
@@ -683,7 +684,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 range->to = esc_w_ranges[i + 1];
 
                 if (i == 0) {
-                    r->range = range;
+                    r->data.range = range;
 
                 } else {
                     last->next = range;
@@ -722,7 +723,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 range->to = esc_w_ranges[i + 1];
 
                 if (i == 0) {
-                    r->range = range;
+                    r->data.range = range;
 
                 } else {
                     last->next = range;
@@ -760,7 +761,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 range->to = esc_s_ranges[i + 1];
 
                 if (i == 0) {
-                    r->range = range;
+                    r->data.range = range;
 
                 } else {
                     last->next = range;
@@ -798,7 +799,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 range->to = esc_s_ranges[i + 1];
 
                 if (i == 0) {
-                    r->range = range;
+                    r->data.range = range;
 
                 } else {
                     last->next = range;
@@ -834,7 +835,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
             range->to = '\n';
             range->next = NULL;
 
-            r->range = range;
+            r->data.range = range;
 
             lvalp->re = r;
             locp->last = *src;
@@ -871,7 +872,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 range->to = esc_h_ranges[i + 1];
 
                 if (i == 0) {
-                    r->range = range;
+                    r->data.range = range;
 
                 } else {
                     last->next = range;
@@ -907,7 +908,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 range->to = esc_h_ranges[i + 1];
 
                 if (i == 0) {
-                    r->range = range;
+                    r->data.range = range;
 
                 } else {
                     last->next = range;
@@ -943,7 +944,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 range->to = esc_v_ranges[i + 1];
 
                 if (i == 0) {
-                    r->range = range;
+                    r->data.range = range;
 
                 } else {
                     last->next = range;
@@ -979,7 +980,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 range->to = esc_v_ranges[i + 1];
 
                 if (i == 0) {
-                    r->range = range;
+                    r->data.range = range;
 
                 } else {
                     last->next = range;
@@ -1092,7 +1093,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                         last->next = range;
 
                     } else {
-                        r->range = range;
+                        r->data.range = range;
                     }
                 }
 
@@ -1321,7 +1322,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                         last->next = range;
 
                     } else {
-                        r->range = range;
+                        r->data.range = range;
                     }
 
                     last = range;
@@ -1344,7 +1345,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                         last->next = range;
 
                     } else {
-                        r->range = range;
+                        r->data.range = range;
                     }
 
                     last = range;
@@ -1366,7 +1367,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                             last->next = range;
 
                         } else {
-                            r->range = range;
+                            r->data.range = range;
                         }
 
                         range->next = NULL;
@@ -1390,7 +1391,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                             last->next = range;
 
                         } else {
-                            r->range = range;
+                            r->data.range = range;
                         }
 
                         range->next = NULL;
@@ -1414,7 +1415,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                             last->next = range;
 
                         } else {
-                            r->range = range;
+                            r->data.range = range;
                         }
 
                         range->next = NULL;
@@ -1438,7 +1439,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                             last->next = range;
 
                         } else {
-                            r->range = range;
+                            r->data.range = range;
                         }
 
                         range->next = NULL;
@@ -1462,7 +1463,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                             last->next = range;
 
                         } else {
-                            r->range = range;
+                            r->data.range = range;
                         }
 
                         range->next = NULL;
@@ -1486,7 +1487,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                             last->next = range;
 
                         } else {
-                            r->range = range;
+                            r->data.range = range;
                         }
 
                         range->next = NULL;
@@ -1510,7 +1511,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                             last->next = range;
 
                         } else {
-                            r->range = range;
+                            r->data.range = range;
                         }
 
                         range->next = NULL;
@@ -1534,7 +1535,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                             last->next = range;
 
                         } else {
-                            r->range = range;
+                            r->data.range = range;
                         }
 
                         range->next = NULL;
@@ -1558,7 +1559,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                             last->next = range;
 
                         } else {
-                            r->range = range;
+                            r->data.range = range;
                         }
 
                         range->next = NULL;
@@ -1616,7 +1617,7 @@ process_char:
                     last->next = range;
 
                 } else {
-                    r->range = range;
+                    r->data.range = range;
                 }
 
                 last = range;
@@ -1831,7 +1832,7 @@ sre_regex_desugar_counted_repetition(sre_pool_t *pool, sre_regex_t *subj,
             return NULL;
         }
 
-        star->greedy = greedy;
+        star->data.greedy = greedy;
 
         concat = sre_regex_create(pool, SRE_REGEX_TYPE_CAT, concat, star);
         if (concat == NULL) {
@@ -1849,7 +1850,7 @@ sre_regex_desugar_counted_repetition(sre_pool_t *pool, sre_regex_t *subj,
         return NULL;
     }
 
-    quest->greedy = greedy;
+    quest->data.greedy = greedy;
 
     for ( ; i < cquant->to; i++) {
         concat = sre_regex_create(pool, SRE_REGEX_TYPE_CAT, concat, quest);

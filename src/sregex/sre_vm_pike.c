@@ -353,7 +353,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
                 break;
 
             case SRE_OPCODE_ASSERT:
-                switch (pc->v.assertion_type) {
+                switch (pc->v.assertion) {
                 case SRE_REGEX_ASSERT_SMALL_Z:
                     if (sp != last) {
                         break;
@@ -711,7 +711,7 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
 
 
     case SRE_OPCODE_ASSERT:
-        switch (pc->v.assertion_type) {
+        switch (pc->v.assertion) {
         case SRE_REGEX_ASSERT_BIG_A:
             if (pos || ctx->processed_bytes) {
                 break;

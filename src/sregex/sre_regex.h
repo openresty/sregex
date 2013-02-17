@@ -74,10 +74,14 @@ struct sre_regex_s {
     sre_regex_t         *left;
     sre_regex_t         *right;
     sre_char             ch;
-    sre_regex_range_t   *range;
-    unsigned             group;
-    unsigned             assertion_type;
-    unsigned             greedy; /* :1 */
+
+    union {
+        sre_regex_range_t   *range;
+        sre_uint_t          *multi_ncaps;
+        sre_uint_t           group;
+        sre_uint_t           assertion;
+        sre_uint_t           greedy;
+    }                    data;
 };
 
 

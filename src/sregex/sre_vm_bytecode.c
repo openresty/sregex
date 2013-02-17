@@ -74,7 +74,7 @@ sre_program_dump(sre_program_t *prog)
         case SRE_OPCODE_ASSERT:
             printf("%2d. assert ", (int) (pc - start));
 
-            switch (pc->v.assertion_type) {
+            switch (pc->v.assertion) {
             case SRE_REGEX_ASSERT_BIG_A:
                 printf("\\A");
                 break;

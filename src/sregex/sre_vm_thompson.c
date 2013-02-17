@@ -172,7 +172,7 @@ sre_vm_thompson_exec(sre_vm_thompson_ctx_t *ctx, sre_char *input, size_t size,
                 break;
 
             case SRE_OPCODE_ASSERT:
-                switch (pc->v.assertion_type) {
+                switch (pc->v.assertion) {
                 case SRE_REGEX_ASSERT_SMALL_Z:
                     if (sp != last) {
                         break;
@@ -298,7 +298,7 @@ sre_vm_thompson_add_thread(sre_vm_thompson_ctx_t *ctx,
         return;
 
     case SRE_OPCODE_ASSERT:
-        switch (pc->v.assertion_type) {
+        switch (pc->v.assertion) {
         case SRE_REGEX_ASSERT_BIG_A:
             if (sp != ctx->buffer) {
                 dd("\\A assertion failed: %d", (int) (sp - ctx->buffer));

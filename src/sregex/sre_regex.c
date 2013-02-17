@@ -61,13 +61,13 @@ sre_regex_dump(sre_regex_t *r)
         break;
 
     case SRE_REGEX_TYPE_PAREN:
-        printf("Paren(%d, ", r->group);
+        printf("Paren(%lu, ", (unsigned long) r->data.group);
         sre_regex_dump(r->left);
         printf(")");
         break;
 
     case SRE_REGEX_TYPE_STAR:
-        if (!r->greedy) {
+        if (!r->data.greedy) {
             printf("Ng");
         }
 
@@ -77,7 +77,7 @@ sre_regex_dump(sre_regex_t *r)
         break;
 
     case SRE_REGEX_TYPE_PLUS:
-        if (!r->greedy) {
+        if (!r->data.greedy) {
             printf("Ng");
         }
 
@@ -87,7 +87,7 @@ sre_regex_dump(sre_regex_t *r)
         break;
 
     case SRE_REGEX_TYPE_QUEST:
-        if (!r->greedy) {
+        if (!r->data.greedy) {
             printf("Ng");
         }
 
@@ -103,7 +103,7 @@ sre_regex_dump(sre_regex_t *r)
     case SRE_REGEX_TYPE_CLASS:
         printf("CLASS(");
 
-        for (range = r->range; range; range = range->next) {
+        for (range = r->data.range; range; range = range->next) {
             printf("[%d, %d]", range->from, range->to);
         }
 
@@ -113,7 +113,7 @@ sre_regex_dump(sre_regex_t *r)
     case SRE_REGEX_TYPE_NCLASS:
         printf("NCLASS(");
 
-        for (range = r->range; range; range = range->next) {
+        for (range = r->data.range; range; range = range->next) {
             printf("[%d, %d]", range->from, range->to);
         }
 
@@ -122,7 +122,7 @@ sre_regex_dump(sre_regex_t *r)
 
     case SRE_REGEX_TYPE_ASSERT:
         printf("ASSERT(");
-        switch (r->assertion_type) {
+        switch (r->data.assertion) {
             case SRE_REGEX_ASSERT_BIG_A:
                 printf("\\A");
                 break;

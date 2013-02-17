@@ -157,7 +157,7 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
     case SRE_REGEX_TYPE_CLASS:
         pc->opcode = SRE_OPCODE_IN;
 
-        if (sre_regex_compiler_add_char_class(pool, pc, r->range) != SRE_OK) {
+        if (sre_regex_compiler_add_char_class(pool, pc, r->data.range) != SRE_OK) {
             return NULL;
         }
 
@@ -167,7 +167,7 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
     case SRE_REGEX_TYPE_NCLASS:
         pc->opcode = SRE_OPCODE_NOTIN;
 
-        if (sre_regex_compiler_add_char_class(pool, pc, r->range) != SRE_OK) {
+        if (sre_regex_compiler_add_char_class(pool, pc, r->data.range) != SRE_OK) {
             return NULL;
         }
 
@@ -181,7 +181,7 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
 
     case SRE_REGEX_TYPE_PAREN:
         pc->opcode = SRE_OPCODE_SAVE;
-        pc->v.group = 2 * r->group;
+        pc->v.group = 2 * r->data.group;
         pc++;
 
         pc = sre_regex_emit_bytecode(pool, pc, r->left);
@@ -191,7 +191,7 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
 
         pc->opcode = SRE_OPCODE_SAVE;
 
-        pc->v.group = 2 * r->group + 1;
+        pc->v.group = 2 * r->data.group + 1;
         pc++;
 
         break;
@@ -208,7 +208,7 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
 
         p1->y = pc;
 
-        if (!r->greedy) { /* non-greedy */
+        if (!r->data.greedy) { /* non-greedy */
             t = p1->x;
             p1->x = p1->y;
             p1->y = t;
@@ -232,7 +232,7 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
 
         p1->y = pc;
 
-        if (!r->greedy) { /* non-greedy */
+        if (!r->data.greedy) { /* non-greedy */
             t = p1->x;
             p1->x = p1->y;
             p1->y = t;
@@ -254,7 +254,7 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
         pc++;
         p2->y = pc;
 
-        if (!r->greedy) { /* non-greedy */
+        if (!r->data.greedy) { /* non-greedy */
             t = p2->x;
             p2->x = p2->y;
             p2->y = t;
@@ -264,7 +264,7 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
 
     case SRE_REGEX_TYPE_ASSERT:
         pc->opcode = SRE_OPCODE_ASSERT;
-        pc->v.assertion_type = r->assertion_type;
+        pc->v.assertion = r->data.assertion;
         pc++;
 
         break;

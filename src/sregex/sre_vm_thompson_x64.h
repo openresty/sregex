@@ -923,7 +923,7 @@ sre_vm_thompson_jit_get_next_states(sre_vm_thompson_jit_t *jit,
     case SRE_OPCODE_ASSERT:
         dd("seen assert bc at %d", (int) (pc - jit->program->start));
 
-        asserts |= pc->v.assertion_type;
+        asserts |= pc->v.assertion;
 
         jit->program->lookahead_asserts |= (asserts & SRE_REGEX_ASSERT_LOOKAHEAD);
 
