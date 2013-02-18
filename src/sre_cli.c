@@ -95,6 +95,8 @@ main(int argc, char **argv)
     prog = sre_regex_compile(cpool, re);
     if (prog == NULL) {
         fprintf(stderr, "failed to compile the regex.\n");
+        sre_destroy_pool(ppool);
+        sre_destroy_pool(cpool);
         return 2;
     }
 
@@ -439,7 +441,7 @@ pike:
         break;
 
     default:
-        assert(rc);
+        printf("unknown (%d)\n", (int) rc);
         break;
     }
 

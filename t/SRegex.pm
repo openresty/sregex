@@ -117,6 +117,9 @@ sub run_test ($) {
                 if (!defined $cap) {
                     $cap = '<undef>';
                 }
+                if (!defined $pike_match) {
+                    $pike_match = '<undef>';
+                }
                 warn "$name - thompson: $thompson_match, pike: $pike_match, cap: $cap\n";
                 warn $res;
             }
