@@ -278,7 +278,7 @@ atom: '(' count alt ')'
                 YYABORT;
             }
 
-            $$->ch = $1;
+            $$->data.ch = $1;
         }
       }
 
@@ -329,7 +329,7 @@ atom: '(' count alt ')'
             YYABORT;
         }
 
-        $$->ch = ':';
+        $$->data.ch = ':';
       }
     ;
 

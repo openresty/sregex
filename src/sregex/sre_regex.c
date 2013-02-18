@@ -53,7 +53,7 @@ sre_regex_dump(sre_regex_t *r)
         break;
 
     case SRE_REGEX_TYPE_LIT:
-        printf("Lit(%d)", (int) r->ch);
+        printf("Lit(%d)", (int) r->data.ch);
         break;
 
     case SRE_REGEX_TYPE_DOT:

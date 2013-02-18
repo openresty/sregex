@@ -71,11 +71,12 @@ typedef struct {
 
 struct sre_regex_s {
     sre_regex_type_t     type;
+
     sre_regex_t         *left;
     sre_regex_t         *right;
-    sre_char             ch;
 
     union {
+        sre_char             ch;
         sre_regex_range_t   *range;
         sre_uint_t          *multi_ncaps;
         sre_uint_t           group;

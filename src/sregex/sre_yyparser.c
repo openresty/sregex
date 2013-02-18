@@ -1798,7 +1798,7 @@ yyreduce:
                 YYABORT;
             }
 
-            (yyval.re)->ch = (yyvsp[(1) - (1)].ch);
+            (yyval.re)->data.ch = (yyvsp[(1) - (1)].ch);
         }
       }
     break;
@@ -1863,7 +1863,7 @@ yyreduce:
             YYABORT;
         }
 
-        (yyval.re)->ch = ':';
+        (yyval.re)->data.ch = ':';
       }
     break;
 

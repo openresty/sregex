@@ -150,7 +150,7 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
 
     case SRE_REGEX_TYPE_LIT:
         pc->opcode = SRE_OPCODE_CHAR;
-        pc->v.ch = r->ch;
+        pc->v.ch = r->data.ch;
         pc++;
         break;
 
