@@ -33,6 +33,7 @@ sre_capture_create(sre_pool_t *pool, size_t ovecsize, unsigned clear)
     cap->ovecsize = ovecsize;
     cap->ref = 1;
     cap->next = NULL;
+    cap->regex_id = 0;
 
     p += sizeof(sre_capture_t);
     cap->vector = (sre_int_t *) p;

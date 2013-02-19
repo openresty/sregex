@@ -28,6 +28,7 @@ typedef enum {
     SRE_REGEX_TYPE_CLASS    = 9,
     SRE_REGEX_TYPE_NCLASS   = 10,
     SRE_REGEX_TYPE_ASSERT   = 11,
+    SRE_REGEX_TYPE_TOPLEVEL = 12
 } sre_regex_type_t;
 
 
@@ -75,6 +76,8 @@ struct sre_regex_s {
     sre_regex_t         *left;
     sre_regex_t         *right;
 
+    sre_uint_t           nregexes;
+
     union {
         sre_char             ch;
         sre_regex_range_t   *range;
@@ -82,6 +85,7 @@ struct sre_regex_s {
         sre_uint_t           group;
         sre_uint_t           assertion;
         sre_uint_t           greedy;
+        sre_int_t            regex_id;
     }                    data;
 };
 

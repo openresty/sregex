@@ -27,6 +27,7 @@ typedef struct sre_capture_s  sre_capture_t;
 struct sre_capture_s {
     unsigned         ref;  /* reference count */
     size_t           ovecsize;
+    sre_int_t        regex_id;
     sre_int_t       *vector;
     sre_capture_t   *next;
 };

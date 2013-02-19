@@ -3549,6 +3549,11 @@ sre_regex_parse(sre_pool_t *pool, sre_char *src, sre_uint_t *ncaps, int flags,
         return NULL;
     }
 
+    re = sre_regex_create(pool, SRE_REGEX_TYPE_TOPLEVEL, re, NULL);
+    if (re == NULL) {
+        return NULL;
+    }
+
     r = sre_regex_create(pool, SRE_REGEX_TYPE_DOT, NULL, NULL);
     if (r == NULL) {
         return NULL;
@@ -3559,7 +3564,137 @@ sre_regex_parse(sre_pool_t *pool, sre_char *src, sre_uint_t *ncaps, int flags,
         return NULL;
     }
 
-    return sre_regex_create(pool, SRE_REGEX_TYPE_CAT, r, re);
+    re = sre_regex_create(pool, SRE_REGEX_TYPE_CAT, r, re);
+    if (re == NULL) {
+        return NULL;
+    }
+
+    re->nregexes = 1;
+    re->data.multi_ncaps = sre_palloc(pool, sizeof(sre_uint_t));
+    if (re->data.multi_ncaps == NULL) {
+        return NULL;
+    }
+
+    re->data.multi_ncaps[0] = *ncaps;
+
+    return re;
+}
+
+
+SRE_API sre_regex_t *
+sre_regex_parse_multi(sre_pool_t *pool, sre_char **regexes,
+    sre_int_t nregexes, sre_uint_t *max_ncaps, int *multi_flags,
+    sre_int_t *err_offset, sre_int_t *err_regex_id)
+{
+    sre_char        *start, *err_pos = NULL;
+    sre_regex_t     *re, *r;
+    sre_regex_t     *parsed = NULL;
+    sre_uint_t       ncaps, saved_ncaps, *multi_ncaps, group;
+    sre_int_t        i;
+    sre_char        *src;
+
+    ncaps = 0;
+    saved_ncaps = 0;
+    *max_ncaps = 0;
+    *err_offset = -1;
+
+    if (nregexes <= 0) {
+        return NULL;
+    }
+
+    multi_ncaps = sre_palloc(pool, nregexes * sizeof(sre_uint_t));
+    if (multi_ncaps == NULL) {
+        return NULL;
+    }
+
+    /* assemble /re1|re2|re3|.../ */
+
+    r = NULL;
+
+    for (i = 0; i < nregexes; i++) {
+        src = regexes[i];
+        start = src;
+
+        group = ncaps;
+
+        if (yyparse(pool, &src, &ncaps, multi_flags ? multi_flags[i] : 0,
+                    &parsed, &err_pos) != SRE_OK)
+        {
+            if (err_pos) {
+                *err_offset = (sre_int_t) (err_pos - start);
+                *err_regex_id = i;
+            }
+
+            return NULL;
+        }
+
+        if (parsed == NULL) {
+            *err_regex_id = i;
+            return NULL;
+        }
+
+        re = sre_regex_create(pool, SRE_REGEX_TYPE_PAREN, parsed, NULL);
+                /* $0 capture */
+
+        if (re == NULL) {
+            return NULL;
+        }
+
+        re->data.group = group;
+
+        re = sre_regex_create(pool, SRE_REGEX_TYPE_TOPLEVEL, re, NULL);
+        if (re == NULL) {
+            return NULL;
+        }
+
+        re->data.regex_id = i;
+
+        if (r == NULL) {
+            r = re;
+            multi_ncaps[i] = ncaps;
+            *max_ncaps = ncaps;
+
+        } else {
+            r = sre_regex_create(pool, SRE_REGEX_TYPE_ALT, r, re);
+            if (r == NULL) {
+                return NULL;
+            }
+
+            multi_ncaps[i] = ncaps - saved_ncaps;
+            if (multi_ncaps[i] > *max_ncaps) {
+                *max_ncaps = multi_ncaps[i];
+            }
+        }
+
+        dd("%d: ncaps: %d, max_ncaps: %d", (int) i, (int) ncaps,
+           (int) *max_ncaps);
+
+        ncaps++;
+        saved_ncaps = ncaps;
+    }
+
+    /* assemble the regex ".*?(regex)" */
+
+    re = r;
+
+    r = sre_regex_create(pool, SRE_REGEX_TYPE_DOT, NULL, NULL);
+    if (r == NULL) {
+        return NULL;
+    }
+
+    r = sre_regex_create(pool, SRE_REGEX_TYPE_STAR, r, NULL);
+    if (r == NULL) {
+        return NULL;
+    }
+
+    re = sre_regex_create(pool, SRE_REGEX_TYPE_CAT, r, re);
+    if (re == NULL) {
+        return NULL;
+    }
+
+    re->data.multi_ncaps = multi_ncaps;
+    re->nregexes = nregexes;
+    return re;
 }
 
 

@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 
 static void usage(void);
@@ -24,14 +25,17 @@ static void process_string(sre_char *s, size_t len, sre_program_t *prog,
     sre_int_t *ovector, size_t ovecsize, sre_uint_t ncaps);
 sre_int_t run_jitted_thompson(sre_vm_thompson_exec_pt handler,
     sre_vm_thompson_ctx_t *ctx, sre_char *input, size_t size, unsigned eof);
+static sre_int_t parse_regex_flags(const char *flags_str, int nregexes,
+    int *multi_flags);
 
 
 int
 main(int argc, char **argv)
 {
     sre_uint_t           i, n;
-    int                  flags = 0;
-    sre_int_t            err_offset = -1;
+    const char          *flags_str = NULL;
+    int                 *multi_flags = NULL;
+    sre_int_t            err_offset = -1, err_regex_id;
     sre_pool_t          *ppool; /* parser pool */
     sre_pool_t          *cpool; /* compiler pool */
     sre_regex_t         *re;
@@ -42,6 +46,7 @@ main(int argc, char **argv)
     sre_char            *s, *p;
     size_t               len;
     unsigned             from_stdin = 0;
+    sre_int_t            nregexes = 1;
 
     if (argc < 2) {
         usage();
@@ -55,12 +60,33 @@ main(int argc, char **argv)
         if (strncmp(argv[i], "--stdin", sizeof("--stdin") - 1) == 0) {
             from_stdin = 1;
 
-        } else if (strncmp(argv[i], "-i", 2) == 0) {
-            flags |= SRE_REGEX_CASELESS;
+        } else if (strncmp(argv[i], "--flags", sizeof("--flags") - 1) == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "--flags should take a value.\n");
+                return 1;
+            }
+
+            i++;
+
+            flags_str = argv[i];
+
+        } else if (strncmp(argv[i], "-n", 2) == 0) {
+            if (i == argc - 1) {
+                fprintf(stderr, "-n should take a value.\n");
+                return 1;
+            }
+
+            i++;
+
+            nregexes = atoi(argv[i]);
+            if (nregexes <= 0) {
+                fprintf(stderr, "invalid -n value: %s.\n", argv[i]);
+                return 1;
+            }
 
         } else {
             fprintf(stderr, "unknown option: %s\n", argv[i]);
-            exit(1);
+            return 1;
         }
     }
 
@@ -69,18 +95,75 @@ main(int argc, char **argv)
         return 2;
     }
 
-    re = sre_regex_parse(ppool, (sre_char *) argv[i], &ncaps, flags, &err_offset);
-    if (re == NULL) {
-        if (err_offset >= 0) {
-            fprintf(stderr, "[error] syntax error at pos %lld\n",
-                    (long long) err_offset);
+    dd("nregexes: %d", (int) nregexes);
+
+    if (flags_str) {
+        multi_flags = malloc(nregexes * sizeof(int));
+        if (multi_flags == NULL) {
+            return 2;
         }
 
-        fprintf(stderr, "unknown error\n");
-        return 2;
+        memset(multi_flags, 0, nregexes * sizeof(int));
+
+        if (parse_regex_flags(flags_str, nregexes, multi_flags) != SRE_OK) {
+            fprintf(stderr, "Bad --flags option value: %s", flags_str);
+            free(multi_flags);
+            return 1;
+        }
     }
 
-    i++;
+    if (nregexes == 1) {
+        re = sre_regex_parse(ppool, (sre_char *) argv[i], &ncaps,
+                             multi_flags ? multi_flags[0] : 0, &err_offset);
+        if (re == NULL) {
+            if (err_offset >= 0) {
+                fprintf(stderr, "[error] syntax error at pos %lld\n",
+                        (long long) err_offset);
+            }
+
+            fprintf(stderr, "unknown error\n");
+
+            if (multi_flags) {
+                free(multi_flags);
+            }
+
+            return 1;
+        }
+
+        i++;
+
+    } else {
+
+        if (argc - i < nregexes) {
+            fprintf(stderr, "at least %ld regexes should be specified\n",
+                    (long) nregexes);
+
+            if (multi_flags) {
+                free(multi_flags);
+            }
+
+            return 1;
+        }
+
+        re = sre_regex_parse_multi(ppool, (sre_char **) &argv[i], nregexes,
+                                   &ncaps, multi_flags, &err_offset, &err_regex_id);
+        if (re == NULL) {
+            if (err_offset >= 0) {
+                fprintf(stderr, "[error] regex %lu: syntax error at pos %ld\n",
+                        (unsigned long) err_regex_id, (long) err_offset);
+            }
+
+            fprintf(stderr, "unknown error\n");
+
+            if (multi_flags) {
+                free(multi_flags);
+            }
+
+            return 1;
+        }
+
+        i += nregexes;
+    }
 
     sre_regex_dump(re);
     printf("\n");
@@ -89,6 +172,9 @@ main(int argc, char **argv)
 
     cpool = sre_create_pool(1024);
     if (cpool == NULL) {
+        if (multi_flags) {
+            free(multi_flags);
+        }
         return 2;
     }
 
@@ -97,6 +183,9 @@ main(int argc, char **argv)
         fprintf(stderr, "failed to compile the regex.\n");
         sre_destroy_pool(ppool);
         sre_destroy_pool(cpool);
+        if (multi_flags) {
+            free(multi_flags);
+        }
         return 2;
     }
 
@@ -109,6 +198,9 @@ main(int argc, char **argv)
     ovecsize = 2 * (ncaps + 1) * sizeof(sre_int_t);
     ovector = malloc(ovecsize);
     if (ovector == NULL) {
+        if (multi_flags) {
+            free(multi_flags);
+        }
         return 2;
     }
 
@@ -143,6 +235,11 @@ main(int argc, char **argv)
 
     } else {
 
+        if (i >= argc) {
+            fprintf(stderr, "no subject string specified.\n");
+            return 1;
+        }
+
         for (; i < argc; i++) {
             len = strlen(argv[i]);
             p = (sre_char *) argv[i];
@@ -165,6 +262,10 @@ main(int argc, char **argv)
     prog = NULL;
     cpool = NULL;
     free(ovector);
+
+    if (multi_flags) {
+        free(multi_flags);
+    }
 
     return 0;
 }
@@ -417,32 +518,33 @@ pike:
 
     rc = sre_vm_pike_exec(pctx, s, len, 1 /* eof */, NULL);
 
-    switch (rc) {
-    case SRE_OK:
-        printf("match");
+    if (rc >= 0) {
+        printf("match %ld", (long) rc);
 
         for (i = 0; i < 2 * (ncaps + 1); i += 2) {
             printf(" (%ld, %ld)", (long) ovector[i], (long) ovector[i + 1]);
         }
 
         printf("\n");
-        break;
 
-    case SRE_AGAIN:
-        printf("again\n");
-        break;
+    } else {
+        switch (rc) {
+        case SRE_AGAIN:
+            printf("again\n");
+            break;
 
-    case SRE_DECLINED:
-        printf("no match\n");
-        break;
+        case SRE_DECLINED:
+            printf("no match\n");
+            break;
 
-    case SRE_ERROR:
-        printf("error\n");
-        break;
+        case SRE_ERROR:
+            printf("error\n");
+            break;
 
-    default:
-        printf("unknown (%d)\n", (int) rc);
-        break;
+        default:
+            printf("unknown (%d)\n", (int) rc);
+            break;
+        }
     }
 
     sre_reset_pool(pool);
@@ -472,7 +574,7 @@ pike:
 #if 1
             if (rc == SRE_AGAIN) {
                 printf("[");
-                for (j = 0; j < 2 * (ncaps + 1); j += 2) {
+                for (j = 0; j < 2; j += 2) {
                     printf("(%ld, %ld)", (long) ovector[j],
                            (long) ovector[j + 1]);
                 }
@@ -493,37 +595,39 @@ pike:
 
         dd("i = %d, rc = %d", (int) i, (int) rc);
 
-        switch (rc) {
-        case SRE_OK:
-            printf("match");
+        if (rc >= 0) {
+            printf("match %ld", (long) rc);
 
             for (j = 0; j < 2 * (ncaps + 1); j += 2) {
                 printf(" (%ld, %ld)", (long) ovector[j], (long) ovector[j + 1]);
             }
 
             printf("\n");
-            break;
 
-        case SRE_AGAIN:
+        } else {
+            switch (rc) {
+
+            case SRE_AGAIN:
 #if 0
-            printf("again\n");
+                printf("again\n");
 #endif
-            continue;
+                continue;
 
-        case SRE_DECLINED:
-            printf("no match\n");
-            break;
+            case SRE_DECLINED:
+                printf("no match\n");
+                break;
 
-        case SRE_ERROR:
-            printf("error\n");
-            break;
+            case SRE_ERROR:
+                printf("error\n");
+                break;
 
-        default:
-            assert(rc);
+            default:
+                printf("unknown (%d)\n", (int) rc);
+                break;
+            }
+
             break;
         }
-
-        break;
     }
 
     sre_destroy_pool(pool);
@@ -545,4 +649,38 @@ run_jitted_thompson(sre_vm_thompson_exec_pt handler, sre_vm_thompson_ctx_t *ctx,
     sre_char *input, size_t size, unsigned eof)
 {
     return handler(ctx, input, size, eof);
+}
+
+
+static sre_int_t
+parse_regex_flags(const char *flags_str, int nregexes,
+    int *multi_flags)
+{
+    int           i = 0;
+    const char   *p;
+
+    for (p = flags_str; *p != '\0'; p++) {
+        if (i >= nregexes) {
+            fprintf(stderr, "Too many flags given but only %d regexes "
+                    "specified.\n", nregexes);
+
+            return SRE_ERROR;
+        }
+
+        switch (*p) {
+        case ' ':
+            i++;
+            break;
+
+        case 'i':
+            multi_flags[i] |= SRE_REGEX_CASELESS;
+            break;
+
+        default:
+            fprintf(stderr, "Bad regex flag '%c' for regex %d\n", *p, i);
+            return SRE_ERROR;
+        }
+    }
+
+    return SRE_OK;
 }

@@ -26,22 +26,32 @@ static sre_int_t sre_regex_compiler_add_char_class(sre_pool_t *pool,
 sre_program_t *
 sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
 {
-    sre_uint_t           n;
+    sre_uint_t           i, n, multi_ncaps_size;
     sre_char            *p;
     sre_program_t       *prog;
     sre_instruction_t   *pc;
 
-    n = sre_program_len(re) + 1;
+    n = sre_program_len(re);
+
+    multi_ncaps_size = (re->nregexes - 1) * sizeof(sre_uint_t);
 
     p = sre_pnalloc(pool,
-                    sizeof(sre_program_t) + n * sizeof(sre_instruction_t));
+                    sizeof(sre_program_t) + multi_ncaps_size
+                    + n * sizeof(sre_instruction_t));
 
     if (p == NULL) {
         return NULL;
     }
 
     prog = (sre_program_t *) p;
-    prog->start = (sre_instruction_t *) (p + sizeof(sre_program_t));
+
+    prog->nregexes = re->nregexes;
+
+    memcpy(prog->multi_ncaps, re->data.multi_ncaps,
+           re->nregexes * sizeof(sre_uint_t));
+
+    prog->start = (sre_instruction_t *) (p + sizeof(sre_program_t)
+                                         + multi_ncaps_size);
 
     sre_memzero(prog->start, n * sizeof(sre_instruction_t));
 
@@ -50,10 +60,8 @@ sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
         return NULL;
     }
 
-    pc->opcode = SRE_OPCODE_MATCH;
-    pc++;
-
     if (pc - prog->start != n) {
+        dd("buffer error: %d != %d", (int) (pc - prog->start), (int) n);
         return NULL;
     }
 
@@ -63,6 +71,12 @@ sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
     prog->dup_threads = 0;
     prog->uniq_threads = 0;
 
+    prog->ovecsize = 0;
+    for (i = 0; i < prog->nregexes; i++) {
+        prog->ovecsize += prog->multi_ncaps[i] + 1;
+    }
+    prog->ovecsize *= 2 * sizeof(sre_uint_t);
+
     return prog;
 }
 
@@ -70,6 +84,8 @@ sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
 static sre_uint_t
 sre_program_len(sre_regex_t *r)
 {
+    dd("program len on node: %d", (int) r->type);
+
     switch(r->type) {
     case SRE_REGEX_TYPE_ALT:
         return 2 + sre_program_len(r->left) + sre_program_len(r->right);
@@ -98,6 +114,9 @@ sre_program_len(sre_regex_t *r)
     case SRE_REGEX_TYPE_ASSERT:
         return 1;
 
+    case SRE_REGEX_TYPE_TOPLEVEL:
+        return 1 + sre_program_len(r->left);
+
     case SRE_REGEX_TYPE_NIL:
     default:
         /* impossible to reach here */
@@ -110,6 +129,8 @@ static sre_instruction_t *
 sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
 {
     sre_instruction_t    *p1, *p2, *t;
+
+    dd("program emit bytecode on node: %d", (int) r->type);
 
     switch(r->type) {
     case SRE_REGEX_TYPE_ALT:
@@ -269,8 +290,24 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
 
         break;
 
+    case SRE_REGEX_TYPE_TOPLEVEL:
+        pc = sre_regex_emit_bytecode(pool, pc, r->left);
+        if (pc == NULL) {
+            return NULL;
+        }
+
+        pc->opcode = SRE_OPCODE_MATCH;
+
+        dd("setting regex id %ld", (long) r->data.regex_id);
+
+        pc->v.regex_id = r->data.regex_id;
+        pc++;
+
+        break;
+
     case SRE_REGEX_TYPE_NIL:
         /* do nothing */
+        break;
 
     default:
         /* impossible to reach here */

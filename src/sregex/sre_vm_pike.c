@@ -75,7 +75,10 @@ static sre_vm_pike_thread_list_t *
 static sre_int_t sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx,
     sre_vm_pike_thread_list_t *l, sre_instruction_t *pc, sre_capture_t *capture,
     sre_int_t pos, sre_capture_t **pcap);
-static void sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx);
+static void sre_vm_pike_prepare_temp_captures(sre_program_t *prog,
+    sre_vm_pike_ctx_t *ctx);
+static sre_int_t sre_vm_pike_prepare_matched_captures(sre_capture_t *matched,
+    sre_program_t *prog, sre_vm_pike_ctx_t *ctx);
 
 
 SRE_API sre_vm_pike_ctx_t *
@@ -180,7 +183,7 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
     if (ctx->first_buf) {
         ctx->first_buf = 0;
 
-        cap = sre_capture_create(pool, ctx->ovecsize, 1);
+        cap = sre_capture_create(pool, prog->ovecsize, 1);
         if (cap == NULL) {
             return SRE_ERROR;
         }
@@ -433,6 +436,7 @@ assertion_hold:
             case SRE_OPCODE_MATCH:
 
                 ctx->last_matched_pos = cap->vector[1];
+                cap->regex_id = pc->v.regex_id;
 
 matched:
                 if (matched) {
@@ -444,7 +448,7 @@ matched:
                     sre_capture_decr_ref(ctx, matched);
                 }
 
-                dd("set matched");
+                dd("set matched, regex id: %d", (int) pc->v.regex_id);
 
                 matched = cap;
 
@@ -516,8 +520,11 @@ step_done:
 
     if (matched) {
         if (eof || clist->head == NULL) {
-            memcpy(ctx->ovector, matched->vector, ctx->ovecsize);
-            /* sre_capture_decr_ref(matched, freecap); */
+            if (sre_vm_pike_prepare_matched_captures(matched, prog, ctx)
+                != SRE_OK)
+            {
+                return SRE_ERROR;
+            }
 
             if (clist->head) {
                 *clist->next = ctx->free_threads;
@@ -533,7 +540,7 @@ step_done:
             ctx->matched = NULL;
             ctx->first_buf = 1;
 
-            return SRE_OK;
+            return matched->regex_id;
         }
 
         dd("clist head cap == matched: %d", clist->head->capture == matched);
@@ -559,7 +566,7 @@ step_done:
 
     ctx->matched = matched;
 
-    sre_vm_pike_prepare_temp_captures(ctx);
+    sre_vm_pike_prepare_temp_captures(prog, ctx);
 
 #if 0
     if (sp > input) {
@@ -573,47 +580,46 @@ step_done:
 
 
 static void
-sre_vm_pike_prepare_temp_captures(sre_vm_pike_ctx_t *ctx)
+sre_vm_pike_prepare_temp_captures(sre_program_t *prog, sre_vm_pike_ctx_t *ctx)
 {
     sre_int_t                a, b;
-    sre_uint_t               i, ngroups;
+    sre_uint_t               i, j, ofs;
     sre_capture_t           *cap;
     sre_vm_pike_thread_t    *t;
 
-    t = ctx->current_threads->head;
-    if (t) {
+    ctx->ovector[0] = -1;
+    ctx->ovector[1] = -1;
 
-        ngroups = ctx->ovecsize / sizeof(sre_int_t);
+    for (t = ctx->current_threads->head; t; t = t->next) {
+        cap = t->capture;
 
-        dd("ngroups: %d, next=%p", (int) ngroups, t->next);
+        ofs = 0;
+        for (i = 0; i < prog->nregexes; i++) {
 
-        memcpy(ctx->ovector, t->capture->vector, ctx->ovecsize);
+            for (j = 0; j < 2; j += 2) {
+                a = ctx->ovector[j];
+                b = cap->vector[ofs + j];
 
-        for (t = t->next; t; t = t->next) {
-            cap = t->capture;
-
-            for (i = 0; i < ngroups; i += 2) {
-                a = ctx->ovector[i];
-                b = cap->vector[i];
-
-                dd("%d: %d -> %d", (int) i, (int) b, (int) a);
+                dd("%d: %d -> %d", (int) j, (int) b, (int) a);
 
                 if (b != -1 && (a == -1 || b < a)) {
-                    dd("setting group %d to %d", (int) i, (int) cap->vector[i]);
-                    ctx->ovector[i] = b;
+                    dd("setting group %d to %d", (int) j, (int) cap->vector[j]);
+                    ctx->ovector[j] = b;
                 }
 
-                a = ctx->ovector[i + 1];
-                b = cap->vector[i + 1];
+                a = ctx->ovector[j + 1];
+                b = cap->vector[j + 1];
 
-                dd("%d: %d -> %d", (int) (i + 1), (int) b, (int) a);
+                dd("%d: %d -> %d", (int) (j + 1), (int) b, (int) a);
 
                 if (b != -1 && (a == -1 || b > a)) {
-                    dd("setting group %d to %d", (int) (i + 1),
-                       (int) cap->vector[i + 1]);
-                    ctx->ovector[i + 1] = b;
+                    dd("setting group %d to %d", (int) (j + 1),
+                       (int) cap->vector[j + 1]);
+                    ctx->ovector[j + 1] = b;
                 }
             }
+
+            ofs += 2 * (prog->multi_ncaps[i] + 1);
         }
     }
 }
@@ -763,6 +769,7 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
     case SRE_OPCODE_MATCH:
 
         ctx->last_matched_pos = capture->vector[1];
+        capture->regex_id = pc->v.regex_id;
 
 #if 1
         if (pcap) {
@@ -808,6 +815,40 @@ add:
            pc->opcode);
 
         break;
+    }
+
+    return SRE_OK;
+}
+
+
+static sre_int_t
+sre_vm_pike_prepare_matched_captures(sre_capture_t *matched,
+    sre_program_t *prog, sre_vm_pike_ctx_t *ctx)
+{
+    sre_uint_t          i, ofs = 0;
+    size_t              len;
+
+    if (matched->regex_id >= prog->nregexes) {
+        dd("bad regex id: %ld >= %ld", (long) matched->regex_id,
+           (long) prog->nregexes);
+
+        return SRE_ERROR;
+    }
+
+    for (i = 0; i < matched->regex_id; i++) {
+        ofs += prog->multi_ncaps[i] + 1;
+    }
+
+    ofs *= 2;
+    len = 2 * (prog->multi_ncaps[i] + 1) * sizeof(sre_int_t);
+
+    dd("matched captures: ofs: %d, len: %d", (int) ofs,
+       (int) len / sizeof(sre_int_t));
+
+    memcpy(ctx->ovector, &matched->vector[ofs], len);
+
+    if (ctx->ovecsize > len) {
+        memset((char *) ctx->ovector + len, -1, ctx->ovecsize - len);
     }
 
     return SRE_OK;

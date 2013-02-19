@@ -102,6 +102,10 @@ SRE_API sre_regex_t *sre_regex_parse(sre_pool_t *pool, sre_char *src,
 
 SRE_API void sre_regex_dump(sre_regex_t *re);
 
+SRE_API sre_regex_t * sre_regex_parse_multi(sre_pool_t *pool,
+    sre_char **regexes, sre_int_t nregexes, sre_uint_t *max_ncaps,
+    int *multi_flags, sre_int_t *err_offset, sre_int_t *err_regex_id);
+
 
 /* the regex compiler API */
 

@@ -53,8 +53,9 @@ struct sre_instruction_s {
         sre_char                ch;
         sre_vm_ranges_t        *ranges;
         sre_uint_t              group; /* capture group */
-        unsigned                greedy;  /* :1 */
-        uint8_t                 assertion;
+        sre_uint_t              greedy;
+        sre_uint_t              assertion;
+        sre_int_t               regex_id;
     } v;
 };
 
@@ -62,10 +63,15 @@ struct sre_instruction_s {
 struct sre_program_s {
     sre_instruction_t   *start;
     sre_uint_t           len;
+
     unsigned             tag;
     unsigned             uniq_threads; /* unique thread count */
     unsigned             dup_threads;  /* duplicatable thread count */
     unsigned             lookahead_asserts;
+
+    sre_uint_t           ovecsize;
+    sre_uint_t           nregexes;
+    sre_uint_t           multi_ncaps[1];
 };
 
 

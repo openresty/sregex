@@ -154,6 +154,12 @@ sre_regex_dump(sre_regex_t *r)
         printf(")");
         break;
 
+    case SRE_REGEX_TYPE_TOPLEVEL:
+        printf("TOPLEVEL(%lu, ", (unsigned long) r->data.regex_id);
+        sre_regex_dump(r->left);
+        printf(")");
+        break;
+
     default:
         printf("???");
         break;

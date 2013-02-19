@@ -29,6 +29,10 @@ sregex will always output the current value ranges for each submatch capture in 
 Almost all the relevant test cases for PCRE 8.32 and Perl 5.16.2 have been imported into sregex's test suite
 and all tests are passing right now.
 
+Already implemtend an API for assembling multiple user regexes and
+returning an ID indicating exactly which regex is matched
+(first), as well as the corresponding submatch captures.
+
 There is also a Just-in-Time (JIT) compiler targeting x86_64 for the Thompson VM.
 
 Syntax Supported
@@ -142,9 +146,9 @@ The `sregex-cli` command-line interface can be used as a convenient way to exerc
 
     ./sregex-cli 'a|ab' 'blab'
 
-It also supports the `-i` option which does case-insensitive matching:
+It also supports the `--flags` option which can be used to enable case-insensitive matching:
 
-    ./sregex-cli -i 'A|AB' 'blab'
+    ./sregex-cli --flags i 'A|AB' 'blab'
 
 A real-world application of this library is the ngx_replace_filter module:
 
@@ -198,7 +202,6 @@ TODO
 * implement the comment notation `(?#comment)`.
 * implement the POSIX character class notation.
 * allow '\0' be used in both the regex and the subject string.
-* add an API for assembling multiple user regexes and return an ID indicating exactly which regex is matched (first), as well as the corresponding submatch captures.
 * add a bytecode optimizer to the regex VM (which also generates minimized DFAs for the Thompson VM).
 * add a JIT compiler for the Pike VM targeting x86_64.
 * port the existing x86_64 JIT compiler for the Thompson VM to other architectures like i386.

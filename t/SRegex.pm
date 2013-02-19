@@ -48,19 +48,22 @@ sub run_test ($) {
     my ($prefix, @opts);
     if ($flags) {
         $prefix = "(?$flags)";
-        while ($flags =~ /./g) {
-           push @opts, "-$&";
-        }
+        #warn "prefix: $prefix\n";
+        push @opts, "--flags", $flags;
 
     } else {
         $prefix = "";
+    }
+
+    if (ref $re) {
+        push @opts, "-n", scalar @$re;
     }
 
     my ($res, $err);
 
     my $stdin = bytes::chr(bytes::length $s) . $s;
 
-    my @cmd = ("./sregex-cli", "--stdin", @opts, $re);
+    my @cmd = ("./sregex-cli", "--stdin", @opts, ref $re ? @$re : $re);
 
     if ($UseValgrind) {
         warn "$name\n";
@@ -109,7 +112,8 @@ sub run_test ($) {
 
             my ($thompson_match, $jitted_thompson_match, $splitted_jitted_thompson_match,
                 $splitted_thompson_match, $pike_match, $pike_cap,
-                $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap)
+                $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap,
+                $pike_re_id, $splitted_pike_re_id)
                 = parse_res($res);
 
             if ($ENV{TEST_SREGEX_VERBOSE}) {
@@ -128,13 +132,15 @@ sub run_test ($) {
             no warnings 'syntax';
             no warnings 'deprecated';
 
-            eval {
-                $s =~ m/$prefix$re/sm;
-            };
+            if (!ref $re) {
+                eval {
+                    $s =~ m/$prefix$re/sm;
+                };
 
-            if ($@) {
-                fail("$name - bad regex: $re: $@");
-                return;
+                if ($@) {
+                    fail("$name - bad regex: $re: $@");
+                    return;
+                }
             }
 
             if (defined $block->cap) {
@@ -155,10 +161,30 @@ sub run_test ($) {
                 ok($splitted_thompson_match, "$name - splitted thompson vm should match");
 
                 ok($pike_match, "$name - pike vm should match");
-                is($pike_cap, $expected_cap, "$name - pike vm capture ok");
+
+                if (defined $block->match_id) {
+                    is $pike_re_id, $block->match_id, "$name - pike match id ok";
+                }
+
+                if (ref $expected_cap) {
+                    like($pike_cap, $expected_cap, "$name - pike vm capture ok");
+
+                } else {
+                    is($pike_cap, $expected_cap, "$name - pike vm capture ok");
+                }
 
                 ok($splitted_pike_match, "$name - splitted pike vm should match");
-                is($splitted_pike_cap, $expected_cap, "$name - splitted pike vm capture ok");
+
+                if (defined $block->match_id) {
+                    is $splitted_pike_re_id, $block->match_id, "$name - splitted pike match id ok";
+                }
+
+                if (ref $expected_cap) {
+                    like($pike_cap, $expected_cap, "$name - pike vm capture ok");
+
+                } else {
+                    is($splitted_pike_cap, $expected_cap, "$name - splitted pike vm capture ok");
+                }
 
                 if (defined $block->temp_cap) {
                     is($splitted_pike_temp_cap, $block->temp_cap, "$name - splitted pike vm temporary capture ok");
@@ -221,7 +247,8 @@ sub parse_res ($) {
 
     my ($thompson_match, $jitted_thompson_match, $splitted_jitted_thompson_match,
         $splitted_thompson_match, $pike_match, $pike_cap,
-        $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap);
+        $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap,
+        $pike_re_id, $splitted_pike_re_id);
 
     while (<$in>) {
         if (/^thompson (.+)/) {
@@ -317,8 +344,9 @@ sub parse_res ($) {
             if ($res eq 'no match') {
                 $pike_match = 0;
 
-            } elsif ($res =~ /^match (.+)/) {
-                $pike_cap = $1;
+            } elsif ($res =~ /^match (\d+) (.+)/) {
+                $pike_re_id = $1;
+                $pike_cap = $2;
                 $pike_match = 1;
 
                 $pike_cap =~ s/( \(-1, -1\))+$//g;
@@ -343,8 +371,9 @@ sub parse_res ($) {
             if ($res eq 'no match') {
                 $splitted_pike_match = 0;
 
-            } elsif ($res =~ /^match (.+)/) {
-                $splitted_pike_cap = $1;
+            } elsif ($res =~ /^match (\d+) (.+)/) {
+                $splitted_pike_re_id = $1;
+                $splitted_pike_cap = $2;
                 $splitted_pike_match = 1;
 
                 $splitted_pike_cap =~ s/( \(-1, -1\))+$//g;
@@ -358,7 +387,8 @@ sub parse_res ($) {
 
     return ($thompson_match, $jitted_thompson_match, $splitted_jitted_thompson_match,
         $splitted_thompson_match, $pike_match, $pike_cap,
-        $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap);
+        $splitted_pike_match, $splitted_pike_cap, $splitted_pike_temp_cap,
+        $pike_re_id, $splitted_pike_re_id);
 }
 
 
