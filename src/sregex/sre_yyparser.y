@@ -46,9 +46,11 @@ typedef struct YYLTYPE {
 #define sre_read_char(sp)  *(*(sp))++
 
 
-static int yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src);
-static void yyerror(YYLTYPE *locp, sre_pool_t *pool, sre_char **src, sre_uint_t *ncaps, int flags,
-    sre_regex_t **parsed, sre_char **err_pos, char *s);
+static int yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool,
+    sre_char **src);
+static void yyerror(YYLTYPE *locp, sre_pool_t *pool, sre_char **src,
+    sre_uint_t *ncaps, int flags, sre_regex_t **parsed, sre_char **err_pos,
+    char *s);
 static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
     sre_regex_t *subj, sre_regex_cquant_t *cquant, unsigned greedy);
 
@@ -198,7 +200,8 @@ repeat: atom
 
       | atom SRE_REGEX_TOKEN_CQUANT
         {
-            $$ = sre_regex_desugar_counted_repetition(pool, $1, &$2, 1 /* greedy */);
+            $$ = sre_regex_desugar_counted_repetition(pool, $1, &$2,
+                                                      1 /* greedy */);
             if ($$ == NULL) {
                 YYABORT;
             }
@@ -206,7 +209,8 @@ repeat: atom
 
       | atom SRE_REGEX_TOKEN_CQUANT '?'
         {
-            $$ = sre_regex_desugar_counted_repetition(pool, $1, &$2, 0 /* greedy */);
+            $$ = sre_regex_desugar_counted_repetition(pool, $1, &$2,
+                                                      0 /* greedy */);
             if ($$ == NULL) {
                 YYABORT;
             }
@@ -360,7 +364,8 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
 
     static sre_char      esc_S_ranges[] = { 0, 8, 11, 11, 14, 31, 33, 255 };
 
-    static sre_char      esc_h_ranges[] = { 0x09, 0x09, 0x20, 0x20, 0xa0, 0xa0 };
+    static sre_char      esc_h_ranges[] = { 0x09, 0x09, 0x20, 0x20, 0xa0,
+                                            0xa0 };
 
     static sre_char      esc_H_ranges[] = { 0x00, 0x08, 0x0a, 0x1f, 0x21, 0x9f,
                                           0xa1, 0xff };
@@ -368,7 +373,8 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
     static sre_char      esc_v_ranges[] = { 0x0a, 0x0a, 0x0b, 0x0b, 0x0c, 0x0c,
                                           0x0d, 0x0d, 0x85, 0x85 };
 
-    static sre_char      esc_V_ranges[] = { 0x00, 0x09, 0x0e, 0x84, 0x86, 0xff };
+    static sre_char      esc_V_ranges[] = { 0x00, 0x09, 0x0e, 0x84, 0x86,
+                                            0xff };
 
     locp->pos = *src;
 
@@ -1733,8 +1739,8 @@ cquant_parsed:
 
 
 static void
-yyerror(YYLTYPE *locp, sre_pool_t *pool, sre_char **src, sre_uint_t *ncaps, int flags,
-    sre_regex_t **parsed, sre_char **err_pos, char *msg)
+yyerror(YYLTYPE *locp, sre_pool_t *pool, sre_char **src, sre_uint_t *ncaps,
+    int flags, sre_regex_t **parsed, sre_char **err_pos, char *msg)
 {
     *err_pos = locp->pos;
 }
