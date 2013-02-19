@@ -132,7 +132,7 @@ sub run_test ($) {
             no warnings 'syntax';
             no warnings 'deprecated';
 
-            if (!ref $re) {
+            if (!ref $re && !defined $block->no_match) {
                 eval {
                     $s =~ m/$prefix$re/sm;
                 };
@@ -143,37 +143,61 @@ sub run_test ($) {
                 }
             }
 
-            if (defined $block->cap) {
+            if (defined $block->cap || defined $block->no_match) {
                 my $expected_cap = $block->cap;
 
-                ok($thompson_match, "$name - thompson vm should match");
+                if (defined $block->no_match) {
+                    ok(!$thompson_match, "$name - thompson vm should not match");
+
+                } else {
+                    ok($thompson_match, "$name - thompson vm should match");
+                }
 
                 SKIP: {
                     skip "Thompson JIT disabled", 1 if $jitted_thompson_match == -1;
-                    ok($jitted_thompson_match, "$name - jitted thompson vm should match");
+                    if (defined $block->no_match) {
+                        ok(!$jitted_thompson_match, "$name - jitted thompson vm should not match");
+                    } else {
+                        ok($jitted_thompson_match, "$name - jitted thompson vm should match");
+                    }
                 }
 
                 SKIP: {
                     skip "Thompson JIT disabled", 1 if $splitted_jitted_thompson_match == -1;
-                    ok($splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should match");
+                    if (defined $block->no_match) {
+                        ok(!$splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should not match");
+
+                    } else {
+                        ok($splitted_jitted_thompson_match, "$name - splitted jitted thompson vm should match");
+                    }
                 }
 
-                ok($splitted_thompson_match, "$name - splitted thompson vm should match");
-
-                ok($pike_match, "$name - pike vm should match");
+                if (defined $block->no_match) {
+                    ok(!$splitted_thompson_match, "$name - splitted thompson vm should not match");
+                    ok(!$pike_match, "$name - pike vm should not match");
+                } else {
+                    ok($splitted_thompson_match, "$name - splitted thompson vm should match");
+                    ok($pike_match, "$name - pike vm should match");
+                }
 
                 if (defined $block->match_id) {
                     is $pike_re_id, $block->match_id, "$name - pike match id ok";
                 }
 
-                if (ref $expected_cap) {
-                    like($pike_cap, $expected_cap, "$name - pike vm capture ok");
+                if (defined $expected_cap) {
+                    if (ref $expected_cap) {
+                        like($pike_cap, $expected_cap, "$name - pike vm capture ok");
 
-                } else {
-                    is($pike_cap, $expected_cap, "$name - pike vm capture ok");
+                    } else {
+                        is($pike_cap, $expected_cap, "$name - pike vm capture ok");
+                    }
                 }
 
-                ok($splitted_pike_match, "$name - splitted pike vm should match");
+                if (defined $block->no_match) {
+                    ok(!$splitted_pike_match, "$name - splitted pike vm should not match");
+                } else {
+                    ok($splitted_pike_match, "$name - splitted pike vm should match");
+                }
 
                 if (defined $block->match_id) {
                     is $splitted_pike_re_id, $block->match_id, "$name - splitted pike match id ok";

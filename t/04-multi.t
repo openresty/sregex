@@ -70,3 +70,11 @@ __DATA__
 --- flags eval: "i i"
 --- match_id: 0
 
+
+
+=== TEST 9: not matched
+--- re eval: ["a", "b"]
+--- s: cde
+--- flags eval: "i i"
+--- no_match
+
