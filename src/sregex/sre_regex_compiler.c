@@ -157,7 +157,9 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
     case SRE_REGEX_TYPE_CLASS:
         pc->opcode = SRE_OPCODE_IN;
 
-        if (sre_regex_compiler_add_char_class(pool, pc, r->data.range) != SRE_OK) {
+        if (sre_regex_compiler_add_char_class(pool, pc, r->data.range)
+            != SRE_OK)
+        {
             return NULL;
         }
 
@@ -167,7 +169,9 @@ sre_regex_emit_bytecode(sre_pool_t *pool, sre_instruction_t *pc, sre_regex_t *r)
     case SRE_REGEX_TYPE_NCLASS:
         pc->opcode = SRE_OPCODE_NOTIN;
 
-        if (sre_regex_compiler_add_char_class(pool, pc, r->data.range) != SRE_OK) {
+        if (sre_regex_compiler_add_char_class(pool, pc, r->data.range)
+            != SRE_OK)
+        {
             return NULL;
         }
 
