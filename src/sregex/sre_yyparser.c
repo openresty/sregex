@@ -2277,7 +2277,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 c = sre_read_char(src);
             }
 
-            dd("\\o{...}: %u, next: %c", num, **src);
+            dd("\\o{...}: %u, next: %c", (unsigned) num, **src);
 
             lvalp->ch = (sre_char) num;
             locp->last = *src;
@@ -2339,7 +2339,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 c = sre_read_char(src);
             }
 
-            dd("\\x{...}: %u, next: %c", num, **src);
+            dd("\\x{...}: %u, next: %c", (unsigned) num, **src);
 
             lvalp->ch = (sre_char) num;
             locp->last = *src;
@@ -2854,7 +2854,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 return SRE_REGEX_TOKEN_BAD;
 
             case ']':
-                dd("n == %d", n);
+                dd("n == %d", (int) n);
 
                 if (n == 1) {
                     goto process_char;
@@ -2891,7 +2891,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                     num = c - '0';
                     i = 1;
 
-                    dd("\\ddd: %d", num);
+                    dd("\\ddd: %d", (int) num);
 
                     for (;;) {
                         c = **src;
@@ -2976,7 +2976,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                         c = sre_read_char(src);
                     }
 
-                    dd("\\x{...}: %u, next: %c", num, **src);
+                    dd("\\x{...}: %u, next: %c", (unsigned) num, **src);
 
                     c = (sre_char) num;
                     goto process_char;
@@ -3040,7 +3040,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                         c = sre_read_char(src);
                     }
 
-                    dd("\\x{...}: %u, next: %c", num, **src);
+                    dd("\\x{...}: %u, next: %c", (int) num, **src);
 
                     c = (sre_char) num;
                     goto process_char;
