@@ -606,7 +606,6 @@ pike:
 
         } else {
             switch (rc) {
-
             case SRE_AGAIN:
 #if 0
                 printf("again\n");
@@ -625,9 +624,9 @@ pike:
                 printf("unknown (%d)\n", (int) rc);
                 break;
             }
-
-            break;
         }
+
+        break;
     }
 
     sre_destroy_pool(pool);
