@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ack '(?<=\#define)\s*DDEBUG\s*[1-9]' src && exit 1
-ack '.{81}' `ls src/sregex/sre_*.[ch]|grep -v yyparser|grep -v _x64\.h`
+ack '.{81}' `ls src/sregex/sre_*.[ch]|grep -v yyparser|grep -v _x64\.h` src/sregex/sre_yyparser.y
 ack '(?<!:)//' `ls src/sregex/sre_*.[ch]|grep -v _x64\.h`
 ack '^master_on' t && exit 1
 ack '\b(?:ONLY|LAST)\b' t
