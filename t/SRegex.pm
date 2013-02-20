@@ -17,6 +17,7 @@ sub fmt_cap ($$);
 our @EXPORT = qw( run_tests );
 
 our $UseValgrind = $ENV{TEST_SREGEX_USE_VALGRIND};
+our $ForceMultiRegexes = $ENV{TEST_SREGEX_FORCE_MULTI_REGEXES};
 
 sub run_tests {
     for my $block (blocks()) {
@@ -41,6 +42,10 @@ sub run_test ($) {
         die "No --- re specified for test $name\n";
     }
 
+    if (!ref $re && $ForceMultiRegexes) {
+        $re = ['^章亦春$', $re];
+    }
+
     my $flags = $block->flags;
 
     #warn "flags: $flags\n";
@@ -57,6 +62,10 @@ sub run_test ($) {
 
     if (ref $re) {
         push @opts, "-n", scalar @$re;
+
+        if ($flags && @$re == 2 && $re->[0] eq '^章亦春$') {
+            push @opts, "--flags", " $flags";
+        }
     }
 
     my ($res, $err);
@@ -77,11 +86,21 @@ sub run_test ($) {
     if (defined $block->err) {
         $err =~ /\[error\] .*\n/;
         $err = $&;
+
+        if (ref $re && @$re == 2 && $re->[0] eq '^章亦春$') {
+            $err =~ s/regex \d+:\s+//;
+        }
+
         is $err, $block->err, "$name - err expected (regex: \"$re\")";
 
     } elsif (defined $block->err_like) {
         $err =~ /\[error\] .*\n/;
         $err = $&;
+
+        if (ref $re && @$re == 2 && $re->[0] eq '^章亦春$') {
+            $err =~ s/regex \d+:\s+//;
+        }
+
         my $re = $block->err_like;
         like $err, qr/$re/, "$name - err_like expected (regex: \"$re\")";
 
@@ -126,6 +145,10 @@ sub run_test ($) {
                 }
                 warn "$name - thompson: $thompson_match, pike: $pike_match, cap: $cap\n";
                 warn $res;
+            }
+
+            if (ref $re && @$re == 2 && $re->[0] eq '^章亦春$') {
+                $re = pop @$re;
             }
 
             no warnings 'regexp';
