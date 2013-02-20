@@ -87,3 +87,36 @@ __DATA__
 --- match_id: 1
 --- temp_cap chop
 [(1, -1)] [(2, -1)] [(3, -1)] [(3, -1)](3, 4) [(3, -1)](3, 5) [(3, -1)](3, 6) [(3, -1)](3, 7) [(3, -1)](3, 8)
+
+
+
+=== TEST 11: syntax error at 2nd regex
+--- re eval: ['BLAH', '(ab']
+--- s eval: "abc \t\n\f\rd"
+--- err
+[error] regex 1: syntax error at pos 3
+
+
+
+=== TEST 12: syntax error at 1st regex
+--- re eval: ['(abc', 'BLAH']
+--- s eval: "abc \t\n\f\rd"
+--- err
+[error] regex 0: syntax error at pos 4
+
+
+
+=== TEST 13: ambiguity patterns (1st matched)
+--- re eval: ['abcd', 'bc']
+--- s eval: "abcd"
+--- cap: (0, 4)
+--- temp_cap: [(0, -1)] [(0, -1)] [(0, -1)](1, 3)
+
+
+
+=== TEST 14: ambiguity patterns (2nd matched)
+--- re eval: ['abcd', 'bc']
+--- s eval: "abce"
+--- cap: (1, 3)
+--- temp_cap: [(0, -1)] [(0, -1)] [(0, -1)](1, 3)
+
