@@ -78,3 +78,12 @@ __DATA__
 --- flags eval: "i i"
 --- no_match
 
+
+
+=== TEST 10: temp captures
+--- re eval: ['BLAH', '\s+']
+--- s eval: "abc \t\n\f\rd"
+--- cap: (3, 8)
+--- match_id: 1
+--- temp_cap chop
+[(1, -1)] [(2, -1)] [(3, -1)] [(3, -1)](3, 4) [(3, -1)](3, 5) [(3, -1)](3, 6) [(3, -1)](3, 7) [(3, -1)](3, 8)
