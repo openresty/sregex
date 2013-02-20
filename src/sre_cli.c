@@ -119,14 +119,16 @@ main(int argc, char **argv)
             if (err_offset >= 0) {
                 fprintf(stderr, "[error] syntax error at pos %lld\n",
                         (long long) err_offset);
-            }
 
-            fprintf(stderr, "unknown error\n");
+            } else {
+                fprintf(stderr, "unknown error\n");
+            }
 
             if (multi_flags) {
                 free(multi_flags);
             }
 
+            sre_destroy_pool(ppool);
             return 1;
         }
 
@@ -142,6 +144,7 @@ main(int argc, char **argv)
                 free(multi_flags);
             }
 
+            sre_destroy_pool(ppool);
             return 1;
         }
 
@@ -151,14 +154,16 @@ main(int argc, char **argv)
             if (err_offset >= 0) {
                 fprintf(stderr, "[error] regex %lu: syntax error at pos %ld\n",
                         (unsigned long) err_regex_id, (long) err_offset);
-            }
 
-            fprintf(stderr, "unknown error\n");
+            } else {
+                fprintf(stderr, "unknown error\n");
+            }
 
             if (multi_flags) {
                 free(multi_flags);
             }
 
+            sre_destroy_pool(ppool);
             return 1;
         }
 
