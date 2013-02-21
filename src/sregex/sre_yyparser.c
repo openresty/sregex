@@ -3603,6 +3603,7 @@ sre_regex_parse_multi(sre_pool_t *pool, sre_char **regexes,
     saved_ncaps = 0;
     *max_ncaps = 0;
     *err_offset = -1;
+    *err_regex_id = -1;
 
     if (nregexes <= 0) {
         return NULL;
@@ -3620,6 +3621,7 @@ sre_regex_parse_multi(sre_pool_t *pool, sre_char **regexes,
     for (i = 0; i < nregexes; i++) {
         src = regexes[i];
         start = src;
+        *err_regex_id = i;
 
         group = ncaps;
 
@@ -3628,7 +3630,6 @@ sre_regex_parse_multi(sre_pool_t *pool, sre_char **regexes,
         {
             if (err_pos) {
                 *err_offset = (sre_int_t) (err_pos - start);
-                *err_regex_id = i;
             }
 
             return NULL;
