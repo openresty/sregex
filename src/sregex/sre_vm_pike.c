@@ -539,11 +539,15 @@ step_done:
             ctx->processed_bytes = ctx->ovector[1];
             ctx->empty_capture = (ctx->ovector[0] == ctx->ovector[1]);
 
-            dd("set empty capture: %u", ctx->empty_capture);
             ctx->matched = NULL;
             ctx->first_buf = 1;
 
-            return matched->regex_id;
+            rc = matched->regex_id;
+            sre_capture_decr_ref(ctx, matched);
+
+            dd("set empty capture: %u", ctx->empty_capture);
+
+            return rc;
         }
 
         dd("clist head cap == matched: %d", clist->head->capture == matched);
@@ -571,6 +575,8 @@ step_done:
     } else {
         if (eof) {
             ctx->eof = 1;
+            ctx->matched = NULL;
+
             return SRE_DECLINED;
         }
 
