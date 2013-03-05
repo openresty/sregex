@@ -23,7 +23,7 @@ Implemented the case-insensitive matching mode via the `SRE_REGEX_CASELESS` flag
 The full streaming matching API for the sregex engine has already been implemented,
 for both the Pike and Thompson regex VMs. The submatch capturing also supports streaming processing.
 When the state machine is yielded (that is, returning `SRE_AGAIN` on the current input data chunk),
-sregex will always output the current value ranges for each submatch capture in the user-supplied
+sregex will always output the current value range for the `$&` submatch capture in the user-supplied
 `ovector` array.
 
 Almost all the relevant test cases for PCRE 8.32 and Perl 5.16.2 have been imported into sregex's test suite
