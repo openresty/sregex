@@ -11,7 +11,7 @@ FILE_A= libsregex.a
 FILE_SO= libsregex.so
 
 CC= gcc
-CFLAGS+= -fpic -g -Wall -Werror -O3 -Isrc -I.
+CFLAGS+= -fpic -g -Wall -O3 -Isrc -I.
 PREFIX= /usr/local
 DESTDIR=
 INSTALL_X= install -m 0755
