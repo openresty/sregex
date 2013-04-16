@@ -428,6 +428,11 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 (*src)++;
 
                 if (++i == 3) {
+                    if (num > 255) {
+                        locp->last = *src;
+                        return SRE_REGEX_TOKEN_BAD;
+                    }
+
                     lvalp->ch = (sre_char) num;
                     locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
@@ -468,7 +473,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
             i = 0;
 
             for (;;) {
-                dd("%d: hex digit: %c (%d)", (int) i, (int) c, c);
+                dd("%d: oct digit: %c (%d)", (int) i, (int) c, c);
 
                 if (c >= '0' && c <= '7') {
                     num = (c - '0') + (num << 3);
@@ -494,6 +499,13 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                         locp->last = *src;
                         return SRE_REGEX_TOKEN_BAD;
                     }
+
+#if 1
+                    if (num > 255) {
+                        locp->last = *src;
+                        return SRE_REGEX_TOKEN_BAD;
+                    }
+#endif
 
                     break;
                 }
@@ -1134,6 +1146,11 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                         (*src)++;
 
                         if (++i == 3) {
+                            if (num > 255) {
+                                locp->last = *src;
+                                return SRE_REGEX_TOKEN_BAD;
+                            }
+
                             c = (sre_char) num;
                             goto process_char;
                         }
@@ -1190,6 +1207,11 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                             dd("cur: '%c' (%d)", **src, **src);
 
                             if (sre_read_char(src) != '}') {
+                                locp->last = *src;
+                                return SRE_REGEX_TOKEN_BAD;
+                            }
+
+                            if (num > 255) {
                                 locp->last = *src;
                                 return SRE_REGEX_TOKEN_BAD;
                             }
