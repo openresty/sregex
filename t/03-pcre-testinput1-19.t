@@ -45,12 +45,14 @@ __DATA__
 === TEST 7: testinput1:3678
 --- re: [\s]+
 --- s eval: "> \x09\x0a\x0c\x0d\x0b<"
+--- cap: (1, 6)
 
 
 
 === TEST 8: testinput1:3681
 --- re: \s+
 --- s eval: "> \x09\x0a\x0c\x0d\x0b<"
+--- cap: (1, 6)
 
 
 

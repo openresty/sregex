@@ -320,6 +320,14 @@ _EOC_
         print $out "--- cap: (0, 4) (0, 4)\n";
     }
 
+    if (($re eq '[\s]+' || $re eq '\s+') && $s eq '> \x09\x0a\x0c\x0d\x0b<') {
+        print $out "--- cap: (1, 6)\n";
+    }
+
+    if ($re eq '(a|(bc)){0,0}?xyz' && $s eq 'xyz') {
+        print $out "--- cap: (0, 3)\n";
+    }
+
     if ($re eq '(a|)*\d' && $s eq 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa4') {
         print $out "--- cap: (0, 61) (59, 60)\n";
     }

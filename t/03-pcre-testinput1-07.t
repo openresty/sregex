@@ -309,6 +309,7 @@ __DATA__
 === TEST 50: testinput1:1508
 --- re: (a|(bc)){0,0}?xyz
 --- s eval: "xyz"
+--- cap: (0, 3)
 
 
 

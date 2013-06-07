@@ -155,7 +155,7 @@ sub run_test ($) {
             no warnings 'syntax';
             no warnings 'deprecated';
 
-            if (!ref $re && !defined $block->no_match) {
+            if (!ref $re && !defined $block->no_match && !defined $block->cap) {
                 eval {
                     $s =~ m/$prefix$re/sm;
                 };
