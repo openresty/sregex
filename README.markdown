@@ -211,14 +211,14 @@ TODO
 Author
 ======
 
-Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>, CloudFlare.
+Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>, CloudFlare Inc.
 
 Copyright and License
 =====================
 
 This module is licensed under the BSD license.
 
-Copyright (C) 2012, 2013, by Yichun "agentzh" Zhang (章亦春), CloudFlare.
+Copyright (C) 2012, 2013, by Yichun "agentzh" Zhang (章亦春), CloudFlare Inc.
 
 Copyright (C) 2007-2009 Russ Cox, Google Inc. All rights reserved.
 
@@ -236,8 +236,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 See Also
 ========
-* the ngx_replace_filter module: https://github.com/agentzh/replace-filter-nginx-module
+* Slides for my talk "sregex: matching Perl 5 regexes on data streams": http://agentzh.org/misc/slides/yapc-na-2013-sregex.pdf
+* The ngx_replace_filter module: https://github.com/agentzh/replace-filter-nginx-module
 * "Implementing Regular Expressions" http://swtch.com/~rsc/regexp/
-* the re1 project: http://code.google.com/p/re1/
-* the re2 project: http://code.google.com/p/re2/
-
+* The re1 project: http://code.google.com/p/re1/
+* The re2 project: http://code.google.com/p/re2/
