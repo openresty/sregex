@@ -556,6 +556,8 @@ pike:
 
     printf("splitted pike ");
 
+    dd("===== splitted pike =====");
+
     pctx = sre_vm_pike_create_ctx(pool, prog, ovector, ovecsize);
     assert(pctx);
 

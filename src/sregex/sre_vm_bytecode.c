@@ -14,102 +14,109 @@
 SRE_API void
 sre_program_dump(sre_program_t *prog)
 {
-    sre_uint_t              i;
-    sre_vm_range_t         *range;
     sre_instruction_t      *pc, *start, *end;
 
     start = prog->start;
     end = prog->start + prog->len;
 
     for (pc = start; pc < end; pc++) {
+        sre_dump_instruction(stdout, pc, start);
+        printf("\n");
+    }
+}
 
-        switch (pc->opcode) {
-        case SRE_OPCODE_SPLIT:
-            printf("%2d. split %d, %d\n", (int) (pc - start),
-                   (int) (pc->x - start), (int) (pc->y - start));
+
+void
+sre_dump_instruction(FILE *f, sre_instruction_t *pc,
+    sre_instruction_t *start)
+{
+    sre_vm_range_t         *range;
+    sre_uint_t              i;
+
+    switch (pc->opcode) {
+    case SRE_OPCODE_SPLIT:
+        fprintf(f, "%2d. split %d, %d", (int) (pc - start),
+               (int) (pc->x - start), (int) (pc->y - start));
+        break;
+
+    case SRE_OPCODE_JMP:
+        fprintf(f, "%2d. jmp %d", (int) (pc - start), (int) (pc->x - start));
+        break;
+
+    case SRE_OPCODE_CHAR:
+        fprintf(f, "%2d. char %d", (int) (pc - start), (int) pc->v.ch);
+        break;
+
+    case SRE_OPCODE_IN:
+        fprintf(f, "%2d. in", (int) (pc - start));
+
+        for (i = 0; i < pc->v.ranges->count; i++) {
+            range = &pc->v.ranges->head[i];
+            fprintf(f, " %d-%d", range->from, range->to);
+        }
+
+        break;
+
+    case SRE_OPCODE_NOTIN:
+        fprintf(f, "%2d. notin", (int) (pc - start));
+
+        for (i = 0; i < pc->v.ranges->count; i++) {
+            range = &pc->v.ranges->head[i];
+            fprintf(f, " %d-%d", range->from, range->to);
+        }
+
+        break;
+
+    case SRE_OPCODE_ANY:
+        fprintf(f, "%2d. any", (int) (pc - start));
+        break;
+
+    case SRE_OPCODE_MATCH:
+        fprintf(f, "%2d. match", (int) (pc - start));
+        break;
+
+    case SRE_OPCODE_SAVE:
+        fprintf(f, "%2d. save %d", (int) (pc - start),
+                (int) pc->v.group);
+        break;
+
+    case SRE_OPCODE_ASSERT:
+        fprintf(f, "%2d. assert ", (int) (pc - start));
+
+        switch (pc->v.assertion) {
+        case SRE_REGEX_ASSERT_BIG_A:
+            fprintf(f, "\\A");
             break;
 
-        case SRE_OPCODE_JMP:
-            printf("%2d. jmp %d\n", (int) (pc - start), (int) (pc->x - start));
+        case SRE_REGEX_ASSERT_CARET:
+            fprintf(f, "^");
             break;
 
-        case SRE_OPCODE_CHAR:
-            printf("%2d. char %d\n", (int) (pc - start), (int) pc->v.ch);
+        case SRE_REGEX_ASSERT_SMALL_Z:
+            fprintf(f, "\\z");
             break;
 
-        case SRE_OPCODE_IN:
-            printf("%2d. in", (int) (pc - start));
-
-            for (i = 0; i < pc->v.ranges->count; i++) {
-                range = &pc->v.ranges->head[i];
-                printf(" %d-%d", range->from, range->to);
-            }
-
-            printf("\n");
+        case SRE_REGEX_ASSERT_BIG_B:
+            fprintf(f, "\\B");
             break;
 
-        case SRE_OPCODE_NOTIN:
-            printf("%2d. notin", (int) (pc - start));
-
-            for (i = 0; i < pc->v.ranges->count; i++) {
-                range = &pc->v.ranges->head[i];
-                printf(" %d-%d", range->from, range->to);
-            }
-
-            printf("\n");
+        case SRE_REGEX_ASSERT_SMALL_B:
+            fprintf(f, "\\b");
             break;
 
-        case SRE_OPCODE_ANY:
-            printf("%2d. any\n", (int) (pc - start));
-            break;
-
-        case SRE_OPCODE_MATCH:
-            printf("%2d. match\n", (int) (pc - start));
-            break;
-
-        case SRE_OPCODE_SAVE:
-            printf("%2d. save %d\n", (int) (pc - start), (int) pc->v.group);
-            break;
-
-        case SRE_OPCODE_ASSERT:
-            printf("%2d. assert ", (int) (pc - start));
-
-            switch (pc->v.assertion) {
-            case SRE_REGEX_ASSERT_BIG_A:
-                printf("\\A");
-                break;
-
-            case SRE_REGEX_ASSERT_CARET:
-                printf("^");
-                break;
-
-            case SRE_REGEX_ASSERT_SMALL_Z:
-                printf("\\z");
-                break;
-
-            case SRE_REGEX_ASSERT_BIG_B:
-                printf("\\B");
-                break;
-
-            case SRE_REGEX_ASSERT_SMALL_B:
-                printf("\\b");
-                break;
-
-            case SRE_REGEX_ASSERT_DOLLAR:
-                printf("$");
-                break;
-
-            default:
-                printf("?");
-                break;
-            }
-
-            printf("\n");
+        case SRE_REGEX_ASSERT_DOLLAR:
+            fprintf(f, "$");
             break;
 
         default:
-            printf("%2d. unknown\n", (int) (pc - start));
+            fprintf(f, "?");
             break;
         }
+
+        break;
+
+    default:
+        fprintf(f, "%2d. unknown", (int) (pc - start));
+        break;
     }
 }

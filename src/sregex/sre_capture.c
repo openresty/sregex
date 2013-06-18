@@ -18,25 +18,35 @@
 
 
 SRE_NOAPI sre_capture_t *
-sre_capture_create(sre_pool_t *pool, size_t ovecsize, unsigned clear)
+sre_capture_create(sre_pool_t *pool, size_t ovecsize, unsigned clear,
+    sre_capture_t **freecap)
 {
     sre_char            *p;
     sre_capture_t       *cap;
 
-    p = sre_pnalloc(pool, sizeof(sre_capture_t) + ovecsize);
-    if (p == NULL) {
-        return NULL;
+    if (*freecap) {
+        dd("reusing cap %p", *freecap);
+        cap = *freecap;
+        *freecap = cap->next;
+        cap->next = NULL;
+        cap->ref = 1;
+
+    } else {
+        p = sre_pnalloc(pool, sizeof(sre_capture_t) + ovecsize);
+        if (p == NULL) {
+            return NULL;
+        }
+
+        cap = (sre_capture_t *) p;
+
+        cap->ovecsize = ovecsize;
+        cap->ref = 1;
+        cap->next = NULL;
+        cap->regex_id = 0;
+
+        p += sizeof(sre_capture_t);
+        cap->vector = (sre_int_t *) p;
     }
-
-    cap = (sre_capture_t *) p;
-
-    cap->ovecsize = ovecsize;
-    cap->ref = 1;
-    cap->next = NULL;
-    cap->regex_id = 0;
-
-    p += sizeof(sre_capture_t);
-    cap->vector = (sre_int_t *) p;
 
     if (clear) {
         (void) memset(cap->vector, -1, ovecsize);
@@ -55,18 +65,9 @@ sre_capture_update(sre_pool_t *pool, sre_capture_t *cap, sre_uint_t group,
     dd("update cap %u to %d", group, pos);
 
     if (cap->ref > 1) {
-        if (*freecap) {
-            dd("reusing cap %p", *freecap);
-            newcap = *freecap;
-            *freecap = newcap->next;
-            newcap->next = NULL;
-            newcap->ref = 1;
-
-        } else {
-            newcap = sre_capture_create(pool, cap->ovecsize, 0);
-            if (newcap == NULL) {
-                return NULL;
-            }
+        newcap = sre_capture_create(pool, cap->ovecsize, 0, freecap);
+        if (newcap == NULL) {
+            return NULL;
         }
 
         memcpy(newcap->vector, cap->vector, cap->ovecsize);

@@ -34,7 +34,7 @@ struct sre_capture_s {
 
 
 SRE_NOAPI sre_capture_t *sre_capture_create(sre_pool_t *pool, size_t ovecsize,
-    unsigned clear);
+    unsigned clear, sre_capture_t **freecap);
 
 SRE_NOAPI sre_capture_t *sre_capture_update(sre_pool_t *pool,
     sre_capture_t *cap, sre_uint_t group, sre_int_t pos,

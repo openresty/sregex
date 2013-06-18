@@ -38,6 +38,7 @@ struct sre_vm_pike_thread_s {
 
 
 typedef struct {
+    sre_uint_t                count;
     sre_vm_pike_thread_t     *head;
     sre_vm_pike_thread_t    **next;
 } sre_vm_pike_thread_list_t;
@@ -63,7 +64,11 @@ struct sre_vm_pike_ctx_s {
     sre_int_t                last_matched_pos; /* the pos for the last
                                                   (partial) match */
 
+    sre_instruction_t      **initial_states;
+    sre_uint_t               initial_states_count;
+
     unsigned                 first_buf:1;
+    unsigned                 seen_start_state:1;
     unsigned                 eof:1;
     unsigned                 empty_capture:1;
     unsigned                 seen_newline:1;
@@ -80,6 +85,10 @@ static void sre_vm_pike_prepare_temp_captures(sre_program_t *prog,
     sre_vm_pike_ctx_t *ctx);
 static sre_int_t sre_vm_pike_prepare_matched_captures(sre_vm_pike_ctx_t *ctx,
     sre_capture_t *matched, sre_int_t *ovector, sre_int_t complete);
+static sre_char *sre_vm_pike_find_first_byte(sre_char *pos, sre_char *last,
+    int leading_byte, sre_chain_t *leading_bytes);
+static void sre_vm_pike_clear_thread_list(sre_vm_pike_ctx_t *ctx,
+    sre_vm_pike_thread_list_t *list);
 
 
 SRE_API sre_vm_pike_ctx_t *
@@ -122,6 +131,10 @@ sre_vm_pike_create_ctx(sre_pool_t *pool, sre_program_t *prog,
     ctx->ovecsize = ovecsize;
     ctx->ovector = ovector;
 
+    dd("resetting seen start state");
+    ctx->seen_start_state = 0;
+    ctx->initial_states_count = 0;
+    ctx->initial_states = NULL;
     ctx->first_buf = 1;
     ctx->eof = 0;
     ctx->empty_capture = 0;
@@ -182,10 +195,14 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
         sp = input;
     }
 
+    last = input + size;
+
+    dd("processing buffer size %d", (int) size);
+
     if (ctx->first_buf) {
         ctx->first_buf = 0;
 
-        cap = sre_capture_create(pool, prog->ovecsize, 1);
+        cap = sre_capture_create(pool, prog->ovecsize, 1, &ctx->free_capture);
         if (cap == NULL) {
             return SRE_ERROR;
         }
@@ -198,11 +215,22 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
             return SRE_ERROR;
         }
 
+        ctx->initial_states_count = clist->count;
+        ctx->initial_states = sre_palloc(pool,
+                                         sizeof(sre_instruction_t *)
+                                         * clist->count);
+        if (ctx->initial_states == NULL) {
+            return SRE_ERROR;
+        }
+
+        /* we skip the last thread because it must always be .*? */
+        for (i = 0, t = clist->head; t && t->next; i++, t = t->next) {
+            ctx->initial_states[i] = t->pc;
+        }
+
     } else {
         ctx->tag = prog->tag;
     }
-
-    last = input + size;
 
     for (; sp < last || (eof && sp == last); sp++) {
         dd("=== pos %d, offset %d (char '%c' (%d)).\n",
@@ -223,17 +251,79 @@ sre_vm_pike_exec(sre_vm_pike_ctx_t *ctx, sre_char *input, size_t size,
         fprintf(stderr, "\n");
 #endif
 
+        dd("seen start state: %d", (int) ctx->seen_start_state);
+
+        if (prog->leading_bytes && ctx->seen_start_state) {
+            dd("resetting seen start state");
+            ctx->seen_start_state = 0;
+
+            if (sp == last || clist->count != ctx->initial_states_count) {
+                dd("skip because sp == last or "
+                   "clist->count != initial states count!");
+                goto run_cur_threads;
+            }
+
+            for (i = 0, t = clist->head; t && t->next; i++, t = t->next) {
+                if (t->pc != ctx->initial_states[i]) {
+                    dd("skip because pc %d unmatched: %d != %d", (int) i,
+                       (int) (t->pc - prog->start),
+                       (int) (ctx->initial_states[i] - prog->start));
+                    goto run_cur_threads;
+                }
+            }
+
+#if 1
+            dd("XXX found initial state to do first byte search!");
+            p = sre_vm_pike_find_first_byte(sp, last, prog->leading_byte,
+                                            prog->leading_bytes);
+
+            if (p > sp) {
+                dd("XXX moved sp by %d bytes", (int) (p - sp));
+#if 0
+                fprintf(stderr, "XXX moved sp by %d bytes\n", (int) (p - sp));
+#endif
+
+                sp = p;
+
+                sre_vm_pike_clear_thread_list(ctx, clist);
+
+                cap = sre_capture_create(pool, prog->ovecsize, 1,
+                                         &ctx->free_capture);
+                if (cap == NULL) {
+                    return SRE_ERROR;
+                }
+
+                ctx->tag++;
+                rc = sre_vm_pike_add_thread(ctx, clist, prog->start, cap,
+                                           (sre_int_t) (sp - input), NULL);
+                if (rc != SRE_OK) {
+                    prog->tag = ctx->tag;
+                    return SRE_ERROR;
+                }
+
+                if (sp == last) {
+                    break;
+                }
+            }
+#endif
+        }
+
+run_cur_threads:
         ctx->tag++;
 
         while (clist->head) {
             t = clist->head;
             clist->head = t->next;
+            clist->count--;
 
             pc = t->pc;
             cap = t->capture;
 
-            dd("--- #%u: pc %d: opcode %d\n", ctx->tag, (int)(pc - prog->start),
-               pc->opcode);
+#if DDEBUG
+            fprintf(stderr, "--- #%u", ctx->tag);
+            sre_dump_instruction(stderr, pc, prog->start);
+            fprintf(stderr, "\n");
+#endif
 
             switch (pc->opcode) {
             case SRE_OPCODE_IN:
@@ -417,6 +507,7 @@ assertion_hold:
                 ctx->tag--;
 
                 list.head = NULL;
+                list.count = 0;
                 rc = sre_vm_pike_add_thread(ctx, &list, pc + 1, cap,
                                            (sre_int_t) (sp - input), NULL);
 
@@ -428,6 +519,7 @@ assertion_hold:
                 if (list.head) {
                     *list.next = clist->head;
                     clist->head = list.head;
+                    clist->count += list.count;
                 }
 
                 ctx->tag++;
@@ -456,13 +548,7 @@ matched:
 
                 sre_vm_pike_free_thread(ctx, t);
 
-                while (clist->head) {
-                    t = clist->head;
-                    clist->head = t->next;
-
-                    sre_capture_decr_ref(ctx, t->capture);
-                    sre_vm_pike_free_thread(ctx, t);
-                }
+                sre_vm_pike_clear_thread_list(ctx, clist);
 
                 goto step_done;
 
@@ -486,9 +572,7 @@ step_done:
         nlist = tmp;
 
         if (nlist->head) {
-            *nlist->next = ctx->free_threads;
-            ctx->free_threads = nlist->head;
-            nlist->head = NULL;
+            sre_vm_pike_clear_thread_list(ctx, nlist);
         }
 
         if (sp == last) {
@@ -533,6 +617,7 @@ step_done:
                 *clist->next = ctx->free_threads;
                 ctx->free_threads = clist->head;
                 clist->head = NULL;
+                clist->count = 0;
                 ctx->eof = 1;
             }
 
@@ -662,6 +747,7 @@ sre_vm_pike_thread_list_create(sre_pool_t *pool)
 
     l->head = NULL;
     l->next = &l->head;
+    l->count = 0;
 
     return l;
 }
@@ -687,6 +773,11 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
 
         if (pc->opcode == SRE_OPCODE_SPLIT) {
             if (pc->y->tag != ctx->tag) {
+                if (pc == ctx->program->start) {
+                    dd("setting seen start state");
+                    ctx->seen_start_state = 1;
+                }
+
                 return sre_vm_pike_add_thread(ctx, l, pc->y, capture, pos,
                                               pcap);
             }
@@ -705,6 +796,11 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
         return sre_vm_pike_add_thread(ctx, l, pc->x, capture, pos, pcap);
 
     case SRE_OPCODE_SPLIT:
+        if (pc == ctx->program->start) {
+            dd("setting seen start state");
+            ctx->seen_start_state = 1;
+        }
+
         capture->ref++;
 
         rc = sre_vm_pike_add_thread(ctx, l, pc->x, capture, pos, pcap);
@@ -739,7 +835,6 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
 #endif
 
         return sre_vm_pike_add_thread(ctx, l, pc + 1, cap, pos, pcap);
-
 
     case SRE_OPCODE_ASSERT:
         switch (pc->v.assertion) {
@@ -834,6 +929,7 @@ add:
             *l->next = t;
         }
 
+        l->count++;
         l->next = &t->next;
 
         dd("added thread: pc %d, bytecode %d", (int) (pc - ctx->program->start),
@@ -890,4 +986,95 @@ sre_vm_pike_prepare_matched_captures(sre_vm_pike_ctx_t *ctx,
     }
 
     return SRE_OK;
+}
+
+
+static sre_char *
+sre_vm_pike_find_first_byte(sre_char *pos, sre_char *last,
+    int leading_byte, sre_chain_t *leading_bytes)
+{
+#if 1
+    int                  in;
+    sre_uint_t           i;
+    sre_chain_t         *cl;
+    sre_instruction_t   *pc;
+    sre_vm_range_t      *range;
+
+    /* optimize for single CHAR bc */
+    if (leading_byte != -1) {
+        pos = memchr(pos, leading_byte, last - pos);
+        if (pos == NULL) {
+            return last;
+        }
+
+        return pos;
+    }
+
+    for ( ; pos != last; pos++) {
+        for (cl = leading_bytes; cl; cl = cl->next) {
+            pc = cl->data;
+            switch (pc->opcode) {
+            case SRE_OPCODE_CHAR:
+                if (*pos == pc->v.ch) {
+                    return pos;
+                }
+
+                break;
+
+            case SRE_OPCODE_IN:
+                for (i = 0; i < pc->v.ranges->count; i++) {
+                    range = &pc->v.ranges->head[i];
+
+                    if (*pos >= range->from && *pos <= range->to) {
+                        return pos;
+                    }
+                }
+
+                break;
+
+            case SRE_OPCODE_NOTIN:
+                in = 0;
+                for (i = 0; i < pc->v.ranges->count; i++) {
+                    range = &pc->v.ranges->head[i];
+
+                    if (*pos >= range->from && *pos <= range->to) {
+                        in = 1;
+                        break;
+                    }
+                }
+
+                if (in == 0) {
+                    return pos;
+                }
+
+                break;
+
+            default:
+                sre_assert(pc->opcode);
+                break;
+            }
+        }
+    }
+#endif
+
+    return pos;
+}
+
+
+static void
+sre_vm_pike_clear_thread_list(sre_vm_pike_ctx_t *ctx,
+    sre_vm_pike_thread_list_t *list)
+{
+    sre_vm_pike_thread_t      *t;
+
+    while (list->head) {
+        t = list->head;
+        list->head = t->next;
+        list->count--;
+
+        sre_capture_decr_ref(ctx, t->capture);
+        sre_vm_pike_free_thread(ctx, t);
+    }
+
+    sre_assert(list->count == 0);
 }

@@ -11,6 +11,7 @@
 
 #include <sregex/sregex.h>
 #include <string.h>
+#include <assert.h>
 
 
 #ifndef SRE_USE_VALGRIND
@@ -56,6 +57,11 @@
 #if 0
 #   undef SRE_TARGET
 #   define SRE_TARGET 0
+#endif
+
+
+#ifndef sre_assert
+#define sre_assert  assert
 #endif
 
 

@@ -12,6 +12,7 @@
 
 
 #include <sregex/sre_regex.h>
+#include <stdio.h>
 
 
 typedef enum {
@@ -60,6 +61,14 @@ struct sre_instruction_s {
 };
 
 
+typedef struct sre_chain_s  sre_chain_t;
+
+struct sre_chain_s {
+    void            *data;
+    sre_chain_t     *next;
+};
+
+
 struct sre_program_s {
     sre_instruction_t   *start;
     sre_uint_t           len;
@@ -68,11 +77,18 @@ struct sre_program_s {
     unsigned             uniq_threads; /* unique thread count */
     unsigned             dup_threads;  /* duplicatable thread count */
     unsigned             lookahead_asserts;
+    unsigned             nullable;
+    sre_chain_t         *leading_bytes;
+    int                  leading_byte;
 
     sre_uint_t           ovecsize;
     sre_uint_t           nregexes;
     sre_uint_t           multi_ncaps[1];
 };
+
+
+void sre_dump_instruction(FILE *f, sre_instruction_t *pc,
+    sre_instruction_t *start);
 
 
 #endif /* _SRE_BYTECODE_H_INCLUDED_ */

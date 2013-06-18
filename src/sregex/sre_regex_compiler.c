@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2012 Yichun "agentzh" Zhang
+ * Copyright 2012-2013 Yichun Zhang (agentzh)
  * Copyright 2007-2009 Russ Cox.  All Rights Reserved.
  * Use of this source code is governed by a BSD-style
  * license that can be found in the LICENSE file.
@@ -16,6 +16,11 @@
 #include <sregex/sre_vm_bytecode.h>
 
 
+static sre_int_t sre_program_get_leading_bytes(sre_pool_t *pool,
+    sre_program_t *prog, sre_chain_t **res);
+static sre_int_t sre_program_get_leading_bytes_helper(sre_pool_t *pool,
+    sre_instruction_t *pc, sre_program_t *prog, sre_chain_t **res,
+    unsigned tag);
 static sre_uint_t sre_program_len(sre_regex_t *r);
 static sre_instruction_t *sre_regex_emit_bytecode(sre_pool_t *pool,
     sre_instruction_t *pc, sre_regex_t *re);
@@ -70,6 +75,9 @@ sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
     prog->lookahead_asserts = 0;
     prog->dup_threads = 0;
     prog->uniq_threads = 0;
+    prog->nullable = 0;
+    prog->leading_bytes = NULL;
+    prog->leading_byte = -1;
 
     prog->ovecsize = 0;
     for (i = 0; i < prog->nregexes; i++) {
@@ -77,7 +85,159 @@ sre_regex_compile(sre_pool_t *pool, sre_regex_t *re)
     }
     prog->ovecsize *= 2 * sizeof(sre_uint_t);
 
+    if (sre_program_get_leading_bytes(pool, prog, &prog->leading_bytes)
+        == SRE_ERROR)
+    {
+        return NULL;
+    }
+
+    if (prog->leading_bytes && prog->leading_bytes->next == NULL) {
+        pc = prog->leading_bytes->data;
+        if (pc->opcode == SRE_OPCODE_CHAR) {
+            prog->leading_byte = pc->v.ch;
+        }
+    }
+
+    dd("nullable: %u", prog->nullable);
+
+#if (DDEBUG)
+    {
+        sre_chain_t         *cl;
+
+        for (cl = prog->leading_bytes; cl; cl = cl->next) {
+            pc = cl->data;
+            fprintf(stderr, "[");
+            sre_dump_instruction(stderr, pc, prog->start);
+            fprintf(stderr, "]");
+        }
+        if (prog->leading_bytes) {
+            fprintf(stderr, "\n");
+        }
+    }
+#endif
+
     return prog;
+}
+
+
+static sre_int_t
+sre_program_get_leading_bytes(sre_pool_t *pool, sre_program_t *prog,
+    sre_chain_t **res)
+{
+    unsigned             tag;
+    sre_int_t            rc;
+
+    tag = prog->tag + 1;
+
+    rc = sre_program_get_leading_bytes_helper(pool, prog->start, prog, res,
+                                              tag);
+    prog->tag = tag;
+
+    if (rc == SRE_ERROR) {
+        return SRE_ERROR;
+    }
+
+    if (rc == SRE_DECLINED || prog->nullable) {
+        *res = NULL;
+        return SRE_DECLINED;
+    }
+
+    return rc;
+}
+
+
+static sre_int_t
+sre_program_get_leading_bytes_helper(sre_pool_t *pool, sre_instruction_t *pc,
+    sre_program_t *prog, sre_chain_t **res, unsigned tag)
+{
+    sre_int_t            rc;
+    sre_chain_t         *cl, *ncl;
+    sre_instruction_t   *bc;
+
+    if (pc->tag == tag) {
+        return SRE_OK;
+    }
+
+    if (pc == prog->start + 1) {
+        /* skip the dot (.) in the initial boilerplate ".*?" */
+        return SRE_OK;
+    }
+
+    pc->tag = tag;
+
+    switch (pc->opcode) {
+    case SRE_OPCODE_SPLIT:
+        rc = sre_program_get_leading_bytes_helper(pool, pc->x, prog, res,
+                                                  tag);
+        if (rc != SRE_OK) {
+            return rc;
+        }
+
+        return sre_program_get_leading_bytes_helper(pool, pc->y, prog, res,
+                                                    tag);
+
+    case SRE_OPCODE_JMP:
+        return sre_program_get_leading_bytes_helper(pool, pc->x, prog, res,
+                                                    tag);
+
+    case SRE_OPCODE_SAVE:
+        if (++pc == prog->start + prog->len) {
+            return SRE_OK;
+        }
+
+        return sre_program_get_leading_bytes_helper(pool, pc, prog, res,
+                                                    tag);
+
+    case SRE_OPCODE_MATCH:
+        prog->nullable = 1;
+        return SRE_DONE;
+
+    case SRE_OPCODE_ASSERT:
+        if (++pc == prog->start + prog->len) {
+            return SRE_OK;
+        }
+
+        return sre_program_get_leading_bytes_helper(pool, pc, prog, res, tag);
+
+    case SRE_OPCODE_ANY:
+        return SRE_DECLINED;
+
+    default:
+        /* CHAR, ANY, IN, NOTIN */
+
+        ncl = sre_palloc(pool, sizeof(sre_chain_t));
+        if (ncl == NULL) {
+            return SRE_ERROR;
+        }
+
+        ncl->data = pc;
+        ncl->next = NULL;
+
+        if (*res) {
+            for (cl = *res; /* void */; cl = cl->next) {
+                bc = cl->data;
+                if (bc->opcode == pc->opcode) {
+                    if (bc->opcode == SRE_OPCODE_CHAR) {
+                        if (bc->v.ch == pc->v.ch) {
+                            return SRE_OK;
+                        }
+                    }
+                }
+
+                if (cl->next == NULL) {
+                    cl->next = ncl;
+                    return SRE_OK;
+                }
+            }
+
+        } else {
+            *res = ncl;
+        }
+
+        return SRE_OK;
+    }
+
+    /* impossible to reach here */
 }
 
 
