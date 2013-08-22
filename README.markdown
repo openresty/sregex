@@ -150,6 +150,16 @@ It also supports the `--flags` option which can be used to enable case-insensiti
 
     ./sregex-cli --flags i 'A|AB' 'blab'
 
+And also the `--stdin` option for reading data chunks from stdin:
+
+    # one single data chunk to be matched:
+    perl -e '$s="foobar";print length($s),"\n$s"' \
+        | ./sregex-cli --stdin foo
+
+    # 3 data chunks (forming a single input stream) to be matched:
+    perl -e '$s="foobar";print length($s),"\n$s" for 1..3' \
+        | sregex-cli --stdin foo
+
 A real-world application of this library is the ngx_replace_filter module:
 
 https://github.com/agentzh/replace-filter-nginx-module

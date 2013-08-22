@@ -70,7 +70,7 @@ sub run_test ($) {
 
     my ($res, $err);
 
-    my $stdin = bytes::chr(bytes::length $s) . $s;
+    my $stdin = bytes::length($s) . "\n$s";
 
     my @cmd = ("./sregex-cli", "--stdin", @opts, ref $re ? @$re : $re);
 

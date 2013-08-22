@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 
 static void usage(void);
@@ -212,9 +213,27 @@ main(int argc, char **argv)
     if (from_stdin) {
 
         for (;;) {
-            len = (size_t) getchar();
-            if (len == EOF) {
-                break;
+            {
+                int i, n;
+
+                n = scanf("%d", &i);
+                if (n != 1) {
+                    if (errno != 0) {
+                        perror("scanf");
+                        exit(1);
+                    }
+
+                    break;
+                }
+
+                len = (size_t) i;
+
+                n = getchar();
+                if (n != '\n') {
+                    fprintf(stderr, "the next character after the chunk size "
+                            "must be a newline");
+                    exit(1);
+                }
             }
 
             s = malloc(len);
