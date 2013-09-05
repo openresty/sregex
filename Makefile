@@ -138,7 +138,7 @@ $(FILE_A): $(lib_o_files)
 
 %.c %.h: %.y
 	$(E) "BISON     $@"
-	$(Q)bison -v $<
+	$(Q)bison -p sregex_yy -v $<
 
 %.h: %.dasc
 	$(E) "DYNASM    $@"

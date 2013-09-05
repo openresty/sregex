@@ -59,7 +59,15 @@
 #define YYPULL 1
 
 
-
+/* Substitute the variable and function names.  */
+#define yyparse         sregex_yyparse
+#define yylex           sregex_yylex
+#define yyerror         sregex_yyerror
+#define yylval          sregex_yylval
+#define yychar          sregex_yychar
+#define yydebug         sregex_yydebug
+#define yynerrs         sregex_yynerrs
+#define yylloc          sregex_yylloc
 
 /* Copy the first part of user declarations.  */
 /* Line 371 of yacc.c  */
@@ -113,7 +121,7 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
 
 
 /* Line 371 of yacc.c  */
-#line 117 "src/sregex/sre_yyparser.c"
+#line 125 "src/sregex/sre_yyparser.c"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -133,14 +141,14 @@ static sre_regex_t *sre_regex_desugar_counted_repetition(sre_pool_t *pool,
 
 /* In a future release of Bison, this section will be replaced
    by #include "sre_yyparser.h".  */
-#ifndef YY_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED
-# define YY_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED
+#ifndef YY_SREGEX_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED
+# define YY_SREGEX_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
 #endif
 #if YYDEBUG
-extern int yydebug;
+extern int sregex_yydebug;
 #endif
 
 /* Tokens.  */
@@ -172,7 +180,7 @@ typedef union YYSTYPE
 
 
 /* Line 387 of yacc.c  */
-#line 176 "src/sregex/sre_yyparser.c"
+#line 184 "src/sregex/sre_yyparser.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -195,24 +203,24 @@ typedef struct YYLTYPE
 
 #ifdef YYPARSE_PARAM
 #if defined __STDC__ || defined __cplusplus
-int yyparse (void *YYPARSE_PARAM);
+int sregex_yyparse (void *YYPARSE_PARAM);
 #else
-int yyparse ();
+int sregex_yyparse ();
 #endif
 #else /* ! YYPARSE_PARAM */
 #if defined __STDC__ || defined __cplusplus
-int yyparse (sre_pool_t *pool, sre_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, sre_char **err_pos);
+int sregex_yyparse (sre_pool_t *pool, sre_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, sre_char **err_pos);
 #else
-int yyparse ();
+int sregex_yyparse ();
 #endif
 #endif /* ! YYPARSE_PARAM */
 
-#endif /* !YY_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED  */
+#endif /* !YY_SREGEX_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 216 "src/sregex/sre_yyparser.c"
+#line 224 "src/sregex/sre_yyparser.c"
 
 #ifdef short
 # undef short
@@ -1873,7 +1881,7 @@ yyreduce:
 
 
 /* Line 1792 of yacc.c  */
-#line 1877 "src/sregex/sre_yyparser.c"
+#line 1885 "src/sregex/sre_yyparser.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

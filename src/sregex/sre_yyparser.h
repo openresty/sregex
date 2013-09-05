@@ -30,14 +30,14 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED
-# define YY_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED
+#ifndef YY_SREGEX_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED
+# define YY_SREGEX_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
 #endif
 #if YYDEBUG
-extern int yydebug;
+extern int sregex_yydebug;
 #endif
 
 /* Tokens.  */
@@ -92,16 +92,16 @@ typedef struct YYLTYPE
 
 #ifdef YYPARSE_PARAM
 #if defined __STDC__ || defined __cplusplus
-int yyparse (void *YYPARSE_PARAM);
+int sregex_yyparse (void *YYPARSE_PARAM);
 #else
-int yyparse ();
+int sregex_yyparse ();
 #endif
 #else /* ! YYPARSE_PARAM */
 #if defined __STDC__ || defined __cplusplus
-int yyparse (sre_pool_t *pool, sre_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, sre_char **err_pos);
+int sregex_yyparse (sre_pool_t *pool, sre_char **src, sre_uint_t *ncaps, int flags, sre_regex_t **parsed, sre_char **err_pos);
 #else
-int yyparse ();
+int sregex_yyparse ();
 #endif
 #endif /* ! YYPARSE_PARAM */
 
-#endif /* !YY_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED  */
+#endif /* !YY_SREGEX_YY_SRC_SREGEX_SRE_YYPARSER_H_INCLUDED  */
