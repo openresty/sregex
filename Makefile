@@ -110,7 +110,7 @@ plist_vfiles= $(patsubst src/sregex/%.c,%.plist,$(lib_c_files))
 
 INSTALL_H_FILES= src/sregex/sregex.h src/sregex/ddebug.h
 
-.PHONY: all clean test val install uninstall
+.PHONY: all clean distclean test val install uninstall
 .PRECIOUS: \
     src/sregex/sre_yyparser.c \
     src/sregex/sre_yyparser.h \
@@ -146,8 +146,11 @@ $(FILE_A): $(lib_o_files)
 
 clean:
 	$(HOST_RM) src/*.o $(lib_o_files) core $(TARGET) \
-		src/sregex/sre_yyparser.[ch] src/sregex/*.output \
+		src/sregex/*.output \
 		$(FILE_T) $(FILE_SO) $(FILE_A)
+
+distclean: clean
+	$(HOST_RM) src/sregex/sre_yyparser.[ch]
 
 test: all
 	prove -j$(jobs) -r t
