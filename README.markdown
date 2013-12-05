@@ -134,6 +134,9 @@ you will find the `DESTDIR` variable handy, as in
     make PREFIX=/opt/sregex
     make install PREFIX=/opt/sregex DESTDIR=/path/to/my/build/root
 
+If you run `make distclean` before `make`, then you also need bison 2.7+
+for generating the regex parser files.
+
 Usage
 =====
 
