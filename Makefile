@@ -146,7 +146,7 @@ $(FILE_A): $(lib_o_files)
 
 clean:
 	$(HOST_RM) src/*.o $(lib_o_files) core $(TARGET) \
-		src/sregex/sre_yyparser.[ch] src/sregex/*.output \
+		src/sregex/*.output \
 		$(FILE_T) $(FILE_SO) $(FILE_A)
 
 test: all
