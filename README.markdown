@@ -229,7 +229,9 @@ Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>, CloudFlare Inc.
 Copyright and License
 =====================
 
-This module is licensed under the BSD license.
+Part of this code is from the NGINX opensource project: http://nginx.org/LICENSE
+
+This library is licensed under the BSD license.
 
 Copyright (C) 2012, 2013, by Yichun "agentzh" Zhang (章亦春), CloudFlare Inc.
 
