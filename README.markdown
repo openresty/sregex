@@ -233,7 +233,7 @@ Part of this code is from the NGINX opensource project: http://nginx.org/LICENSE
 
 This library is licensed under the BSD license.
 
-Copyright (C) 2012, 2013, by Yichun "agentzh" Zhang (章亦春), CloudFlare Inc.
+Copyright (C) 2012-2014, by Yichun "agentzh" Zhang (章亦春), CloudFlare Inc.
 
 Copyright (C) 2007-2009 Russ Cox, Google Inc. All rights reserved.
 
