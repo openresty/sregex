@@ -2,7 +2,7 @@ Part of this code is from the NGINX opensource project: http://nginx.org/LICENSE
 
 This library is licensed under the BSD license.
 
-Copyright (c) 2012 Yichun "agentzh" Zhang.
+Copyright (c) 2012-2014 Yichun "agentzh" Zhang.
 
 Copyright (c) 2007-2009 Russ Cox, Google Inc. All rights reserved.
 
