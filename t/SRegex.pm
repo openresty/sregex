@@ -76,7 +76,9 @@ sub run_test ($) {
 
     if ($UseValgrind) {
         warn "$name\n";
-        @cmd =  ('valgrind', '-q', '--leak-check=full', @cmd);
+        @cmd =  ('valgrind', '--gen-suppressions=all',
+                 '--suppressions=valgrind.suppress',
+                 '--show-possibly-lost=no', '-q', '--leak-check=full', @cmd);
     }
 
     run3 \@cmd, \$stdin, \$res, \$err;
