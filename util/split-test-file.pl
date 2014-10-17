@@ -55,6 +55,8 @@ while (<$in>) {
             print $out $preamble;
         }
 
+        my $ntests = $ncases % 50 ? $ncases % 50 : 50;
+        $_ =~ s/^===\sTEST\s+(\d+)/=== TEST $ntests/g;
         print $out $_;
         next;
     }
