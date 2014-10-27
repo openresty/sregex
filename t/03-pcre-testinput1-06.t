@@ -212,13 +212,13 @@ __DATA__
 
 === TEST 35: testinput1:1282
 --- re: A\x0{2,3}Z
---- s eval: "The A\x0\x0Z"
+--- s eval: "The A\x{0}\x{0}Z"
 
 
 
 === TEST 36: testinput1:1283
 --- re: A\x0{2,3}Z
---- s eval: "An A\0\x0\0Z"
+--- s eval: "An A\0\x{0}\0Z"
 
 
 
@@ -236,7 +236,7 @@ __DATA__
 
 === TEST 39: testinput1:1286
 --- re: A\x0{2,3}Z
---- s eval: "A\0\x0\0\x0Z"
+--- s eval: "A\0\x{0}\0\x{0}Z"
 
 
 

@@ -291,6 +291,7 @@ for my $test (@tests) {
 
     } else {
         $s =~ s/\\B/\\\\B/g;
+        $s =~ s/\\x([\da-f])(?=[^\da-f])/\\x{$1}/gi;
     }
 
     #$s =~ s/\\$/\\\\/;
