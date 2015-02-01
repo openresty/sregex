@@ -181,7 +181,7 @@ install: all
 
 uninstall:
 	@echo "==== Uninstalling sregex $(VERSION) to $(PREFIX) ===="
-	$(UNINSTALL) $(INSTALL_T)/sregex-cli
+	$(UNINSTALL) $(INSTALL_T)
 	$(UNINSTALL) $(INSTALL_LIB)/libsregex.so
 	$(UNINSTALL) $(INSTALL_LIB)/libsregex.a
 	for file in $(patsubst src/sregex/%,%,$(INSTALL_H_FILES)); do \
