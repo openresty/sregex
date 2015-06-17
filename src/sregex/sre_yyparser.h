@@ -59,14 +59,14 @@ extern int sregex_yydebug;
 
 union YYSTYPE
 {
-#line 82 "src/sregex/sre_yyparser.y" /* yacc.c:1915  */
+#line 82 "src/sregex/sre_yyparser.y"
 
     sre_regex_t         *re;
     sre_char             ch;
     sre_uint_t           group;
     sre_regex_cquant_t   cquant;
 
-#line 70 "src/sregex/sre_yyparser.h" /* yacc.c:1915  */
+#line 70 "src/sregex/sre_yyparser.h"
 };
 
 typedef union YYSTYPE YYSTYPE;

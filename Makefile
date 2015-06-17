@@ -140,6 +140,7 @@ $(FILE_A): $(lib_o_files)
 %.c %.h: %.y
 	$(E) "BISON     $@"
 	$(Q)bison -p sregex_yy -v $<
+	$(Q)./util/fix-bison-comments
 
 %.h: %.dasc
 	$(E) "DYNASM    $@"

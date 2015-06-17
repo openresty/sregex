@@ -1,0 +1,38 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use File::Temp 'tempfile';
+use File::Copy 'copy';
+
+process_file("src/sregex/sre_yyparser.c");
+process_file("src/sregex/sre_yyparser.h");
+
+sub process_file {
+    my $infile = shift;
+    open my $in, $infile
+        or die "Cannot open $infile $!\n";
+
+    my ($out, $outfile) = tempfile();
+    my $hits = 0;
+    while (<$in>) {
+        if (m{ ^ ( \# line \b .*? ) /\* \s* yacc\.c:\d+ \s* \*/ \s* $ }x) {
+            $hits++;
+            my $line = $1;
+            $line =~ s/\s+$//g;
+            #warn "HIT! $line";
+            print $out "$line\n";
+            next;
+        }
+
+        print $out $_;
+    }
+    close $out;
+    close $in;
+
+    if ($hits) {
+        copy $outfile, $infile
+            or die "Cannot copy $outfile to $infile: $!\n";
+    }
+}
