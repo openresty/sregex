@@ -33,6 +33,7 @@ src/cli.[ch]
 *.output
 *.so
 *.a
+*.dylib
 sregex-cli
 go
 releng

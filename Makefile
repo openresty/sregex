@@ -34,9 +34,13 @@ INSTALL_ANAME= libsregex.a
 INSTALL_SONAME= libsregex.so.$(MAJVER).$(MINVER).$(RELVER)
 INSTALL_SOSHORT1= libsregex.so
 INSTALL_SOSHORT2= libsregex.so.$(MAJVER)
-INSTALL_DYLIBNAME= libsregex.$(MAJVER).$(MINVER).$(RELVER).dylib
-INSTALL_DYLIBSHORT1= libsregex.dylib
-INSTALL_DYLIBSHORT2= libsregex.$(MAJVER).dylib
+
+ifeq (Darwin,$(shell uname -s))
+    INSTALL_SONAME= libsregex.$(MAJVER).$(MINVER).$(RELVER).dylib
+    INSTALL_SOSHORT1= libsregex.dylib
+    INSTALL_SOSHORT2= libsregex.$(MAJVER).dylib
+endif
+
 INSTALL_T= $(INSTALL_BIN)/$(FILE_T)
 
 INSTALL_STATIC= $(INSTALL_LIB)/$(INSTALL_ANAME)
@@ -46,28 +50,25 @@ INSTALL_SHORT2= $(INSTALL_LIB)/$(INSTALL_SOSHORT2)
 
 INSTALL_DIRS= $(INSTALL_INC) $(INSTALL_LIB) $(INSTALL_BIN)
 
-ifeq (,$(findstring Windows,$(OS)))
-  ifeq (Darwin,$(shell uname -s))
-    INSTALL_SONAME= $(INSTALL_DYLIBNAME)
-    INSTALL_SHORT1= $(INSTALL_LIB)/$(INSTALL_DYLIBSHORT1)
-    INSTALL_SHORT2= $(INSTALL_LIB)/$(INSTALL_DYLIBSHORT2)
-    LDCONFIG= :
-  else
-    ifeq (SunOS,$(shell uname -s))
-      INSTALL_X=cp -p
-      INSTALL_F=cp -p
-    endif
+TARGET_SONAME= libsregex.so.$(MAJVER)
+
+ifeq (Darwin,$(shell uname -s))
+  TARGET_SONAME= libsregex.$(MAJVER).dylib
+  LDCONFIG= :
+else
+  ifeq (SunOS,$(shell uname -s))
+    INSTALL_X=cp -p
+    INSTALL_F=cp -p
   endif
 endif
 
-TARGET_SONAME= libsregex.so.$(MAJVER)
-TARGET_DYLIBNAME= libsregex.$(MAJVER).dylib
-TARGET_DYLIBPATH= $(or $(PREFIX),/usr/local)/lib/$(TARGET_DYLIBNAME)
+TARGET_DYLIBPATH= $(PREFIX)/lib/$(TARGET_SONAME)
 TARGET_XSHLDFLAGS= -shared -fpic -Wl,-soname,$(TARGET_SONAME)
 TARGET_AR=ar rcus
 HOST_SYS:= $(shell uname -s)
 
 ifeq (Darwin,$(HOST_SYS))
+  FILE_SO= libsregex.dylib
   TARGET_XSHLDFLAGS= -dynamiclib -single_module -undefined dynamic_lookup -fpic
   TARGET_XSHLDFLAGS+= -install_name $(TARGET_DYLIBPATH) -compatibility_version $(MAJVER).$(MINVER) -current_version $(MAJVER).$(MINVER).$(RELVER)
 endif
@@ -145,7 +146,7 @@ $(FILE_A): $(lib_o_files)
 	$(Q)$(DASM) $(DASM_FLAGS) -o $@ $<
 
 clean:
-	$(HOST_RM) src/*.o $(lib_o_files) core $(TARGET) \
+	$(HOST_RM) *.dylib *.so *.so.* src/*.o $(lib_o_files) core $(TARGET) \
 		src/sregex/*.output \
 		$(FILE_T) $(FILE_SO) $(FILE_A)
 
@@ -182,7 +183,7 @@ install: all
 uninstall:
 	@echo "==== Uninstalling sregex $(VERSION) to $(PREFIX) ===="
 	$(UNINSTALL) $(INSTALL_T)
-	$(UNINSTALL) $(INSTALL_LIB)/libsregex.so
+	$(UNINSTALL) $(INSTALL_LIB)/$(FILE_SO)
 	$(UNINSTALL) $(INSTALL_LIB)/libsregex.a
 	$(UNINSTALL) $(INSTALL_SHORT1)
 	$(UNINSTALL) $(INSTALL_SHORT2)
