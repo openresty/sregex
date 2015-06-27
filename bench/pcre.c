@@ -206,14 +206,11 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
 
         if (rc == PCRE_ERROR_NOMATCH) {
             printf("no match");
-        }
 
-        if (rc < 0) {
-            printf("error: %d\n", rc);
-            exit(2);
-        }
+        } else if (rc < 0) {
+            printf("error: %d", rc);
 
-        if (rc > 0) {
+        } else if (rc > 0) {
             printf("match");
             for (i = 0, n = 0; i < rc; i++, n += 2) {
                 printf(" (%d, %d)", ovector[n], ovector[n + 1]);
@@ -257,14 +254,11 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
 
         if (rc == PCRE_ERROR_NOMATCH) {
             printf("no match");
-        }
 
-        if (rc < 0) {
-            printf("error: %d\n", rc);
-            exit(2);
-        }
+        } else if (rc < 0) {
+            printf("error: %d", rc);
 
-        if (rc > 0) {
+        } else if (rc > 0) {
             printf("match");
             for (i = 0, n = 0; i < rc; i++, n += 2) {
                 printf(" (%d, %d)", ovector[n], ovector[n + 1]);
@@ -309,14 +303,11 @@ run_engines(pcre *re, unsigned engine_types, int ncaps,
 
         if (rc == PCRE_ERROR_NOMATCH) {
             printf("no match");
-        }
 
-        if (rc < 0) {
-            printf("error: %d\n", rc);
-            exit(2);
-        }
+        } else if (rc < 0) {
+            printf("error: %d", rc);
 
-        if (rc > 0) {
+        } else if (rc > 0) {
             printf("match");
             for (i = 0, n = 0; i < rc; i++, n += 2) {
                 printf(" (%d, %d)", ovector[n], ovector[n + 1]);
