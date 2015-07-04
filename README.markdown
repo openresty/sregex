@@ -353,7 +353,7 @@ This return value can later be used by the [sre_vm_thompson_exec](#sre_vm_thomps
 The `prog` parameter accepts the compiled bytecode form of the regex(es) returned by the [sre_regex_compile](#sre_regex_compile)
 function. This compiled regex(es) is embedded into the resulting context structure.
 
-Accepts a memory pool created by the [sre_create_pool)(#sre_create_pool) function as the first argument. This memory pool does not have to be the same as the pool used for parsing or compiling the regex(es).
+Accepts a memory pool created by the [sre_create_pool](#sre_create_pool) function as the first argument. This memory pool does not have to be the same as the pool used for parsing or compiling the regex(es).
 
 [Back to TOC](#table-of-contents)
 
@@ -394,7 +394,7 @@ This function may return one of the following values:
     A fatal error has occurred (like running out of memory).
 
 This function does not return the regex ID of the matched regex when multiple regexes are
-specified at once via the [sre_regex_parse_multi)(#sre_regex_parse_multi) function is used. This
+specified at once via the [sre_regex_parse_multi](#sre_regex_parse_multi) function is used. This
 may change in the future.
 
 Sub-match captures are not supported in this Thompson VM by design. You should use the [Pike VM](#pike-vm) instead if you want that.
@@ -505,7 +505,7 @@ This return value can later be used by the [sre_vm_pike_exec](#sre_vm_pike_exec)
 The `prog` parameter accepts the compiled bytecode form of the regex(es) returned by the [sre_regex_compile](#sre_regex_compile)
 function. This compiled regex(es) is embedded into the resulting context structure.
 
-Accepts a memory pool created by the [sre_create_pool)(#sre_create_pool) function as the first argument. This memory pool does not have to be the same as the pool used for parsing or compiling the regex(es).
+Accepts a memory pool created by the [sre_create_pool](#sre_create_pool) function as the first argument. This memory pool does not have to be the same as the pool used for parsing or compiling the regex(es).
 
 The `ovector` parameter specifies an array for outputting the beginning and end offsets of the (sub-)match captures.
 The elements of the array are used like below:
@@ -566,7 +566,7 @@ This function may return one of the following values:
 * a non-negative value
     A match is found and the value is the ID of the (first) matched regex if multiple regexes are
     parsed at once via the [sre_regex_parse_multi](#sre_regex_parse_multi) function. A regex ID
-    is the 0-based index of the corresponding regex in the regexes array fed into the [sre_regex_parse_multi)(#sre_regex_parse_multi)
+    is the 0-based index of the corresponding regex in the regexes array fed into the [sre_regex_parse_multi](#sre_regex_parse_multi)
     function.
 * `SRE_DECLINED`
     No match can be found. This value can never be returned when the `eof` parameter is unset (because
