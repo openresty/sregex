@@ -1,7 +1,7 @@
 Name
 ====
 
-libsregex - A non-backtracking NFA/DFA-based regex engine library for matching on large data streams
+libsregex - A non-backtracking NFA/DFA-based Perl-compatible regex engine library for matching on large data streams
 
 Table of Contents
 =================
