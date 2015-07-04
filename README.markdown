@@ -552,6 +552,13 @@ chunk, the `size` parameter specifies the size of the chunk, while the `eof` par
 whether this chunk is the last chunk in the stream. If you just want to match on a single
 C string, then always specify 1 as the `eof` argument and exclude the NULL string terminator in your C string while computing the `size` argument value.
 
+The `pending_matched` parameter outputs an array holding all the pending matched captures (whole-match only, no sub-matches) if
+no complete matches have been found yet (i.e., this call returns `SRE_AGAIN`).
+This is very useful for doing regex substitutions on (large) data streams where the caller
+can use the info in `pending_matched` to decide exactly how much data in the current to-be-thrown data chunk needs to be buffered.
+The caller should never allocate the space for this array, rather,
+this function call takes care of it and just sets the (double) pointer to point to its internal (read-only) storage.
+
 This function may return one of the following values:
 
 * a non-negative value
