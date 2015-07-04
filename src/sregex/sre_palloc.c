@@ -23,7 +23,7 @@ static void * sre_memalign(size_t alignment, size_t size);
 #endif
 
 
-sre_pool_t *
+SRE_API sre_pool_t *
 sre_create_pool(size_t size)
 {
     sre_pool_t  *p;
@@ -57,7 +57,7 @@ sre_create_pool(size_t size)
 }
 
 
-void
+SRE_API void
 sre_destroy_pool(sre_pool_t *pool)
 {
 #if !(SRE_USE_VALGRIND)
@@ -115,7 +115,7 @@ sre_destroy_pool(sre_pool_t *pool)
 }
 
 
-void
+SRE_API void
 sre_reset_pool(sre_pool_t *pool)
 {
 #if !(SRE_USE_VALGRIND)
