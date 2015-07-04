@@ -41,7 +41,9 @@ Table of Contents
 Status
 ======
 
-This library is already quite usable but still under early development. The API is still in flux
+This library is already quite usable and some people are already using it in production.
+
+Nevertheless this library is still under heavy development. The API is still in flux
 and may be changed quickly without notice.
 
 This is a pure C library that is designed to have zero dependencies.
