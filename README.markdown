@@ -505,6 +505,29 @@ function. This compiled regex(es) is embedded into the resulting context structu
 
 Accepts a memory pool created by the [sre_create_pool)(#sre_create_pool) function as the first argument. This memory pool does not have to be the same as the pool used for parsing or compiling the regex(es).
 
+The `ovector` parameter specifies an array for outputting the beginning and end offsets of the (sub-)match captures.
+The elements of the array are used like below:
+
+1. The 1st element of the array holds the beginning offset of the whole match,
+2. the 2nd element holds the end offset of the whole match,
+3. the 3rd element holds the beginning offset of the 1st sub-match capture,
+4. the 4th element holds the end offset of the 1st sub-match capture,
+5. the 5rd element holds the beginning offset of the 2st sub-match capture,
+6. the 6th element holds the end offset of the 2st sub-match capture,
+7. and so on...
+
+The size of the `ovector` array is specified by the `ovecsize` parameter, in bytes. The size of the array
+can be computed as follows:
+
+```
+    ovecsize = 2 * (ncaps + 1) * sizeof(sre_int_t)
+```
+
+where `ncaps` is the value previously output by the [sre_regex_parse](#sre_regex_parse) 
+or [sre_regex_parse_multi](#sre_regex_parse_multi) function.
+
+The `ovector` array is allocated by the caller and filled by this function call.
+
 [Back to TOC](#table-of-contents)
 
 #### sre_vm_pike_exec
