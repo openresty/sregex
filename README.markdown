@@ -1,7 +1,7 @@
 Name
 ====
 
-libsregex - A non-backtracking regex engine library for large data streams
+libsregex - A non-backtracking NFA/DFA-based regex engine library for matching on large data streams
 
 Table of Contents
 =================
@@ -10,11 +10,11 @@ Table of Contents
 * [Status](#status)
 * [Syntax Supported](#syntax-supported)
 * [API](#api)
+    * [Constants](#constants)
     * [Memory pool API](#memory-pool-api)
         * [sre_create_pool](#sre_create_pool)
         * [sre_destroy_pool](#sre_destroy_pool)
         * [sre_reset_pool](#sre_reset_pool)
-    * [Constants](#constants)
     * [Regex parsing and compilation API](#regex-parsing-and-compilation-api)
         * [sre_regex_parse](#sre_regex_parse)
         * [sre_regex_parse_multi](#sre_regex_parse_multi)
@@ -155,6 +155,20 @@ without notice.
 
 [Back to TOC](#table-of-contents)
 
+Constants
+---------
+
+This library provides the following public constants for use in the various API functions.
+
+* `SRE_OK`
+* `SRE_DECLINED`
+* `SRE_AGAIN`
+* `SRE_ERROR`
+
+The actual meanings of these constants depend on the concrete API functions using them.
+
+[Back to TOC](#table-of-contents)
+
 Memory pool API
 ---------------
 
@@ -203,20 +217,6 @@ Destroys the memory pool created by the [sre_create_pool](#sre_create_pool) func
 ```C
 void sre_reset_pool(sre_pool_t *pool);
 ```
-
-[Back to TOC](#table-of-contents)
-
-Constants
----------
-
-This library provides the following public constants for use in the various API functions.
-
-* `SRE_OK`
-* `SRE_DECLINED`
-* `SRE_AGAIN`
-* `SRE_ERROR`
-
-The actual meanings of these constants depend on the concrete API functions using them.
 
 [Back to TOC](#table-of-contents)
 
