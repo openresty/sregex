@@ -710,7 +710,7 @@ Part of this code is from the NGINX open source project: http://nginx.org/LICENS
 
 This library is licensed under the BSD license.
 
-Copyright (C) 2012-2014, by Yichun "agentzh" Zhang (章亦春), CloudFlare Inc.
+Copyright (C) 2012-2015, by Yichun "agentzh" Zhang (章亦春), CloudFlare Inc.
 
 Copyright (C) 2007-2009 Russ Cox, Google Inc. All rights reserved.
 
