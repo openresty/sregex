@@ -30,8 +30,8 @@ void
 sre_dump_instruction(FILE *f, sre_instruction_t *pc,
     sre_instruction_t *start)
 {
-    sre_vm_range_t         *range;
     sre_uint_t              i;
+    sre_vm_range_t         *range;
 
     switch (pc->opcode) {
     case SRE_OPCODE_SPLIT:
@@ -52,6 +52,9 @@ sre_dump_instruction(FILE *f, sre_instruction_t *pc,
 
         for (i = 0; i < pc->v.ranges->count; i++) {
             range = &pc->v.ranges->head[i];
+            if (i > 0) {
+                fputc(',', f);
+            }
             fprintf(f, " %d-%d", range->from, range->to);
         }
 
@@ -62,6 +65,9 @@ sre_dump_instruction(FILE *f, sre_instruction_t *pc,
 
         for (i = 0; i < pc->v.ranges->count; i++) {
             range = &pc->v.ranges->head[i];
+            if (i > 0) {
+                fputc(',', f);
+            }
             fprintf(f, " %d-%d", range->from, range->to);
         }
 
