@@ -1555,3 +1555,14 @@ re1 and re2 are wrong here.
 --- temp_cap chop
 [(0, -1)] [(0, -1)] [(0, -1)](1, 3) [(0, -1)](1, 3)
 
+
+
+=== TEST 251: \&
+--- re: a\&b
+--- s eval: 'a&b'
+
+
+
+=== TEST 252: [\&]
+--- re: a[\&]b
+--- s eval: 'a&b'

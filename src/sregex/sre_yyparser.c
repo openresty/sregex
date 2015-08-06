@@ -1994,7 +1994,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
             return SRE_REGEX_TOKEN_CHAR;
         }
 
-        if (strchr("'\" iM%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
+        if (strchr("'\" iM%@!,_-|*+?():.^$&\\/[]{}", (int) c)) {
             lvalp->ch = c;
             locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
@@ -2922,7 +2922,7 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                     goto process_char;
                 }
 
-                if (strchr("'\" iMzC%@!,_-|*+?():.^$\\/[]{}", (int) c)) {
+                if (strchr("'\" iMzC%@!,_-|*+?():.^$&\\/[]{}", (int) c)) {
                     goto process_char;
                 }
 
