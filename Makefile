@@ -106,6 +106,7 @@ h_files= src/sregex/sre_capture.h \
 	 src/sregex/sre_vm_thompson_x64.h \
 	 src/sregex/sre_vm_thompson.h \
 	 src/sregex/sregex.h \
+	 src/sregex/ddebug.h \
 
 plist_vfiles= $(patsubst src/sregex/%.c,%.plist,$(lib_c_files))
 

@@ -17,7 +17,7 @@
 #   define dd(...) \
     fprintf(stderr, "sregex ** "); \
     fprintf(stderr, __VA_ARGS__); \
-    fprintf(stderr, "\n")
+    fprintf(stderr, " at %s:%d\n", __FILE__, __LINE__)
 
 #else
 
