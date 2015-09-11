@@ -78,7 +78,7 @@ sre_dump_instruction(FILE *f, sre_instruction_t *pc,
         break;
 
     case SRE_OPCODE_MATCH:
-        fprintf(f, "%2d. match", (int) (pc - start));
+        fprintf(f, "%2d. match %d", (int) (pc - start), (int) pc->v.regex_id);
         break;
 
     case SRE_OPCODE_SAVE:
