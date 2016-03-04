@@ -2009,6 +2009,11 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 c = **src;
 
                 if (c < '0' || c > '7') {
+                    if (++i != 3 && num != 0) {
+                        locp->last = *src;
+                        return SRE_REGEX_TOKEN_BAD;
+                    }
+
                     lvalp->ch = (sre_char) num;
                     locp->last = *src;
                     return SRE_REGEX_TOKEN_CHAR;
@@ -2035,7 +2040,6 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
         case 'c':
             c = sre_read_char(src);
             if (c == '\0') {
-                locp->last = *src;
                 locp->last = *src;
                 return SRE_REGEX_TOKEN_BAD;
             }
