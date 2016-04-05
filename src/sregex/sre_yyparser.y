@@ -1050,6 +1050,13 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
             locp->last = *src;
             return SRE_REGEX_TOKEN_CHAR;
 
+        case '"':
+        case '\'':
+        case '#':
+            lvalp->ch = c;
+            locp->last = *src;
+            return SRE_REGEX_TOKEN_CHAR;
+
         default:
             break;
         }
@@ -1326,6 +1333,11 @@ yylex(YYSTYPE *lvalp, YYLTYPE *locp, sre_pool_t *pool, sre_char **src)
                 case '\0':
                     locp->last = *src;
                     return SRE_REGEX_TOKEN_BAD;
+
+                case '"':
+                case '\'':
+                case '#':
+                    goto process_char;
 
                 default:
                     break;

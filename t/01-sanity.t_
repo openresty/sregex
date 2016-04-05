@@ -1566,3 +1566,15 @@ re1 and re2 are wrong here.
 === TEST 252: [\&]
 --- re: a[\&]b
 --- s eval: 'a&b'
+
+
+
+=== TEST 253: \# \" \'
+--- re: a\#\"\'b
+--- s eval: 'a#"\'b'
+
+
+
+=== TEST 254: [\#\"\']
+--- re: [a\#\"\'b]{4}
+--- s eval: 'a#"\'b'
