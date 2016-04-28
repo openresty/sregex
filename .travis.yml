@@ -10,10 +10,10 @@ compiler:
   - clang
 
 install:
-    - sudo apt-get update
-    - sudo apt-get install -qq -y cpanminus libipc-run3-perl
+    - sudo apt-get update > build.log 2>&1 || (cat build.log && exit 1)
+    - sudo apt-get install -qq -y cpanminus libipc-run3-perl > build.log 2>&1 || (cat build.log && exit 1)
     - sudo cpanm --notest Test::Nginx > build.log 2>&1 || (cat build.log && exit 1)
 
 script:
-  - make
+  - make > build.log 2>&1 || (cat build.log && exit 1)
   - prove -lv t
