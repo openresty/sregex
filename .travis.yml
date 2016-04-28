@@ -11,7 +11,7 @@ compiler:
 
 install:
     - sudo apt-get update
-    - sudo apt-get install -qq -y cpanminus libluajit-5.1-dev libgd-dev libpcre3-dev cppcheck
+    - sudo apt-get install -qq -y cpanminus libipc-run3-perl
     - sudo cpanm --notest Test::Nginx > build.log 2>&1 || (cat build.log && exit 1)
 
 script:
