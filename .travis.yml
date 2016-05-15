@@ -16,4 +16,4 @@ install:
 
 script:
   - make > build.log 2>&1 || (cat build.log && exit 1)
-  - prove -lv t
+  - prove -r t
