@@ -47,6 +47,8 @@ my $conditional = 0;
 my $comments = 0;
 my $esc_K = 0;
 my $esc_g = 0;
+my $esc_c_nonprintable = 0;
+my $esc_C = 0;
 my $metaquoting = 0;
 my %memo;
 
@@ -158,12 +160,12 @@ while (<$in>) {
         next;
     }
 
-    if ($re =~ m/\\x{[a-zA-Z0-9]{3,}}/) {
+    if ($re =~ m/\\x\{[a-zA-Z0-9]{3,}}/) {
         $esc_x_unicode++;
         next;
     }
 
-    if ($re =~ m/\\o{([0-7]+)}/) {
+    if ($re =~ m/\\o\{([0-7]+)}/) {
         my $code = $1;
         if (oct($code) > 255) {
             $esc_o_unicode++;
@@ -211,6 +213,16 @@ while (<$in>) {
         next;
     }
 
+    if ($re =~ m/(?<!\\)\\C/) {
+        $esc_C++;
+        next;
+    }
+
+    if ($re =~ m/\\c[[:^print:]]/) {
+        $esc_c_nonprintable++;
+        next;
+    }
+
     if ($re =~ m/\(\?['<]\w+['>].*?\)|\(\?P<\w+>.*?\)/) {
         $named_cap++;
         next;
@@ -243,6 +255,10 @@ while (<$in>) {
 
     my $skip;
     if ($re =~ m{\\N\{def}) {
+        $skip = 1;
+    }
+
+    if ($re =~ /\Q^\ca\cA\c[\c{\c:\E/) {
         $skip = 1;
     }
 
@@ -419,6 +435,8 @@ warn "skipped $code_assertions code assertions, ",
     "$comments comment tests, ",
     "$metaquoting meta-quoting tests, ",
     "$esc_g \\g tests, ",
+    "$esc_c_nonprintable \\c followed by a nonprintable character tests, ",
+    "$esc_C \\C tests, ",
     "and $dup duplicate tests.\n";
 
 sub usage {

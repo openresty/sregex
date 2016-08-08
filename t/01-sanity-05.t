@@ -263,6 +263,7 @@ __DATA__
 === TEST 39: \C
 --- re: \C+
 --- s eval: "hello world!\n\r"
+--- SKIP
 
 
 

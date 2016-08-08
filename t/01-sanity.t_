@@ -1478,6 +1478,7 @@ re1 and re2 are wrong here.
 === TEST 239: \C
 --- re: \C+
 --- s eval: "hello world!\n\r"
+--- SKIP
 
 
 

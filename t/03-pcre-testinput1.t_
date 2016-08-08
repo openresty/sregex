@@ -529,6 +529,9 @@ __DATA__
 === TEST 87: testinput1:113
 --- re: ^\ca\cA\c[\c{\c:
 --- s eval: "\x01\x01\e;z"
+--- err
+[error] syntax error
+--- SKIP
 
 
 
@@ -5642,621 +5645,579 @@ __DATA__
 
 
 
-=== TEST 911: testinput1:3815
---- re: [\z\C]
---- s eval: "z"
-
-
-
-=== TEST 912: testinput1:3816
---- re: [\z\C]
---- s eval: "C "
-
-
-
-=== TEST 913: testinput1:3819
+=== TEST 911: testinput1:3819
 --- re: \M
 --- s eval: "M "
 
 
 
-=== TEST 914: testinput1:3822
+=== TEST 912: testinput1:3822
 --- re: (a+)*b
 --- s eval: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa "
 
 
 
-=== TEST 915: testinput1:3831
+=== TEST 913: testinput1:3831
 --- re: ≈жед[а-€ј-я]+
 --- s eval: "≈жеда"
 
 
 
-=== TEST 916: testinput1:3832
+=== TEST 914: testinput1:3832
 --- re: ≈жед[а-€ј-я]+
 --- s eval: "≈жед€"
 
 
 
-=== TEST 917: testinput1:3833
+=== TEST 915: testinput1:3833
 --- re: ≈жед[а-€ј-я]+
 --- s eval: "≈жедј"
 
 
 
-=== TEST 918: testinput1:3834
+=== TEST 916: testinput1:3834
 --- re: ≈жед[а-€ј-я]+
 --- s eval: "≈жедя"
 
 
 
-=== TEST 919: testinput1:3863
+=== TEST 917: testinput1:3863
 --- re: ^
 --- s eval: "a\nb\nc\n"
 
 
 
-=== TEST 920: testinput1:3864
+=== TEST 918: testinput1:3864
 --- re: ^
 --- s eval: "\ "
 
 
 
-=== TEST 921: testinput1:3880
+=== TEST 919: testinput1:3880
 --- re: [[,abc,]+]
 --- s eval: "abc]"
 
 
 
-=== TEST 922: testinput1:3881
+=== TEST 920: testinput1:3881
 --- re: [[,abc,]+]
 --- s eval: "a,b]"
 
 
 
-=== TEST 923: testinput1:3882
+=== TEST 921: testinput1:3882
 --- re: [[,abc,]+]
 --- s eval: "[a,b,c]  "
 
 
 
-=== TEST 924: testinput1:3899
+=== TEST 922: testinput1:3899
 --- re: a*b*\w
 --- s eval: "aaabbbb"
 
 
 
-=== TEST 925: testinput1:3900
+=== TEST 923: testinput1:3900
 --- re: a*b*\w
 --- s eval: "aaaa"
 
 
 
-=== TEST 926: testinput1:3901
+=== TEST 924: testinput1:3901
 --- re: a*b*\w
 --- s eval: "a"
 
 
 
-=== TEST 927: testinput1:3904
+=== TEST 925: testinput1:3904
 --- re: a*b?\w
 --- s eval: "aaabbbb"
 
 
 
-=== TEST 928: testinput1:3905
+=== TEST 926: testinput1:3905
 --- re: a*b?\w
 --- s eval: "aaaa"
 
 
 
-=== TEST 929: testinput1:3906
+=== TEST 927: testinput1:3906
 --- re: a*b?\w
 --- s eval: "a"
 
 
 
-=== TEST 930: testinput1:3909
+=== TEST 928: testinput1:3909
 --- re: a*b{0,4}\w
 --- s eval: "aaabbbb"
 
 
 
-=== TEST 931: testinput1:3910
+=== TEST 929: testinput1:3910
 --- re: a*b{0,4}\w
 --- s eval: "aaaa"
 
 
 
-=== TEST 932: testinput1:3911
+=== TEST 930: testinput1:3911
 --- re: a*b{0,4}\w
 --- s eval: "a"
 
 
 
-=== TEST 933: testinput1:3914
+=== TEST 931: testinput1:3914
 --- re: a*b{0,}\w
 --- s eval: "aaabbbb"
 
 
 
-=== TEST 934: testinput1:3915
+=== TEST 932: testinput1:3915
 --- re: a*b{0,}\w
 --- s eval: "aaaa"
 
 
 
-=== TEST 935: testinput1:3916
+=== TEST 933: testinput1:3916
 --- re: a*b{0,}\w
 --- s eval: "a"
 
 
 
-=== TEST 936: testinput1:3919
+=== TEST 934: testinput1:3919
 --- re: a*\d*\w
 --- s eval: "0a"
 
 
 
-=== TEST 937: testinput1:3920
+=== TEST 935: testinput1:3920
 --- re: a*\d*\w
 --- s eval: "a "
 
 
 
-=== TEST 938: testinput1:3923
+=== TEST 936: testinput1:3923
 --- re: a*b *\w
 --- s eval: "a "
 
 
 
-=== TEST 939: testinput1:3930
+=== TEST 937: testinput1:3930
 --- re: a* b *\w
 --- s eval: "a "
 
 
 
-=== TEST 940: testinput1:3933
+=== TEST 938: testinput1:3933
 --- re: ^\w+=.*(\\\n.*)*
 --- s eval: "abc=xyz\\\npqr"
 
 
 
-=== TEST 941: testinput1:3976
+=== TEST 939: testinput1:3976
 --- re: ^(a()*)*
 --- s eval: "aaaa"
 
 
 
-=== TEST 942: testinput1:3979
+=== TEST 940: testinput1:3979
 --- re: ^(?:a(?:(?:))*)*
 --- s eval: "aaaa"
 
 
 
-=== TEST 943: testinput1:3982
+=== TEST 941: testinput1:3982
 --- re: ^(a()+)+
 --- s eval: "aaaa"
 
 
 
-=== TEST 944: testinput1:3985
+=== TEST 942: testinput1:3985
 --- re: ^(?:a(?:(?:))+)+
 --- s eval: "aaaa"
 
 
 
-=== TEST 945: testinput1:3993
+=== TEST 943: testinput1:3993
 --- re: (a|)*\d
 --- s eval: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
 
 
-=== TEST 946: testinput1:3994
+=== TEST 944: testinput1:3994
 --- re: (a|)*\d
 --- s eval: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa4"
 --- cap: (0, 61) (59, 60)
 
 
 
-=== TEST 947: testinput1:4001
+=== TEST 945: testinput1:4001
 --- re: (?:a|)*\d
 --- s eval: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
 
 
-=== TEST 948: testinput1:4002
+=== TEST 946: testinput1:4002
 --- re: (?:a|)*\d
 --- s eval: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa4"
 
 
 
-=== TEST 949: testinput1:4020
+=== TEST 947: testinput1:4020
 --- re: (.*(.)?)*
 --- s eval: "abcd"
 --- cap: (0, 4) (0, 4)
 
 
 
-=== TEST 950: testinput1:4032
+=== TEST 948: testinput1:4032
 --- re: [[:abcd:xyz]]
 --- s eval: "a]"
 
 
 
-=== TEST 951: testinput1:4033
+=== TEST 949: testinput1:4033
 --- re: [[:abcd:xyz]]
 --- s eval: ":] "
 
 
 
-=== TEST 952: testinput1:4036
+=== TEST 950: testinput1:4036
 --- re: [abc[:x\]pqr]
 --- s eval: "a"
 
 
 
-=== TEST 953: testinput1:4037
+=== TEST 951: testinput1:4037
 --- re: [abc[:x\]pqr]
 --- s eval: "["
 
 
 
-=== TEST 954: testinput1:4038
+=== TEST 952: testinput1:4038
 --- re: [abc[:x\]pqr]
 --- s eval: ":"
 
 
 
-=== TEST 955: testinput1:4039
+=== TEST 953: testinput1:4039
 --- re: [abc[:x\]pqr]
 --- s eval: "]"
 
 
 
-=== TEST 956: testinput1:4040
+=== TEST 954: testinput1:4040
 --- re: [abc[:x\]pqr]
 --- s eval: "p    "
 
 
 
-=== TEST 957: testinput1:4043
+=== TEST 955: testinput1:4043
 --- re: .*[op][xyz]
 --- s eval: "fooabcfoo"
 
 
 
-=== TEST 958: testinput1:4078
+=== TEST 956: testinput1:4078
 --- re: [\x00-\xff\s]+
 --- s eval: "\x0a\x0b\x0c\x0d"
 
 
 
-=== TEST 959: testinput1:4081
---- re: ^\c
---- s eval: "?"
-
-
-
-=== TEST 960: testinput1:4090
+=== TEST 957: testinput1:4090
 --- re: [^a]*
 --- s eval: "12abc"
 --- flags: i
 
 
 
-=== TEST 961: testinput1:4091
+=== TEST 958: testinput1:4091
 --- re: [^a]*
 --- s eval: "12ABC"
 --- flags: i
 
 
 
-=== TEST 962: testinput1:4098
+=== TEST 959: testinput1:4098
 --- re: [^a]*?X
 --- s eval: "** Failers"
 --- flags: i
 
 
 
-=== TEST 963: testinput1:4099
+=== TEST 960: testinput1:4099
 --- re: [^a]*?X
 --- s eval: "12abc"
 --- flags: i
 
 
 
-=== TEST 964: testinput1:4100
+=== TEST 961: testinput1:4100
 --- re: [^a]*?X
 --- s eval: "12ABC"
 --- flags: i
 
 
 
-=== TEST 965: testinput1:4103
+=== TEST 962: testinput1:4103
 --- re: [^a]+?X
 --- s eval: "** Failers"
 --- flags: i
 
 
 
-=== TEST 966: testinput1:4104
+=== TEST 963: testinput1:4104
 --- re: [^a]+?X
 --- s eval: "12abc"
 --- flags: i
 
 
 
-=== TEST 967: testinput1:4105
+=== TEST 964: testinput1:4105
 --- re: [^a]+?X
 --- s eval: "12ABC"
 --- flags: i
 
 
 
-=== TEST 968: testinput1:4108
+=== TEST 965: testinput1:4108
 --- re: [^a]?X
 --- s eval: "12aXbcX"
 --- flags: i
 
 
 
-=== TEST 969: testinput1:4109
+=== TEST 966: testinput1:4109
 --- re: [^a]?X
 --- s eval: "12AXBCX"
 --- flags: i
 
 
 
-=== TEST 970: testinput1:4110
+=== TEST 967: testinput1:4110
 --- re: [^a]?X
 --- s eval: "BCX "
 --- flags: i
 
 
 
-=== TEST 971: testinput1:4113
+=== TEST 968: testinput1:4113
 --- re: [^a]??X
 --- s eval: "12aXbcX"
 --- flags: i
 
 
 
-=== TEST 972: testinput1:4114
+=== TEST 969: testinput1:4114
 --- re: [^a]??X
 --- s eval: "12AXBCX"
 --- flags: i
 
 
 
-=== TEST 973: testinput1:4115
+=== TEST 970: testinput1:4115
 --- re: [^a]??X
 --- s eval: "BCX"
 --- flags: i
 
 
 
-=== TEST 974: testinput1:4123
+=== TEST 971: testinput1:4123
 --- re: [^a]{2,3}
 --- s eval: "abcdef"
 --- flags: i
 
 
 
-=== TEST 975: testinput1:4124
+=== TEST 972: testinput1:4124
 --- re: [^a]{2,3}
 --- s eval: "ABCDEF  "
 --- flags: i
 
 
 
-=== TEST 976: testinput1:4127
+=== TEST 973: testinput1:4127
 --- re: [^a]{2,3}?
 --- s eval: "abcdef"
 --- flags: i
 
 
 
-=== TEST 977: testinput1:4128
+=== TEST 974: testinput1:4128
 --- re: [^a]{2,3}?
 --- s eval: "ABCDEF  "
 --- flags: i
 
 
 
-=== TEST 978: testinput1:4135
+=== TEST 975: testinput1:4135
 --- re: ((a|)+)+Z
 --- s eval: "Z"
 
 
 
-=== TEST 979: testinput1:4138
+=== TEST 976: testinput1:4138
 --- re: (a)b|(a)c
 --- s eval: "ac"
 
 
 
-=== TEST 980: testinput1:4177
+=== TEST 977: testinput1:4177
 --- re: (?:a+|ab)+c
 --- s eval: "aabc"
 
 
 
-=== TEST 981: testinput1:4192
+=== TEST 978: testinput1:4192
 --- re: ^(?:a|ab)+c
 --- s eval: "aaaabc"
 
 
 
-=== TEST 982: testinput1:4253
+=== TEST 979: testinput1:4253
 --- re: [:a]xxx[b:]
 --- s eval: ":xxx:"
 
 
 
-=== TEST 983: testinput1:4310
---- re: ab\Cde
---- s eval: "abXde"
-
-
-
-=== TEST 984: testinput1:4316
---- re: a[\CD]b
---- s eval: "aCb"
-
-
-
-=== TEST 985: testinput1:4317
---- re: a[\CD]b
---- s eval: "aDb "
-
-
-
-=== TEST 986: testinput1:4320
---- re: a[\C-X]b
---- s eval: "aJb"
-
-
-
-=== TEST 987: testinput1:4323
+=== TEST 980: testinput1:4323
 --- re: \H\h\V\v
 --- s eval: "X X\x0a"
 
 
 
-=== TEST 988: testinput1:4324
+=== TEST 981: testinput1:4324
 --- re: \H\h\V\v
 --- s eval: "X\x09X\x0b"
 
 
 
-=== TEST 989: testinput1:4325
+=== TEST 982: testinput1:4325
 --- re: \H\h\V\v
 --- s eval: "** Failers"
 
 
 
-=== TEST 990: testinput1:4326
+=== TEST 983: testinput1:4326
 --- re: \H\h\V\v
 --- s eval: "\xa0 X\x0a   "
 
 
 
-=== TEST 991: testinput1:4329
+=== TEST 984: testinput1:4329
 --- re: \H*\h+\V?\v{3,4}
 --- s eval: "\x09\x20\xa0X\x0a\x0b\x0c\x0d\x0a"
 
 
 
-=== TEST 992: testinput1:4330
+=== TEST 985: testinput1:4330
 --- re: \H*\h+\V?\v{3,4}
 --- s eval: "\x09\x20\xa0\x0a\x0b\x0c\x0d\x0a"
 
 
 
-=== TEST 993: testinput1:4331
+=== TEST 986: testinput1:4331
 --- re: \H*\h+\V?\v{3,4}
 --- s eval: "\x09\x20\xa0\x0a\x0b\x0c"
 
 
 
-=== TEST 994: testinput1:4332
+=== TEST 987: testinput1:4332
 --- re: \H*\h+\V?\v{3,4}
 --- s eval: "** Failers "
 
 
 
-=== TEST 995: testinput1:4333
+=== TEST 988: testinput1:4333
 --- re: \H*\h+\V?\v{3,4}
 --- s eval: "\x09\x20\xa0\x0a\x0b"
 
 
 
-=== TEST 996: testinput1:4336
+=== TEST 989: testinput1:4336
 --- re: \H{3,4}
 --- s eval: "XY  ABCDE"
 
 
 
-=== TEST 997: testinput1:4337
+=== TEST 990: testinput1:4337
 --- re: \H{3,4}
 --- s eval: "XY  PQR ST "
 
 
 
-=== TEST 998: testinput1:4340
+=== TEST 991: testinput1:4340
 --- re: .\h{3,4}.
 --- s eval: "XY  AB    PQRS"
 
 
 
-=== TEST 999: testinput1:4343
+=== TEST 992: testinput1:4343
 --- re: \h*X\h?\H+Y\H?Z
 --- s eval: ">XNNNYZ"
 
 
 
-=== TEST 1000: testinput1:4344
+=== TEST 993: testinput1:4344
 --- re: \h*X\h?\H+Y\H?Z
 --- s eval: ">  X NYQZ"
 
 
 
-=== TEST 1001: testinput1:4345
+=== TEST 994: testinput1:4345
 --- re: \h*X\h?\H+Y\H?Z
 --- s eval: "** Failers"
 
 
 
-=== TEST 1002: testinput1:4346
+=== TEST 995: testinput1:4346
 --- re: \h*X\h?\H+Y\H?Z
 --- s eval: ">XYZ   "
 
 
 
-=== TEST 1003: testinput1:4347
+=== TEST 996: testinput1:4347
 --- re: \h*X\h?\H+Y\H?Z
 --- s eval: ">  X NY Z"
 
 
 
-=== TEST 1004: testinput1:4350
+=== TEST 997: testinput1:4350
 --- re: \v*X\v?Y\v+Z\V*\x0a\V+\x0b\V{2,3}\x0c
 --- s eval: ">XY\x0aZ\x0aA\x0bNN\x0c"
 
 
 
-=== TEST 1005: testinput1:4351
+=== TEST 998: testinput1:4351
 --- re: \v*X\v?Y\v+Z\V*\x0a\V+\x0b\V{2,3}\x0c
 --- s eval: ">\x0a\x0dX\x0aY\x0a\x0bZZZ\x0aAAA\x0bNNN\x0c"
 
 
 
-=== TEST 1006: testinput1:4906
+=== TEST 999: testinput1:4906
 --- re: \A.*?(?:a|bc)
 --- s eval: "ba"
 
 
 
-=== TEST 1007: testinput1:4912
+=== TEST 1000: testinput1:4912
 --- re: \A.*?(a|bc)
 --- s eval: "ba"
 
 
 
-=== TEST 1008: testinput1:4930
+=== TEST 1001: testinput1:4930
 --- re: \A.*?(?:a|bc|d)
 --- s eval: "ba"
 
 
 
-=== TEST 1009: testinput1:4954
+=== TEST 1002: testinput1:4954
 --- re: ^\N+
 --- s eval: "abc\ndef"
 
 
 
-=== TEST 1010: testinput1:5260
+=== TEST 1003: testinput1:5260
 --- re: ((?:a?)*)*c
 --- s eval: "aac   "
 --- cap: (0, 3) (0, 2)

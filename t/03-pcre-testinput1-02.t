@@ -225,6 +225,9 @@ __DATA__
 === TEST 37: testinput1:113
 --- re: ^\ca\cA\c[\c{\c:
 --- s eval: "\x01\x01\e;z"
+--- err
+[error] syntax error
+--- SKIP
 
 
 
