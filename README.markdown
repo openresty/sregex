@@ -70,7 +70,7 @@ Already implemented an API for assembling multiple user regexes and
 returning an ID indicating exactly which regex is matched
 (first), as well as the corresponding sub-match captures.
 
-There is also a Just-in-Time (JIT) compiler targeting x86_64 for the Thompson VM.
+There is also a Just-in-Time (JIT) compiler targeting `x86_64` for the Thompson VM.
 
 Syntax Supported
 ================
@@ -698,7 +698,7 @@ TODO
 Author
 ======
 
-Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>, CloudFlare Inc.
+Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>, OpenResty Inc.
 
 [Back to TOC](#table-of-contents)
 
@@ -709,7 +709,7 @@ Part of this code is from the NGINX open source project: http://nginx.org/LICENS
 
 This library is licensed under the BSD license.
 
-Copyright (C) 2012-2015, by Yichun "agentzh" Zhang (章亦春), CloudFlare Inc.
+Copyright (C) 2012-2017, by Yichun "agentzh" Zhang (章亦春), OpenResty Inc.
 
 Copyright (C) 2007-2009 Russ Cox, Google Inc. All rights reserved.
 
