@@ -783,6 +783,7 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
             }
         }
 
+        sre_capture_decr_ref(ctx, capture);
         return SRE_OK;
     }
 
@@ -884,6 +885,7 @@ sre_vm_pike_add_thread(sre_vm_pike_ctx_t *ctx, sre_vm_pike_thread_list_t *l,
             goto add;
         }
 
+        sre_capture_decr_ref(ctx, capture);
         break;
 
     case SRE_OPCODE_MATCH:
