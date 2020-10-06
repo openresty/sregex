@@ -105,7 +105,7 @@ sre_vm_thompson_jit_compile(sre_pool_t *pool, sre_program_t *prog,
 
         /*
          * write generated machine code to a temporary file.
-         * wiew with objdump or ndisasm
+         * view with objdump or ndisasm
          */
         f = fopen("/tmp/thompson-jit.bin", "wb");
         fwrite(code->handler, codesz, 1, f);
